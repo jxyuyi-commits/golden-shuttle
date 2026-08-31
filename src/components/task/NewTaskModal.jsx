@@ -1,0 +1,143 @@
+import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
+import { fetchStyleByNo, createTask } from '../../api';
+
+/** 新建打样需求单弹窗（款号自动带出款式信息 + 分类联动号型） */
+const NewTaskModal = ({ settings, onClose, onSuccess }) => {
+  const [fd, setFd] = useState({
+    title: '', style_no: '', category: '', brand: '', designer: '',
+    sample_type: '', sample_color: '', priority: '中', size: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [isStyleFound, setIsStyleFound] = useState(false);
+  const [currentSizeList, setCurrentSizeList] = useState([]);
+
+  const handleStyleBlur = async () => {
+    if (!fd.style_no) return;
+    setLoading(true);
+    try {
+      const styleInfo = await fetchStyleByNo(fd.style_no);
+      if (styleInfo) {
+        setIsStyleFound(true);
+        setFd(prev => ({
+          ...prev,
+          title: styleInfo.title || prev.title,
+          category: styleInfo.category || prev.category,
+          brand: styleInfo.brand || prev.brand,
+          designer: styleInfo.designer || prev.designer
+        }));
+      } else {
+        setIsStyleFound(false);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (!fd.category) {
+      setCurrentSizeList([]);
+      return;
+    }
+    const catObj = settings.categories.find(c => (typeof c === 'string' ? c : c.name) === fd.category);
+    if (catObj && typeof catObj !== 'string' && catObj.size_group_id) {
+      const group = settings.sizeGroups.find(g => g.id == catObj.size_group_id);
+      if (group) {
+        const sizes = group.size_list.split(',').map(s => s.trim());
+        setCurrentSizeList(sizes);
+        if (!sizes.includes(fd.size)) setFd(prev => ({ ...prev, size: sizes[0] || '' }));
+      }
+    } else {
+      setCurrentSizeList(['S', 'M', 'L', 'XL', 'XXL']);
+    }
+  }, [fd.category, settings.categories, settings.sizeGroups]);
+
+  const submit = (e) => {
+    e.preventDefault();
+    createTask(fd).then(onSuccess);
+  };
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <form className="modal glass" onSubmit={submit} onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <span>新建打样需求单</span>
+          <button type="button" className="btn-icon" onClick={onClose}><X size={20} /></button>
+        </div>
+
+        <div className="field">
+          <label>款号 (回车或失焦自动带出款式信息)</label>
+          <input value={fd.style_no} onChange={e => setFd({ ...fd, style_no: e.target.value })} onBlur={handleStyleBlur} placeholder="例：RWCX-2025-001" />
+        </div>
+        {loading && <div style={{ fontSize: 12, color: '#38bdf8', marginBottom: 12 }}>正在查询款式资料...</div>}
+        {isStyleFound && <div style={{ fontSize: 12, color: '#4ade80', marginBottom: 12, padding: '4px 8px', background: 'rgba(74,222,128,0.1)', borderRadius: 4 }}>✓ 找到已有款式，已自动填入基础信息</div>}
+
+        <div className="field">
+          <label>款式名称 *</label>
+          <input required value={fd.title} onChange={e => setFd({ ...fd, title: e.target.value })} placeholder="输入款式名称…" />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="field">
+            <label>款式类别</label>
+            <select required value={fd.category} onChange={e => setFd({ ...fd, category: e.target.value })}>
+              <option value="">请选择类别</option>
+              {settings.categories.map(c => {
+                const name = typeof c === 'string' ? c : c.name;
+                return <option key={name} value={name}>{name}</option>;
+              })}
+            </select>
+          </div>
+          <div className="field">
+            <label>品牌</label>
+            <select value={fd.brand} onChange={e => setFd({ ...fd, brand: e.target.value })}>
+              <option value="">请选择</option>
+              {settings.brands.map(b => <option key={b}>{b}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', margin: '16px 0', paddingTop: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', marginBottom: 12 }}>本次打样批次配置</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="field">
+              <label>打样版次</label>
+              <select value={fd.sample_type} onChange={e => setFd({ ...fd, sample_type: e.target.value })}>
+                <option value="">请选择</option>
+                {settings.sampleTypes.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>制作尺码 *</label>
+              <select required value={fd.size} onChange={e => setFd({ ...fd, size: e.target.value })}>
+                <option value="">选择尺码</option>
+                {currentSizeList.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>样衣颜色</label>
+              <input value={fd.sample_color} onChange={e => setFd({ ...fd, sample_color: e.target.value })} placeholder="如：黑色" />
+            </div>
+            <div className="field">
+              <label>优先级</label>
+              <select value={fd.priority} onChange={e => setFd({ ...fd, priority: e.target.value })}>
+                <option value="低">低</option>
+                <option value="中">中</option>
+                <option value="高">高</option>
+                <option value="紧急">紧急</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-foot">
+          <button type="button" className="btn-ghost" onClick={onClose}>取消</button>
+          <button type="submit" className="btn-blue">确认创建</button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default NewTaskModal;

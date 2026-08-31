@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "checkJs": true,
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "strict": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "server/**/*.cjs",
+    "server/**/*.js",
+    "scripts/**/*.cjs",
+    "main.js"
+  ],
+  "exclude": ["node_modules", "dist", "dist_electron"]
+}

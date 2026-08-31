@@ -1,0 +1,189 @@
+// 打样单(Tasks) 业务服务层：纯函数，HTTP路由与IPC handler共用
+const { getDb } = require('../db.cjs');
+
+// 工作动态默认模板：按项目事件流推进（可自由增删改，不再按分工角色写死）
+// 每个节点：label 事件名 / status(pending|active|done) / date / by 负责人 / note 备注
+const INITIAL_NODES = [
+  { label: '收单', status: 'done', date: '', by: '', note: '' },
+  { label: '胚样', status: 'pending', date: '', by: '', note: '' },
+  { label: '头样', status: 'pending', date: '', by: '', note: '' },
+  { label: '样衣', status: 'pending', date: '', by: '', note: '' },
+  { label: '制单', status: 'pending', date: '', by: '', note: '' }
+];
+
+/** 安全解析 JSON 字段，失败返回默认值 */
+function safeParse(json, fallback) {
+  try { return JSON.parse(json || '[]'); } catch { return fallback; }
+}
+
+const TASK_JOIN_SELECT = `
+  SELECT t.*,
+         s.style_no, s.title, s.brand, s.designer, s.year, s.season, s.month, s.category, s.pdf_url
+  FROM tasks t
+  LEFT JOIN styles s ON t.style_id = s.id
+`;
+
+/**
+ * 获取全部打样单（含款式信息，progress_nodes 已解析）
+ * @returns {Array<object>}
+ */
+function list() {
+  const rows = getDb().prepare(`${TASK_JOIN_SELECT} ORDER BY t.created_at DESC`).all();
+  return rows.map(t => ({ ...t, progress_nodes: safeParse(t.progress_nodes, []) }));
+}
+
+/**
+ * 获取单个打样单
+ * @param {number|string} id
+ * @returns {object|null}
+ */
+function get(id) {
+  const row = getDb().prepare(`${TASK_JOIN_SELECT} WHERE t.id = ?`).get(id);
+  if (!row) return null;
+  row.progress_nodes = safeParse(row.progress_nodes, []);
+  return row;
+}
+
+/**
+ * 获取同款式的所有打样单（版本对比）
+ * @param {number|string} styleId
+ * @returns {Array<object>}
+ */
+function versions(styleId) {
+  const rows = getDb().prepare(`
+    SELECT id, order_no, sample_type, sample_color, size_data, created_at
+    FROM tasks WHERE style_id = ? ORDER BY created_at DESC
+  `).all(styleId);
+  return rows.map(r => ({ ...r, size_data: safeParse(r.size_data, []) }));
+}
+
+/**
+ * 新建打样单（事务：自动建/复用款式）
+ * @param {object} b - 请求体
+ * @returns {number} 新任务 id
+ */
+function create(b) {
+  const db = getDb();
+  const insertTransaction = db.transaction((b) => {
+    let style_id;
+    if (b.style_no) {
+      const existingStyle = db.prepare('SELECT id FROM styles WHERE style_no = ?').get(b.style_no);
+      if (existingStyle) style_id = existingStyle.id;
+    }
+
+    if (!style_id) {
+      const styleInfo = db.prepare(`
+        INSERT INTO styles (style_no, title, brand, designer, year, season, month, category, pdf_url)
+        VALUES (@style_no, @title, @brand, @designer, @year, @season, @month, @category, @pdf_url)
+      `).run({
+        style_no: b.style_no || `TMP-${Date.now()}`,
+        title: b.title || '未命名',
+        brand: b.brand || '',
+        designer: b.designer || '',
+        year: b.year || '',
+        season: b.season || '',
+        month: b.month || '',
+        category: b.category || '',
+        pdf_url: b.pdf_url || ''
+      });
+      style_id = styleInfo.lastInsertRowid;
+    }
+
+    const taskInfo = db.prepare(`
+      INSERT INTO tasks (
+        style_id, order_no, priority, sample_type, sample_color, size, sample_count,
+        fabric_date, start_date, expected_date, finish_date, audit_status, audit_comment,
+        status, progress_nodes, size_data, fabric_req, trim_req, process_req, note
+      )
+      VALUES (
+        @style_id, @order_no, @priority, @sample_type, @sample_color, @size, @sample_count,
+        @fabric_date, @start_date, @expected_date, @finish_date, @audit_status, @audit_comment,
+        @status, @progress_nodes, @size_data, @fabric_req, @trim_req, @process_req, @note
+      )
+    `).run({
+      style_id,
+      order_no: b.order_no || '',
+      priority: b.priority || '中',
+      sample_type: b.sample_type || '',
+      sample_color: b.sample_color || '',
+      size: b.size || '',
+      sample_count: parseInt(b.sample_count) || 1,
+      fabric_date: b.fabric_date || '',
+      start_date: b.start_date || '',
+      expected_date: b.expected_date || '',
+      finish_date: b.finish_date || '',
+      audit_status: b.audit_status || '待审核',
+      audit_comment: b.audit_comment || '',
+      status: b.status || 'todo',
+      progress_nodes: JSON.stringify(INITIAL_NODES),
+      size_data: b.size_data || '[]',
+      fabric_req: b.fabric_req || '',
+      trim_req: b.trim_req || '',
+      process_req: b.process_req || '',
+      note: b.note || ''
+    });
+
+    return taskInfo.lastInsertRowid;
+  });
+  return insertTransaction(b);
+}
+
+/**
+ * 更新打样单（款式字段与任务字段分离更新）
+ * @param {number|string} id
+ * @param {object} b - PATCH 请求体
+ * @returns {{success: boolean, styleUpdated: boolean, taskUpdated: boolean}}
+ */
+function update(id, b) {
+  const db = getDb();
+  const row = db.prepare('SELECT style_id FROM tasks WHERE id = ?').get(id);
+  if (!row) return null;
+  const { style_id } = row;
+
+  const STYLE_KEYS = ['style_no', 'title', 'brand', 'designer', 'year', 'season', 'month', 'category', 'pdf_url'];
+  const styleUpdates = {};
+  for (const key of STYLE_KEYS) {
+    if (key in b) styleUpdates[key] = b[key];
+  }
+  let styleUpdated = false;
+  if (Object.keys(styleUpdates).length > 0) {
+    const setParts = [...Object.keys(styleUpdates).map(k => `${k} = @${k}`), "updated_at = CURRENT_TIMESTAMP"].join(', ');
+    db.prepare(`UPDATE styles SET ${setParts} WHERE id = @_id`).run({ ...styleUpdates, _id: style_id });
+    styleUpdated = true;
+  }
+
+  const TASK_KEYS = [
+    'order_no', 'priority', 'sample_type', 'sample_color', 'size', 'sample_count',
+    'fabric_date', 'start_date', 'expected_date', 'finish_date', 'audit_status',
+    'audit_comment', 'status', 'progress_nodes', 'image_url',
+    'fabric_req', 'trim_req', 'process_req', 'note', 'size_data'
+  ];
+  const taskUpdates = {};
+  for (const key of TASK_KEYS) {
+    if (key in b) {
+      taskUpdates[key] = (['progress_nodes', 'size_data'].includes(key) && Array.isArray(b[key]))
+        ? JSON.stringify(b[key])
+        : b[key];
+    }
+  }
+  let taskUpdated = false;
+  if (Object.keys(taskUpdates).length > 0) {
+    const setParts = [...Object.keys(taskUpdates).map(k => `${k} = @${k}`), "updated_at = CURRENT_TIMESTAMP"].join(', ');
+    db.prepare(`UPDATE tasks SET ${setParts} WHERE id = @_id`).run({ ...taskUpdates, _id: id });
+    taskUpdated = true;
+  }
+
+  return { success: true, styleUpdated, taskUpdated };
+}
+
+/**
+ * 删除打样单
+ * @param {number|string} id
+ * @returns {{success: boolean}}
+ */
+function remove(id) {
+  getDb().prepare('DELETE FROM tasks WHERE id = ?').run(id);
+  return { success: true };
+}
+
+module.exports = { list, get, versions, create, update, remove };

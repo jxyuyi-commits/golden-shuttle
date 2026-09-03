@@ -88,13 +88,12 @@ const DetailView = ({
 
       <div className="tab-bar glass">
         <div className={`tab ${detailTab === 'base' ? 'active' : ''}`} onClick={() => onSetDetailTab('base')}>基本信息</div>
-        <div className="tab">图纸资料</div>
         <div className={`tab ${detailTab === 'size' ? 'active' : ''}`} onClick={() => onSetDetailTab('size')}>尺寸指标</div>
         <div className={`tab ${detailTab === 'bom' ? 'active' : ''}`} onClick={() => onSetDetailTab('bom')}>物料清单</div>
         <div className={`tab ${detailTab === 'process' ? 'active' : ''}`} onClick={() => onSetDetailTab('process')}>工艺指示</div>
       </div>
 
-      <div className="detail-content">
+      <div className="detail-content custom-scrollbar">
         {detailTab === 'bom' && <BomEditor taskId={task.id} />}
         {detailTab === 'process' && <ProcessEditor taskId={task.id} />}
         {detailTab === 'size' && (
@@ -246,9 +245,16 @@ const DetailView = ({
               <input type="file" accept="image/*,.pdf" hidden onChange={e => onPdfUpload(e.target.files[0])} />
             </label>
             {task.pdf_url && (
-              <button className="btn-ghost-sm" onClick={() => onSetField('pdf_url', '')}>
-                <Trash2 size={14} /> 移除
-              </button>
+              <div className="pdf-actions">
+                <button
+                  type="button"
+                  className="btn-remove-pdf"
+                  title="移除当前设计稿"
+                  onClick={() => onSetField('pdf_url', '')}
+                >
+                  <Trash2 size={13} /> 移除设计稿
+                </button>
+              </div>
             )}
           </div>
 

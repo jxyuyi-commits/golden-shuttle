@@ -1,7 +1,7 @@
 # PatternMaster Pro 迭代状态追踪
 
 > 本文件是迭代过程的"外部记忆"，上下文压缩后必须先读本文件再继续。
-> 最后更新：2026-08-29
+> 最后更新：2026-09-04（本次为会话恢复 + dev 环境启动，代码无改动）
 
 ---
 
@@ -16,15 +16,19 @@
 
 ## 二、环境信息
 
-- **Node 版本**：v20.20.2（ABI 115）
-- **better-sqlite3**：已 rebuild 为 ABI 115，可正常加载
-- **开发端口**：后端 3001，前端 Vite 5173
-- **数据库路径**：`server/database.sqlite`（7 tasks / 5 styles / 12 measurement_templates）
-- **启动命令**：`npm run dev:all`（同时启动后端+前端）
-- **注意**：rebuild better-sqlite3 需用国内镜像：
+- **Node 版本**：真机系统 Node v24.13.0（ABI 137）；AI 工具通道里的 node 是托管版 v22.22.2（ABI 127）
+- **better-sqlite3**：当前编为 ABI 132（Electron），dev 后端由 Electron Node 运行，无需再 rebuild:node
+- **开发端口**：后端 3001（0.0.0.0），前端 Vite 5173
+- **数据库路径**：`server/database.sqlite`（8 tasks / 6 styles，迁移已到 v5）
+  - task 8 = 26AWW526 褶皱金属丝棒球服：工作动态 8 条 / 尺寸 12 部位 / BOM 10 条 / 工艺 13 条
+- **启动命令**：`npm run dev:all`（= `node scripts/dev.cjs`，同时启动后端+前端）
+- **启动校验**：后端日志出现 `[DB] All migrations up to date (latest: v5)` 即为正常
+- **Git 现状**：仓库 2026-09-01 重新初始化，当前 `main` 分支仅 1 个提交 `5989809 初始提交`
+  （远端 github.com/jxyuyi-commits/golden-shuttle），本文件引用的历史提交号已不可查
+- **注意**：仅在换机/升级 Electron 时才需要 rebuild，且需用国内镜像：
   ```powershell
   $env:npm_config_disturl='https://npmmirror.com/mirrors/node'
-  npm rebuild better-sqlite3
+  npm run rebuild:electron
   ```
 
 ## 三、已完成的修改

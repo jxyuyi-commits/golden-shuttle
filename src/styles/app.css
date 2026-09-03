@@ -170,7 +170,7 @@
       .tab.active::after {content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #38bdf8; border-radius: 3px 3px 0 0; box-shadow: 0 -4px 12px rgba(56,189,248,0.4); }
 
       /* 详情页布局微调 */
-      .detail-content {display: grid; grid-template-columns: 1fr 340px; gap: 32px; padding: 32px 40px; max-width: 1440px; margin: 0 auto; width: 100%; }
+      .detail-content {display: grid; grid-template-columns: 1fr 340px; gap: 32px; padding: 32px 40px; max-width: 1440px; margin: 0 auto; width: 100%; max-height: calc(100vh - 136px); overflow-y: auto; align-content: start; }
       .form-panel {padding: 40px; border-radius: 24px; }
       .section-title {font-size: 17px; font-weight: 900; letter-spacing: -0.2px; margin-bottom: 24px; }
 
@@ -207,6 +207,10 @@
       .btn-upload-pdf {display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border: 1px dashed rgba(255,255,255,.15); border-radius: 10px; color: #64748b; cursor: pointer; font-size: 13px; font-weight: 600; transition: .2s; }
       .btn-upload-pdf:hover {border-color: #38bdf8; color: #38bdf8; }
       .btn-ghost-sm {display: flex; align-items: center; gap: 6px; font-size: 12px; color: #ef4444; background: none; border: none; cursor: pointer; padding: 6px 0; }
+      /* 设计稿移除按钮：右对齐、有边框的小按钮，hover 才变红 */
+      .pdf-actions {display: flex; justify-content: flex-end; margin-top: 10px; }
+      .btn-remove-pdf {display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #64748b; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: .2s; }
+      .btn-remove-pdf:hover {color: #f43f5e; border-color: rgba(244,63,94,0.4); background: rgba(244,63,94,0.08); }
 
       .timeline-row {display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
       .tl-label {flex: 1; font-size: 13px; font-weight: 700; }

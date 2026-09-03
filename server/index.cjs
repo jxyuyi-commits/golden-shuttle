@@ -16,7 +16,23 @@ const { registerProcessRoutes } = require('./routes/process.cjs');
 const app = express();
 const port = 3001;
 
-app.use(cors());
+// CORS 白名单（P0-2）：仅放行本机回环来源（Vite dev 5173 / 生产同源 3001 / file:// / 无 Origin），
+// 拒绝任意外部源，防止任意网页读写本地数据库。
+// 注意：cors 库对函数型 origin 采用 (origin, callback) 回调约定，必须调用 callback 放行，否则请求会卡死。
+const isAllowedOrigin = (origin, callback) => {
+  if (!origin) return callback(null, true); // 同源请求、curl 等无 Origin 头
+  try {
+    const u = new URL(origin);
+    const allowed =
+      u.protocol === 'file:' ||
+      ((u.hostname === 'localhost' || u.hostname === '127.0.0.1') &&
+        (u.port === '' || u.port === '5173' || u.port === '3001'));
+    return callback(null, allowed);
+  } catch {
+    return callback(null, false);
+  }
+};
+app.use(cors({ origin: isAllowedOrigin }));
 app.use(express.json({ limit: '50mb' })); // 支持 base64 PDF
 
 // ── 服务启动封装 ─────────────────────────────────────────────
@@ -52,7 +68,8 @@ function startServer(overridePort, dbPath, uploadsPath) {
 
   return new Promise((resolve) => {
     const p = overridePort || port;
-    const server = app.listen(p, () => {
+    // P0-1：仅绑定本机回环地址（localhost），不暴露局域网
+    const server = app.listen(p, 'localhost', () => {
       console.log(`PatternMaster Backend running at http://localhost:${p}`);
       resolve(server);
     });

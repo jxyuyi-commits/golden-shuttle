@@ -125,7 +125,7 @@ async function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            sandbox: false,
+            sandbox: true,
             preload: path.join(__dirname, 'preload.js') // P2：暴露 window.api
         },
         autoHideMenuBar: true // 隐藏系统默认菜单栏

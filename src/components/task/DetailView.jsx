@@ -88,12 +88,23 @@ const DetailView = ({
 
       <div className="tab-bar glass">
         <div className={`tab ${detailTab === 'base' ? 'active' : ''}`} onClick={() => onSetDetailTab('base')}>基本信息</div>
+        <div className={`tab ${detailTab === 'drawing' ? 'active' : ''}`} onClick={() => onSetDetailTab('drawing')}>图纸资料</div>
         <div className={`tab ${detailTab === 'size' ? 'active' : ''}`} onClick={() => onSetDetailTab('size')}>尺寸指标</div>
         <div className={`tab ${detailTab === 'bom' ? 'active' : ''}`} onClick={() => onSetDetailTab('bom')}>物料清单</div>
         <div className={`tab ${detailTab === 'process' ? 'active' : ''}`} onClick={() => onSetDetailTab('process')}>工艺指示</div>
       </div>
 
       <div className="detail-content custom-scrollbar">
+        {detailTab === 'drawing' && (
+          <div className="glass drawing-placeholder">
+            <div className="dp-title">图纸资料</div>
+            <div className="dp-desc">
+              此模块正在开发中，将用于集中管理款式的技术图纸、纸样、放码图等资料。<br />
+              当前可先用右侧「设计稿 PDF」上传单张设计稿。
+            </div>
+            <div className="dp-badge">即将上线</div>
+          </div>
+        )}
         {detailTab === 'bom' && <BomEditor taskId={task.id} />}
         {detailTab === 'process' && <ProcessEditor taskId={task.id} />}
         {detailTab === 'size' && (
@@ -245,16 +256,9 @@ const DetailView = ({
               <input type="file" accept="image/*,.pdf" hidden onChange={e => onPdfUpload(e.target.files[0])} />
             </label>
             {task.pdf_url && (
-              <div className="pdf-actions">
-                <button
-                  type="button"
-                  className="btn-remove-pdf"
-                  title="移除当前设计稿"
-                  onClick={() => onSetField('pdf_url', '')}
-                >
-                  <Trash2 size={13} /> 移除设计稿
-                </button>
-              </div>
+              <button className="btn-ghost-sm" onClick={() => onSetField('pdf_url', '')}>
+                <Trash2 size={14} /> 移除
+              </button>
             )}
           </div>
 

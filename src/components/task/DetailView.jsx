@@ -7,6 +7,7 @@ import ExportButton from '../common/ExportButton';
 import BomEditor from '../bom/BomEditor';
 import ProcessEditor from '../process/ProcessEditor';
 import { exportTechPack, getTechPackFileName } from '../../utils/exportTechPack';
+import { exportTechPackPdf, getTechPackPdfFileName } from '../../utils/exportTechPackPdf';
 import { fetchBomItems, fetchProcessItems } from '../../api';
 
 const years = ['2023', '2024', '2025', '2026', '2027'];
@@ -70,6 +71,20 @@ const DetailView = ({
               return exportTechPack(task, bom, proc);
             }}
             style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(56,189,248,0.2)', background: 'rgba(56,189,248,0.1)', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+          />
+          <ExportButton
+            label="导出PDF"
+            title="导出工艺单 PDF"
+            confirmText={`将导出打样单「${task.style_no} ${task.title}」的工艺单 PDF（A4：基本信息 / 尺寸规格 / 物料清单 / 工艺指示）。`}
+            fileName={getTechPackPdfFileName(task)}
+            onExport={async () => {
+              const [bom, proc] = await Promise.all([
+                fetchBomItems(task.id).catch(() => []),
+                fetchProcessItems(task.id).catch(() => [])
+              ]);
+              return exportTechPackPdf(task, bom, proc);
+            }}
+            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(52,211,153,0.25)', background: 'rgba(52,211,153,0.1)', color: '#34d399', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
           />
           <button
             className="btn-ghost-sm"

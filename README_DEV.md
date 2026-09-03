@@ -1,5 +1,7 @@
 # PatternMaster Pro 开发与维护指南 🛠️
 
+> ⚠️ **部分内容已过时（2026-09-04 校正）**：「终极三步修复法 / npm rebuild better-sqlite3」是 ABI 115 时代旧办法——现方案D 已统一 ABI 132（dev 后端用 Electron Node 跑，见 MEMORY.md）；「生产 3005 端口 / 双端口隔离」实际为 dev 与生产均用 3001。端口、ABI、启动方式以 MEMORY.md 与 ITERATION_STATE.md 为准。
+
 > **[IMPORTANT]** 
 > 本文档记录了开发过程中最核心的数据库连接与驱动冲突解决方案。这是通过多次调试换来的宝贵经验，请在遇到“数据显示为空”或“打包失败”时优先参考。
 

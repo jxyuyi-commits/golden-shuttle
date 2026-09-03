@@ -1,7 +1,7 @@
 # PatternMaster Pro 迭代状态追踪
 
 > 本文件是迭代过程的"外部记忆"，上下文压缩后必须先读本文件再继续。
-> 最后更新：2026-09-04（本次为会话恢复 + dev 环境启动，代码无改动）
+> 最后更新：2026-09-04（恢复 P0-1/P0-2 回环绑定 + CORS 白名单、sandbox:true，提交 24d2705；本仓库 9-01 重新初始化后分支为 main）
 
 ---
 
@@ -11,7 +11,7 @@
 - **定位**：服装打样单全流程管理桌面应用
 - **技术栈**：Electron 34 + React 19 + Vite 7 + Express 5 + better-sqlite3 + SQLite
 - **项目路径**：`D:\dev\golden-shuttle`
-- **当前分支**：`fix-dev-db-connection`
+- **当前分支**：`main`（2026-09-01 仓库重新初始化后）
 - **备份分支**：`backup/pre-review-20260827`（审查前全量备份）
 
 ## 二、环境信息
@@ -137,6 +137,9 @@
 - [x] 清理仓库垃圾文件 → 70c063aa
 - [x] Electron 安全加固 → c0da7b63
 - [x] PDF.js 本地化 + 缩略图修复 → 59e38ae2
+
+- [x] P0-1 回环绑定（仅 [::1]）+ P0-2 CORS 白名单恢复 → 24d2705（8-25 回滚后曾缺失，2026-09-04 重新落地并实测数据链路正常）
+- [x] P0-3 Electron sandbox: true → 24d2705（main.js，配合 nodeIntegration:false + contextIsolation:true）
 
 ### P1 - 架构改进
 - [x] 提取API层和工具函数（src/api/, src/utils/）→ f78a2246

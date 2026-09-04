@@ -134,6 +134,12 @@ const DrawingLibrary = ({ taskId }) => {
     catch (e) { alert('删除失败: ' + e.message); }
   };
 
+  // 切换分类：本地即时更新 + 立即持久化（PATCH）
+  const handleCategoryChange = (d, value) => {
+    setField(d.id, 'category', value);
+    updateDrawing(d.id, { category: value }).catch(e => alert('分类保存失败: ' + e.message));
+  };
+
   const filtered = filter === '全部' ? items : items.filter(d => d.category === filter);
 
   return (
@@ -203,9 +209,19 @@ const DrawingLibrary = ({ taskId }) => {
             <div key={d.id} className="drawing-card">
               <div className="drawing-thumb">
                 <PdfThumb pdfUrl={d.url} />
-                <span className="drawing-badge" style={{ background: `${CATEGORY_COLORS[d.category] || '#38bdf8'}22`, color: CATEGORY_COLORS[d.category] || '#38bdf8', borderColor: `${CATEGORY_COLORS[d.category] || '#38bdf8'}44` }}>
-                  {d.category || '设计稿'}
-                </span>
+                <select
+                  className="drawing-cat-sel"
+                  value={d.category || '设计稿'}
+                  title="点击修改分类"
+                  onChange={e => handleCategoryChange(d, e.target.value)}
+                  style={{
+                    background: `${CATEGORY_COLORS[d.category] || '#38bdf8'}22`,
+                    color: CATEGORY_COLORS[d.category] || '#38bdf8',
+                    borderColor: `${CATEGORY_COLORS[d.category] || '#38bdf8'}44`,
+                  }}
+                >
+                  {DRAWING_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
                 <button
                   className="drawing-del"
                   title="删除"

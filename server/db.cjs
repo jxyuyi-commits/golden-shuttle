@@ -218,6 +218,16 @@ const migrations = [
         CREATE INDEX IF NOT EXISTS idx_drawings_task_id ON drawings(task_id);
       `);
     }
+  },
+  {
+    version: 7,
+    description: '图纸资料分类细化：技术图纸→参考图、放码图→唛架图',
+    up: () => {
+      db.exec(`
+        UPDATE drawings SET category = '参考图' WHERE category = '技术图纸';
+        UPDATE drawings SET category = '唛架图' WHERE category = '放码图';
+      `);
+    }
   }
 ];
 

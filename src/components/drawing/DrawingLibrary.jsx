@@ -1,4 +1,4 @@
-// 图纸资料库：集中管理款式的技术图纸、纸样、放码图等资料
+// 图纸资料库：集中管理款式的设计稿/参考图/成衣图/纸样/唛架图等资料
 // 支持：点击选择 / 拖拽 / 复制粘贴 上传，不限文件格式（图片/PDF/专业软件文件 dxf/pla/prj 等）
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -8,14 +8,15 @@ import {
   fetchDrawings, createDrawing, updateDrawing, deleteDrawing, uploadDesignFile
 } from '../../api';
 
-export const DRAWING_CATEGORIES = ['设计稿', '技术图纸', '纸样', '放码图'];
+export const DRAWING_CATEGORIES = ['设计稿', '参考图', '成衣图', '纸样', '唛架图'];
 
 // 各分类徽章配色
 const CATEGORY_COLORS = {
   '设计稿': '#38bdf8',
-  '技术图纸': '#a78bfa',
-  '纸样': '#fbbf24',
-  '放码图': '#34d399',
+  '参考图': '#f472b6',
+  '成衣图': '#fb923c',
+  '纸样': '#a78bfa',
+  '唛架图': '#34d399',
 };
 
 const inputStyle = {
@@ -167,7 +168,7 @@ const DrawingLibrary = ({ taskId }) => {
         <div>
           <div className="section-title" style={{ borderLeftColor: '#a78bfa', marginBottom: 8 }}>
             <div>图纸资料</div>
-            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>集中管理技术图纸 / 纸样 / 放码图等资料 · 共 {items.length} 份</span>
+            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>集中管理设计稿 / 参考图 / 成衣图 / 纸样 / 唛架图等资料 · 共 {items.length} 份</span>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {['全部', ...DRAWING_CATEGORIES].map(c => (

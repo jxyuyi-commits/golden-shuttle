@@ -9,7 +9,7 @@
 > **先读本文件 +&#x20;**
 > `ITERATION_STATE.md`
 > 即可无缝接续。
-> 更新日期：2026-09-04（PDF 导出完成版）
+> 更新日期：2026-09-04（图纸资料页上线版）
 
 
 
@@ -26,11 +26,11 @@
 | 技术栈  | Electron 34（ABI 132）+ Vite 7 + React 19 + Express 5 + better-sqlite3 12                                                                                                                                              |
 | 数据库  | 本地 SQLite（dev: `server/database.sqlite`；生产: `%APPDATA%/PatternMaster Pro/database.sqlite`，首次启动从 resources 拷示例库）                                                                                                      |
 | 模块   | 看板（Kanban）/ 打样需求单详情（Detail）/ 设置，路由 8 个 + services 8 个                                                                                                                                                                |
-| 关键文件 | `server/index.cjs`（66 行入口）+ `routes/` + `services/` + `db.cjs`（迁移 v5）；`src/App.jsx`（288 行）+ `src/components/**`；`src/utils/exportTechPack.js`（Excel 导出）+ `exportTechPackPdf.js`（PDF 导出）+ `pdfTechPackVfs.js`（字体 vfs） |
+| 关键文件 | `server/index.cjs`（66 行入口）+ `routes/` + `services/`（含 drawings.cjs）+ `db.cjs`（迁移 v6）；`src/App.jsx`（288 行）+ `src/components/**`（含 drawing/DrawingLibrary.jsx）；`src/utils/exportTechPack.js`（Excel 导出）+ `exportTechPackPdf.js`（PDF 导出）+ `pdfTechPackVfs.js`（字体 vfs） |
 | 当前版本 | `package.json` version 1.0.0（Electron-builder 用）                                                                                                                                                                     |
 | Git  | main 分支，75 个受管文件；远端 `https://github.com/jxyuyi-commits/golden-shuttle.git`                                                                                                                                           |
 
-**API 路由备忘**：BOM 是 `/api/bom?task_id=N`（不是 /api/bom-items），工艺 `/api/process?task_id=N`，均需 task\_id 参数。
+**API 路由备忘**：BOM 是 `/api/bom?task_id=N`（不是 /api/bom-items），工艺 `/api/process?task_id=N`，图纸 `/api/drawings?task_id=N`，均需 task\_id 参数。
 
 
 
@@ -202,6 +202,8 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 * ✅ 工艺单 PDF 导出（pdfmake + 思源黑体，A4：信息 + 尺寸竖版 / BOM + 工艺横向；提交 6f89b9f）
 
+* ✅ 图纸资料页（drawings 表 v6：分类管理设计稿/技术图纸/纸样/放码图，上传弹窗 + 卡片网格预览 + 编辑自动保存 + 删除，IPC 双通道）
+
 * ✅ ExportButton 交互（确认→执行→toast）
 
 * ✅ BOM + 工艺指示模块、工作动态开放式项目更新流
@@ -212,9 +214,7 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 
 
-* 工艺单 PDF 导出 → ✅ 已完成
-
-* Excel 导入、操作日志、逾期提醒、品牌 / 分类 / 设计师 ID 引用重构、图纸资料页开发（当前是「开发中」占位）
+* Excel 导入、操作日志、逾期提醒、品牌 / 分类 / 设计师 ID 引用重构
 
 
 

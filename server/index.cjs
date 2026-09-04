@@ -12,6 +12,7 @@ const { registerSettingsRoutes } = require('./routes/settings.cjs');
 const { registerSizeGroupRoutes } = require('./routes/sizeGroups.cjs');
 const { registerBomRoutes } = require('./routes/bom.cjs');
 const { registerProcessRoutes } = require('./routes/process.cjs');
+const { registerDrawingRoutes } = require('./routes/drawings.cjs');
 
 const app = express();
 const port = 3001;
@@ -49,6 +50,7 @@ function startServer(overridePort, dbPath, uploadsPath) {
   registerSizeGroupRoutes(app);
   registerBomRoutes(app);
   registerProcessRoutes(app);
+  registerDrawingRoutes(app);
 
   // 静态文件服务
   app.use('/uploads', express.static(getUploadsDir()));

@@ -1,7 +1,7 @@
 # PatternMaster Pro 迭代状态追踪
 
 > 本文件是迭代过程的"外部记忆"，上下文压缩后必须先读本文件再继续。
-> 最后更新：2026-09-04（恢复 P0-1/P0-2 回环绑定 + CORS 白名单、sandbox:true，提交 24d2705；本仓库 9-01 重新初始化后分支为 main）
+> 最后更新：2026-09-04（图纸资料页上线：drawings 表 v6 + CRUD + IPC + DrawingLibrary 组件）
 
 ---
 
@@ -128,6 +128,14 @@
 - server/routes/ 下6个路由模块：tasks(203行)/styles/files/measurement/settings/sizeGroups
 - 新增3个数据库索引：tasks.style_id / tasks.status / measurement_templates.category
 - 验证：全部API端点200 OK，前端看板/详情正常，零console错误
+
+### 图纸资料页（2026-09-04，迁移 v6 + CRUD + IPC + DrawingLibrary）
+- **背景**：DetailView「图纸资料」Tab 原为占位（"集中管理技术图纸/纸样/放码图等资料…即将上线"），仅右侧单张设计稿 PDF
+- **数据层**：迁移 v6 新增 drawings 表（task_id 外键 ON DELETE CASCADE / category / title / filename / url / note / sort_order）+ idx_drawings_task_id 索引
+- **后端**：services/drawings.cjs（listByTask/create/update PATCH 语义/remove）+ routes/drawings.cjs（GET /api/drawings?task_id / POST / PATCH / DELETE），index.cjs 注册
+- **IPC 双通道**：preload.js 暴露 api.drawings 4 方法；main.js 注册 drawings:* handlers；client.js ipcRequest 映射 /api/drawings；api/index.js 新增 fetchDrawings/createDrawing/updateDrawing/deleteDrawing（文件上传仍走 HTTP /api/upload-pdf）
+- **前端**：src/components/drawing/DrawingLibrary.jsx（分类筛选全部/设计稿/技术图纸/纸样/放码图 + 上传弹窗 createPortal + 卡片网格 PdfThumb 预览 + 标题/备注防抖自动保存 + 删除 confirm）；DetailView 移除占位接入组件；app.css 新增 drawing-grid/card/thumb/badge/del/meta 样式
+- **验证**：API CRUD 全通（UTF-8 中文正常）；生产构建 1771 模块通过；浏览器实测上传→卡片出现（分类徽章/标题默认文件名）→改标题防抖 PATCH 持久化→删除→空态，全部通过
 
 ## 四、待办事项（按优先级）
 
@@ -259,7 +267,7 @@
   - 清理：note 字段里"工作动态：..."冗余文本自动过滤（工作动态已单独成块导出）
   - 浏览器实测：26AWW526 导出 4 sheet 完整，分类合并生效，BOM 合计 389.25，尺寸 12 部位，工艺 13 条，文件 14KB
   - 注意：exportTechPack 现为 async 函数，DetailView onExport 已 await，ExportButton handleConfirm 已 async
-- [ ] 工艺单（Tech Pack）PDF 导出（pdfmake，Excel 版已完成）
+- [x] 工艺单（Tech Pack）PDF 导出（pdfmake，Excel 版已完成）→ 提交 6f89b9f
 - [ ] Excel 导入/导出
 - [ ] 操作日志（侧边栏已占位"开发中"）
 - [ ] 逾期提醒

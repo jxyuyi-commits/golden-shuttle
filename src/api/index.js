@@ -72,6 +72,12 @@ export const uploadDesignFile = (file) =>
     reader.readAsDataURL(file);
   });
 
+/* ── 图纸资料 Drawings ── */
+export const fetchDrawings = (taskId) => apiGet(`/api/drawings?task_id=${taskId}`);
+export const createDrawing = (data) => apiPost('/api/drawings', data);
+export const updateDrawing = (id, data) => apiPatch(`/api/drawings/${id}`, data);
+export const deleteDrawing = (id) => apiDelete(`/api/drawings/${id}`);
+
 /* ── 用本地程序打开文件 ── */
 export const openFileLocally = (url) =>
   fetch(apiUrl('/api/open-pdf'), {

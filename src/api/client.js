@@ -64,6 +64,12 @@ function ipcRequest(path, method, body) {
   // Files（本地打开走 IPC，上传走 HTTP）
   if (method === 'POST' && path === '/api/open-pdf') return api.files.openLocally(body.url);
 
+  // Drawings（图纸资料元数据 CRUD；文件上传走 HTTP）
+  if (method === 'GET' && (m = path.match(/^\/api\/drawings\?task_id=(\d+)$/))) return api.drawings.list(m[1]);
+  if (method === 'POST' && path === '/api/drawings') return api.drawings.create(body);
+  if (method === 'PATCH' && (m = path.match(/^\/api\/drawings\/(\d+)$/))) return api.drawings.update(m[1], body);
+  if (method === 'DELETE' && (m = path.match(/^\/api\/drawings\/(\d+)$/))) return api.drawings.remove(m[1]);
+
   return undefined;
 }
 

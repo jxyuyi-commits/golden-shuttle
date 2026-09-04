@@ -32,5 +32,11 @@ contextBridge.exposeInMainWorld('api', {
   },
   files: {
     openLocally: (url) => ipcRenderer.invoke('files:openLocally', url),
+  },
+  drawings: {
+    list: (taskId) => ipcRenderer.invoke('drawings:list', taskId),
+    create: (data) => ipcRenderer.invoke('drawings:create', data),
+    update: (id, data) => ipcRenderer.invoke('drawings:update', id, data),
+    remove: (id) => ipcRenderer.invoke('drawings:remove', id),
   }
 });

@@ -6,6 +6,7 @@ import SmartSelect from '../common/SmartSelect';
 import ExportButton from '../common/ExportButton';
 import BomEditor from '../bom/BomEditor';
 import ProcessEditor from '../process/ProcessEditor';
+import DrawingLibrary from '../drawing/DrawingLibrary';
 import { exportTechPack, getTechPackFileName } from '../../utils/exportTechPack';
 import { exportTechPackPdf, getTechPackPdfFileName } from '../../utils/exportTechPackPdf';
 import { fetchBomItems, fetchProcessItems } from '../../api';
@@ -110,16 +111,7 @@ const DetailView = ({
       </div>
 
       <div className="detail-content custom-scrollbar">
-        {detailTab === 'drawing' && (
-          <div className="glass drawing-placeholder">
-            <div className="dp-title">图纸资料</div>
-            <div className="dp-desc">
-              此模块正在开发中，将用于集中管理款式的技术图纸、纸样、放码图等资料。<br />
-              当前可先用右侧「设计稿 PDF」上传单张设计稿。
-            </div>
-            <div className="dp-badge">即将上线</div>
-          </div>
-        )}
+        {detailTab === 'drawing' && <DrawingLibrary taskId={task.id} />}
         {detailTab === 'bom' && <BomEditor taskId={task.id} />}
         {detailTab === 'process' && <ProcessEditor taskId={task.id} />}
         {detailTab === 'size' && (

@@ -11,6 +11,7 @@ const settingsService = require('./server/services/settings.cjs');
 const sizeGroupService = require('./server/services/sizeGroups.cjs');
 const measurementService = require('./server/services/measurements.cjs');
 const fileService = require('./server/services/files.cjs');
+const drawingService = require('./server/services/drawings.cjs');
 
 // ── 全局异常捕获 ──
 process.on('uncaughtException', (error) => {
@@ -62,6 +63,12 @@ function registerIpcHandlers() {
 
   // Files（大文件上传仍走 HTTP，仅本地打开走 IPC）
   ipcMain.handle('files:openLocally', (_e, url) => fileService.openLocally(url));
+
+  // Drawings（图纸资料元数据 CRUD；文件上传仍走 HTTP）
+  ipcMain.handle('drawings:list', (_e, taskId) => drawingService.listByTask(taskId));
+  ipcMain.handle('drawings:create', (_e, data) => drawingService.create(data));
+  ipcMain.handle('drawings:update', (_e, id, data) => drawingService.update(id, data));
+  ipcMain.handle('drawings:remove', (_e, id) => drawingService.remove(id));
 
   console.log('[IPC] Handlers registered.');
 }

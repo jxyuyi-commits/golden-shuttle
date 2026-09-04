@@ -195,6 +195,29 @@ const migrations = [
         CREATE INDEX IF NOT EXISTS idx_process_task_id ON process_items(task_id);
       `);
     }
+  },
+  {
+    version: 6,
+    description: '新增图纸资料 drawings 表（技术图纸/纸样/放码图等）',
+    up: () => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS drawings (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          task_id INTEGER NOT NULL,
+          category TEXT DEFAULT '设计稿',
+          title TEXT DEFAULT '',
+          filename TEXT DEFAULT '',
+          url TEXT DEFAULT '',
+          note TEXT DEFAULT '',
+          sort_order INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_drawings_task_id ON drawings(task_id);
+      `);
+    }
   }
 ];
 

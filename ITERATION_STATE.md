@@ -1,7 +1,7 @@
 # PatternMaster Pro 迭代状态追踪
 
 > 本文件是迭代过程的"外部记忆"，上下文压缩后必须先读本文件再继续。
-> 最后更新：2026-09-04（图纸资料页上线：drawings 表 v6 + CRUD + IPC + DrawingLibrary 组件）
+> 最后更新：2026-09-05（图纸资料页迭代合入：版本管控 v8 + EMF/DXF 缩略图 + 统一交互 + 类型标签 + 工作动态修复 + 缓存路径修复）
 
 ---
 
@@ -153,6 +153,49 @@
 - **需求**：分类细分为 设计稿 / 参考图 / 成衣图 / 纸样 / 唛架图（原 设计稿/技术图纸/纸样/放码图）
 - **实现**：DRAWING_CATEGORIES + CATEGORY_COLORS 更新（参考图 #f472b6、成衣图 #fb923c、唛架图 #34d399）；迁移 v7 映射旧数据：技术图纸→参考图、放码图→唛架图
 - **验证**：筛选 chips / 卡片下拉 / 上传弹窗均同步为新 5 分类；已有 5 条数据正确映射（技术图纸→参考图）；浏览器实测通过
+
+### 图纸资料版本管控 + 文件校验（2026-09-05，迁移 v8）
+- **需求**：①纸样会持续迭代需版本管控；②同一文件反复上传被照单全收，缺校验。用户明确分两类治理：参考资料（参考图/成衣图）→ A 防冗余；工作成果（设计稿/纸样/唛架图）→ B 可追溯版本，回复「确认」授权实施
+- **数据层**：迁移 v8 给 drawings 表加 kind / file_hash / version / group_id 四列；历史数据按分类推断 kind、按 (task_id, kind, filename) 归组、group_id=组内最小 id、version 按 id 升序递增
+- **后端**：services/files.cjs save 返回 `{url, hash, size}`（SHA-256）；services/drawings.cjs 重写——categoryKind() 映射、create() 智能逻辑（同 task+同 hash 非 force → conflict:duplicate；output 非 force + 同名文件 → 归同组 version+1 返回 isNewVersion/previousId）、新增 listGroup/removeGroup；routes/drawings.cjs 新增 GET/DELETE /api/drawings/group/:groupId
+- **IPC 双通道**：preload.js / main.js / src/api/client.js 透传 groupList/removeGroup；src/api/index.js 新增 fetchDrawingGroup/deleteDrawingGroup、uploadDesignFile 返回 hash
+- **前端**：DrawingLibrary.jsx 重写——按 group_id 聚合卡片（最新版 + 版本徽章「Vx · 共N版」+ 分类下拉并排）；上传弹窗分类旁标注「参考资料·防冗余 / 工作成果·可追溯版本」；上传冲突分支（重复弹窗 confirm：确定=force 强制新建 / 取消=跳过）；版本历史弹窗（V1~Vn 缩略图列表、单版删除）；多版本整组删除二次确认
+- **验证**：API 实测同内容重复→conflict:duplicate、同名不同内容→自动升 V3 归组、force 强制新建、参考图重复同样拦截、GROUP 12 返回 V1,V2,V3；前端版本徽章/版本历史弹窗/自动升版/重复确认全部实测通过
+
+### 多文件拖拽 overlay 卡住修复（2026-09-05）
+- **需求**：一次性拖入多文件后「松开鼠标上传」覆盖层 drop 后不消失、不锁焦点（用户截图 1425x896）
+- **根因**：真实浏览器拖拽多文件时 drop 后残留 dragover 事件重新点亮 dragOver 状态；原代码只在 drop 重置且 dragleave 判断脆弱（未用 relatedTarget.contains）
+- **修复**：DrawingLibrary.jsx 加 onDragEnd 强制关闭 + drop 后 setTimeout 兜底重置 + dragleave 改用 `relatedTarget.contains` 判断
+- **验证**：实测残留 dragover 后再 dragend 必定关闭
+
+### EMF/DXF 缩略图（2026-09-05）
+- **需求**：EMF/DXF 无预览缩略图
+- **实现**：新增 server/services/thumbs.cjs——parseDxf（解析 POLYLINE/VERTEX 轮廓，适配服装 CAD AC1009）、dxfToSvg（Y 轴翻转、padding、non-scaling-stroke）、emfToPng（PowerShell + System.Drawing 转 PNG，maxSide 1000）、getThumb（按扩展名分流 + 缓存）；新增 server/routes/thumbs.cjs GET /api/drawing-thumb（image/png 或 image/svg+xml，Cache-Control max-age=86400）；index.cjs 挂载；PdfThumb.jsx 增加 isVectorThumb(emf/dxf) 分支，卡片 img 显示真实预览，失败回退占位
+- **验证**：EMF 清晰渲染连衣裙线稿（1000x388）；DXF 正确渲染纸样轮廓（3 纸样片、77 POLYLINE、3447 VERTEX）；PRJ 保持占位（富怡/格博工程文件无公开格式规范，合理边界）；DXF 解析曾修 bug：顶点按 10→push 新点、20→补 Y，不能按行序盲推
+
+### 单击放大修复 + 统一交互（2026-09-05）
+- **第一轮**：PNG/DXF 放大无效——根因放大条件检查 thumb（PDF 渲染图）但图片直显时 thumb 恒 null，改 canEnlarge 按类型取预览源（图片→fullUrl、矢量→thumbUrl、PDF→thumb）
+- **第二轮 DXF 仍异常**：SVG 作 `<img>` 在 flex 容器中固有宽度被 Chrome 按 0 处理（clientWidth=0）；SVG 加 width/height、img 用 vw、onLoad 设宽均无效（React 对已缓存 SVG onLoad 不触发）
+- **最终方案**：DXF 放大弹窗改内联渲染——useEffect fetch SVG 文本 + dangerouslySetInnerHTML 渲染到 .drawing-svg-preview（app.css：max-width 92vw/max-height 90vh、白底圆角阴影）
+- **统一交互**（用户明确"所有文件双击打开，prj 也改成双击"）：handleInteract 移除 isGeneric 单击直达分支——所有格式统一 单击→300ms 放大（无预览格式显示「该格式无在线预览，双击卡片可调用本地软件打开」占位）/ 300ms 内第二击=双击→openNative；title 统一「单击放大预览，双击用本地软件打开」
+
+### 文件类型标签（2026-09-05）
+- **需求**：为各文件类型打上标签以便区分（PRJ/EMF/DXF/PNG/PDF/ZPRJ 等）
+- **实现**：DrawingLibrary.jsx 加 TYPE_COLORS 配色（图片=绿、PDF=红、DXF=橙、EMF=蓝、PRJ/ZPRJ/ZPAC/PLA=紫、其他=灰）+ fileExtOf 从 url/filename 提取扩展名；卡片缩略图加 .drawing-type-badge 标签（初版在左上角 badges 区，版本历史弹窗 .ver-title 同步加）
+- **调整**：用户要求移到右上角——新增 .drawing-corner 容器（类型标签 + 删除按钮），左上角 badges 只留分类 + 版本
+- **验证**：15 卡片全部带类型标签且配色正确；右上角布局不拥挤；版本历史行带类型标签；浏览器实测 + 构建通过
+
+### 工作动态节点显示修复（2026-09-05）
+- **需求**：工作动态卡片没显示工作节点（截图：每条记录只剩「已完成+日期+负责人」）
+- **根因**：timeline-row 总宽仅 290px，单行要塞 状态+日期(104px)+事件名+负责人+删除 五元素，事件名 input 被 flex 压缩到 18px 几乎不可见
+- **修复**：DetailView.jsx 改两行布局——第一行 事件名称全宽 + 删除按钮，第二行 状态+日期+负责人（.tl-main/.tl-sub）；app.css 相应调整
+- **验证**：事件名 input 从 18px→260px，7 条节点（收单→胚样→完成头样待料→料齐下板房→完成头板样衣→更名→大货制单）全部清晰可见
+
+### 缩略图缓存路径修复（2026-09-05）
+- **问题**：git status 出现项目根未跟踪 thumbs/ 目录（6 个缩略图缓存 + _emf2png.ps1）
+- **根因**：thumbs.cjs 的 THUMB_DIR 在模块加载时固定计算，若 require 早于 initDatabase()，getUploadsDir() 返回空串 → path.resolve('', 'thumbs') 落到项目根
+- **修复**：THUMB_DIR 弃用，改为惰性 getThumbDir()（每次调用现算，getUploadsDir() 为空时回退 server/uploads）；emfToPng/getThumb 内部改用 getThumbDir()；删除误生成的根目录 thumbs/
+- **验证**：重启 dev 后 EMF→PNG/DXF→SVG 全部缓存正确写入 server/uploads/thumbs/（2 PNG + 3 SVG + ps1），根目录无残留；浏览器缩略图全部正常渲染
 
 ## 四、待办事项（按优先级）
 

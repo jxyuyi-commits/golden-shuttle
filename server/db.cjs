@@ -228,6 +228,41 @@ const migrations = [
         UPDATE drawings SET category = '唛架图' WHERE category = '放码图';
       `);
     }
+  },
+  {
+    version: 8,
+    description: '图纸资料版本管控：kind/file_hash/version/group_id + 历史数据归组',
+    up: () => {
+      db.exec(`
+        ALTER TABLE drawings ADD COLUMN kind TEXT DEFAULT 'output';
+        ALTER TABLE drawings ADD COLUMN file_hash TEXT DEFAULT '';
+        ALTER TABLE drawings ADD COLUMN version INTEGER DEFAULT 1;
+        ALTER TABLE drawings ADD COLUMN group_id INTEGER;
+      `);
+      // 历史数据：kind 按分类推断；同 task+同名+同 kind 归入同一版本组（按 id 序赋 version）
+      const refCats = ['参考图', '成衣图'];
+      const rows = db.prepare('SELECT id, task_id, category, filename FROM drawings').all();
+      for (const r of rows) {
+        const kind = refCats.includes(r.category) ? 'reference' : 'output';
+        db.prepare('UPDATE drawings SET kind = ? WHERE id = ?').run(kind, r.id);
+      }
+      // 按 (task_id, kind, filename) 分组：group_id = 组内最小 id，version 按 id 递增
+      const groups = db.prepare(`
+        SELECT task_id, kind, filename, MIN(id) as gid FROM drawings
+        GROUP BY task_id, kind, filename
+      `).all();
+      for (const g of groups) {
+        const members = db.prepare(`
+          SELECT id FROM drawings
+          WHERE task_id = ? AND kind = ? AND filename = ?
+          ORDER BY id ASC
+        `).all(g.task_id, g.kind, g.filename);
+        members.forEach((m, i) => {
+          db.prepare('UPDATE drawings SET group_id = ?, version = ? WHERE id = ?')
+            .run(g.gid, i + 1, m.id);
+        });
+      }
+    }
   }
 ];
 

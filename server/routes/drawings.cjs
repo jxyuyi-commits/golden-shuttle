@@ -11,11 +11,19 @@ function registerDrawingRoutes(app) {
     }
   });
 
+  // 版本组详情（全部版本）
+  app.get('/api/drawings/group/:groupId', (req, res) => {
+    try {
+      res.json(drawingService.listGroup(req.params.groupId));
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.post('/api/drawings', (req, res) => {
     try {
       if (!req.body.task_id) return res.status(400).json({ error: 'task_id required' });
-      const id = drawingService.create(req.body);
-      res.json({ id });
+      res.json(drawingService.create(req.body));
     } catch (err) {
       console.error('[POST DRAWINGS]', err.message);
       res.status(500).json({ error: err.message });
@@ -27,6 +35,15 @@ function registerDrawingRoutes(app) {
       res.json(drawingService.update(req.params.id, req.body));
     } catch (err) {
       console.error('[PATCH DRAWINGS]', err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 删除整个版本组
+  app.delete('/api/drawings/group/:groupId', (req, res) => {
+    try {
+      res.json(drawingService.removeGroup(req.params.groupId));
+    } catch (err) {
       res.status(500).json({ error: err.message });
     }
   });

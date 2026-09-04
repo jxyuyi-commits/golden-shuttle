@@ -69,6 +69,8 @@ function registerIpcHandlers() {
   ipcMain.handle('drawings:create', (_e, data) => drawingService.create(data));
   ipcMain.handle('drawings:update', (_e, id, data) => drawingService.update(id, data));
   ipcMain.handle('drawings:remove', (_e, id) => drawingService.remove(id));
+  ipcMain.handle('drawings:groupList', (_e, groupId) => drawingService.listGroup(groupId));
+  ipcMain.handle('drawings:removeGroup', (_e, groupId) => drawingService.removeGroup(groupId));
 
   console.log('[IPC] Handlers registered.');
 }

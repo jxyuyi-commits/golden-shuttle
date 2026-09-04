@@ -66,8 +66,10 @@ function ipcRequest(path, method, body) {
 
   // Drawings（图纸资料元数据 CRUD；文件上传走 HTTP）
   if (method === 'GET' && (m = path.match(/^\/api\/drawings\?task_id=(\d+)$/))) return api.drawings.list(m[1]);
+  if (method === 'GET' && (m = path.match(/^\/api\/drawings\/group\/(\d+)$/))) return api.drawings.groupList(m[1]);
   if (method === 'POST' && path === '/api/drawings') return api.drawings.create(body);
   if (method === 'PATCH' && (m = path.match(/^\/api\/drawings\/(\d+)$/))) return api.drawings.update(m[1], body);
+  if (method === 'DELETE' && (m = path.match(/^\/api\/drawings\/group\/(\d+)$/))) return api.drawings.removeGroup(m[1]);
   if (method === 'DELETE' && (m = path.match(/^\/api\/drawings\/(\d+)$/))) return api.drawings.remove(m[1]);
 
   return undefined;

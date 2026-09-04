@@ -9,7 +9,7 @@
 > **先读本文件 +&#x20;**
 > `ITERATION_STATE.md`
 > 即可无缝接续。
-> 更新日期：2026-09-05（图纸资料分类细化为 设计稿/参考图/成衣图/纸样/唛架图）
+> 更新日期：2026-09-05（图纸资料页迭代合入：版本管控 v8 + EMF/DXF 缩略图 + 统一单击放大/双击打开 + 文件类型标签 + 工作动态修复）
 
 
 
@@ -25,8 +25,8 @@
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 技术栈  | Electron 34（ABI 132）+ Vite 7 + React 19 + Express 5 + better-sqlite3 12                                                                                                                                              |
 | 数据库  | 本地 SQLite（dev: `server/database.sqlite`；生产: `%APPDATA%/PatternMaster Pro/database.sqlite`，首次启动从 resources 拷示例库）                                                                                                      |
-| 模块   | 看板（Kanban）/ 打样需求单详情（Detail）/ 设置，路由 8 个 + services 8 个                                                                                                                                                                |
-| 关键文件 | `server/index.cjs`（66 行入口）+ `routes/` + `services/`（含 drawings.cjs）+ `db.cjs`（迁移 v7）；`src/App.jsx`（288 行）+ `src/components/**`（含 drawing/DrawingLibrary.jsx）；`src/utils/exportTechPack.js`（Excel 导出）+ `exportTechPackPdf.js`（PDF 导出）+ `pdfTechPackVfs.js`（字体 vfs） |
+| 模块   | 看板（Kanban）/ 打样需求单详情（Detail）/ 设置，路由 8 个 + services 9 个（含 drawings.cjs / thumbs.cjs）                                                                                                                                                |
+| 关键文件 | `server/index.cjs`（66 行入口）+ `routes/` + `services/`（含 drawings.cjs / thumbs.cjs）+ `db.cjs`（迁移 v8：drawings 版本管控 4 列）；`src/App.jsx`（288 行）+ `src/components/**`（含 drawing/DrawingLibrary.jsx）；`src/utils/exportTechPack.js`（Excel 导出）+ `exportTechPackPdf.js`（PDF 导出）+ `pdfTechPackVfs.js`（字体 vfs） |
 | 当前版本 | `package.json` version 1.0.0（Electron-builder 用）                                                                                                                                                                     |
 | Git  | main 分支，75 个受管文件；远端 `https://github.com/jxyuyi-commits/golden-shuttle.git`                                                                                                                                           |
 
@@ -56,7 +56,7 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 * 换机后若 better-sqlite3 报 ABI 不匹配 → `npm run rebuild:electron`（方案 D 统一 ABI 132，见 §7）。
 
-* **数据库不随仓库走**（`.gitignore` 排除）→ 空库启动会自动建表（迁移 v5）。要带数据 / 用真实库 → 见 §10。
+* **数据库不随仓库走**（`.gitignore` 排除）→ 空库启动会自动建表（迁移 v8）。要带数据 / 用真实库 → 见 §10。
 
 
 
@@ -202,7 +202,8 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 * ✅ 工艺单 PDF 导出（pdfmake + 思源黑体，A4：信息 + 尺寸竖版 / BOM + 工艺横向；提交 6f89b9f）
 
-* ✅ 图纸资料页（drawings 表 v6 + 分类 v7：设计稿/参考图/成衣图/纸样/唛架图，上传弹窗 + 卡片网格预览 + 编辑自动保存 + 删除 + 分类可下拉更改，IPC 双通道；2026-09-05 升级上传：整区拖拽 + Ctrl+V 粘贴 + 多文件 + 任意格式，专业文件 dxf/pla/prj 等显示扩展名占位、单击本地打开）
+* ✅ 图纸资料页（drawings 表 v6 + 分类 v7 + **版本管控 v8**：设计稿/参考图/成衣图/纸样/唛架图，上传弹窗 + 卡片网格预览 + 编辑自动保存 + 删除 + 分类可下拉更改，IPC 双通道）
+  - 2026-09-05 迭代：上传升级（整区拖拽 + Ctrl+V 粘贴 + 多文件 + 任意格式 dxf/pla/prj/Zprj/zpac 等，100mb）；**版本管控**（参考资料防冗余去重 / 工作成果同名迭代自动升版，版本徽章 + 版本历史弹窗 + 整组删除）；**EMF→PNG、DXF→SVG 缩略图**（server/services/thumbs.cjs，缓存 server/uploads/thumbs/，PRJ 保持扩展名占位合理边界）；**统一交互**（单击放大预览 + 双击本地软件打开，DXF 放大内联 SVG 渲染）；**文件类型标签**（右上角按大类配色 PRJ/EMF/DXF/PNG/PDF 等）；**工作动态卡片两行布局修复节点不可见**
 
 * ✅ ExportButton 交互（确认→执行→toast）
 
@@ -258,7 +259,7 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 
 
-* `server/database.sqlite` 在 `.gitignore`，**不进 git** → clone 后是空库，启动自动建表（迁移 v5），从零开始用真实工作数据即可。
+* `server/database.sqlite` 在 `.gitignore`，**不进 git** → clone 后是空库，启动自动建表（迁移 v8），从零开始用真实工作数据即可。
 
 * 当前这台机器的 `server/database.sqlite` 是**测试数据**（8 tasks / 6 styles），**不需要**迁到新电脑。
 

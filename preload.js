@@ -38,5 +38,7 @@ contextBridge.exposeInMainWorld('api', {
     create: (data) => ipcRenderer.invoke('drawings:create', data),
     update: (id, data) => ipcRenderer.invoke('drawings:update', id, data),
     remove: (id) => ipcRenderer.invoke('drawings:remove', id),
+    groupList: (groupId) => ipcRenderer.invoke('drawings:groupList', groupId),
+    removeGroup: (groupId) => ipcRenderer.invoke('drawings:removeGroup', groupId),
   }
 });

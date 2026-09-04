@@ -281,44 +281,48 @@ const DetailView = ({
             </div>
             {(task.progress_nodes || []).map((node, i) => (
               <div key={i} className="timeline-row">
-                <div className="t-status-wrap">
-                  <select
-                    className="t-status-sel"
-                    value={node.status}
-                    onChange={e => onSetNodeField(i, 'status', e.target.value)}
+                <div className="tl-main">
+                  <input
+                    className="tl-label-input"
+                    value={node.label || ''}
+                    placeholder="事件名称（如：完成头样）"
+                    onChange={e => onSetNodeField(i, 'label', e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn-icon"
+                    title="删除该事件"
+                    style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: 4, flex: '0 0 auto' }}
+                    onClick={() => onSetField('progress_nodes', (task.progress_nodes || []).filter((_, x) => x !== i))}
                   >
-                    <option value="done">已完成</option>
-                    <option value="active">进行中</option>
-                    <option value="pending">待开始</option>
-                  </select>
+                    <Trash2 size={14} />
+                  </button>
                 </div>
-                <input
-                  type="date"
-                  className="tl-date"
-                  value={node.date || ''}
-                  onChange={e => onSetNodeField(i, 'date', e.target.value)}
-                />
-                <input
-                  className="tl-label-input"
-                  value={node.label || ''}
-                  placeholder="事件名称（如：完成头样）"
-                  onChange={e => onSetNodeField(i, 'label', e.target.value)}
-                />
-                <input
-                  className="tl-by"
-                  value={node.by || ''}
-                  placeholder="负责人"
-                  onChange={e => onSetNodeField(i, 'by', e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="btn-icon"
-                  title="删除该事件"
-                  style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
-                  onClick={() => onSetField('progress_nodes', (task.progress_nodes || []).filter((_, x) => x !== i))}
-                >
-                  <Trash2 size={14} />
-                </button>
+                <div className="tl-sub">
+                  <div className="t-status-wrap">
+                    <select
+                      className="t-status-sel"
+                      value={node.status}
+                      onChange={e => onSetNodeField(i, 'status', e.target.value)}
+                    >
+                      <option value="done">已完成</option>
+                      <option value="active">进行中</option>
+                      <option value="pending">待开始</option>
+                    </select>
+                  </div>
+                  <input
+                    type="date"
+                    className="tl-date"
+                    value={node.date || ''}
+                    onChange={e => onSetNodeField(i, 'date', e.target.value)}
+                  />
+                  <input
+                    className="tl-by"
+                    value={node.by || ''}
+                    placeholder="负责人"
+                    onChange={e => onSetNodeField(i, 'by', e.target.value)}
+                  />
+                </div>
               </div>
             ))}
             {(task.progress_nodes || []).length === 0 && (

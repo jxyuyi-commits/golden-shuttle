@@ -1,11 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Upload } from 'lucide-react';
+import { X, Upload, FileText, FolderOpen } from 'lucide-react';
 import { API } from '../../api/client';
 import { openFileLocally } from '../../api';
 import { renderPdfThumb, isImageFile } from '../../utils/pdf';
 
-/** PDF/图片设计稿缩略图：单击放大预览，双击用本地程序打开 */
+const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'avif', 'tif', 'tiff'];
+
+/** 从 URL/文件名提取小写扩展名 */
+function getExt(url) {
+  if (!url) return '';
+  const clean = url.split('?')[0].split('/').pop();
+  return clean.includes('.') ? clean.split('.').pop().toLowerCase() : '';
+}
+
+/**
+ * 图纸/设计稿缩略图：
+ * - 图片：直接显示
+ * - PDF：pdf.js 渲染首页，单击放大、双击本地打开
+ * - 其他专业格式（dxf/pla/prj 等）：通用文件占位（图标+扩展名），单击用系统默认软件打开
+ */
 const PdfThumb = ({ pdfUrl, objectFit = 'cover' }) => {
   const [thumb, setThumb] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -13,28 +27,34 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover' }) => {
   const clickTimeout = useRef(null);
 
   const fullUrl = pdfUrl ? (pdfUrl.startsWith('http') ? pdfUrl : `${API}${pdfUrl}`) : '';
-  const isImage = !!fullUrl && isImageFile(fullUrl);
+  const ext = getExt(fullUrl);
+  const isImage = !!fullUrl && (isImageFile(fullUrl) || IMAGE_EXTS.includes(ext));
+  const isPdf = !!fullUrl && ext === 'pdf';
+  const isGeneric = !!fullUrl && !isImage && !isPdf;
 
   useEffect(() => {
-    if (!pdfUrl || isImage) return; // 图片直接用 src 显示，无需 PDF 渲染
+    if (!pdfUrl || isImage || isGeneric) return; // 图片直显，专业格式用占位
     setLoading(true);
     renderPdfThumb(fullUrl)
       .then(setThumb)
       .catch(() => setThumb(null))
       .finally(() => setLoading(false));
-  }, [pdfUrl]);
+  }, [pdfUrl, isImage, isGeneric]);
+
+  const openNative = () => openFileLocally(fullUrl).catch(console.error);
 
   const handleInteract = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (!pdfUrl) return;
+    // 非图片/PDF 的专业文件：单击直接用系统默认软件打开
+    if (isGeneric) { openNative(); return; }
     if (enlarged) return;
 
     if (clickTimeout.current) {
       clearTimeout(clickTimeout.current);
       clickTimeout.current = null;
-      const fullUrl = pdfUrl.startsWith('http') ? pdfUrl : `${API}${pdfUrl}`;
-      openFileLocally(fullUrl).catch(console.error);
+      openNative();
     } else {
       clickTimeout.current = setTimeout(() => {
         clickTimeout.current = null;
@@ -45,7 +65,9 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover' }) => {
 
   const interactiveProps = pdfUrl ? {
     onClick: handleInteract,
-    title: '单击放大预览，双击用本地程序(如 Acrobat)编辑',
+    title: isGeneric
+      ? `单击用本地软件打开 .${ext} 文件`
+      : '单击放大预览，双击用本地程序(如 Acrobat)编辑',
   } : {};
 
   const previewSrc = isImage ? fullUrl : thumb;
@@ -53,11 +75,21 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover' }) => {
   return (
     <>
       {isImage ? (
-        <img src={fullUrl} alt="设计稿（单击放大，双击编辑）" style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, cursor: pdfUrl ? 'pointer' : 'default' }} {...interactiveProps} />
-      ) : loading ? (
-        <div className="pdf-loading">渲染中…</div>
-      ) : thumb ? (
-        <img src={thumb} alt="PDF 预览（单击放大，双击编辑）" style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, cursor: pdfUrl ? 'pointer' : 'default' }} {...interactiveProps} />
+        <img src={fullUrl} alt="图纸预览（单击放大，双击编辑）" style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, cursor: pdfUrl ? 'pointer' : 'default' }} {...interactiveProps} />
+      ) : isPdf ? (
+        loading ? (
+          <div className="pdf-loading">渲染中…</div>
+        ) : thumb ? (
+          <img src={thumb} alt="PDF 预览（单击放大，双击编辑）" style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, cursor: pdfUrl ? 'pointer' : 'default' }} {...interactiveProps} />
+        ) : (
+          <div className="pdf-empty"><Upload size={32} /><span>请上传设计稿</span></div>
+        )
+      ) : isGeneric ? (
+        <div className="generic-file" style={{ width: '100%', height: '100%', cursor: 'pointer', userSelect: 'none' }} {...interactiveProps}>
+          <FileText size={34} color="#a78bfa" />
+          <div className="generic-ext">{ext.toUpperCase()}</div>
+          <div className="generic-hint"><FolderOpen size={13} /> 单击本地打开</div>
+        </div>
       ) : (
         <div className="pdf-empty"><Upload size={32} /><span>请上传设计稿</span></div>
       )}

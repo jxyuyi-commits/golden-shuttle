@@ -34,7 +34,7 @@ const isAllowedOrigin = (origin, callback) => {
   }
 };
 app.use(cors({ origin: isAllowedOrigin }));
-app.use(express.json({ limit: '50mb' })); // 支持 base64 PDF
+app.use(express.json({ limit: '100mb' })); // 支持 base64 大文件（含 dxf 等专业格式）
 
 // ── 服务启动封装 ─────────────────────────────────────────────
 function startServer(overridePort, dbPath, uploadsPath) {

@@ -288,4 +288,21 @@
       .drawing-card:hover .drawing-del {opacity: 1; }
       .drawing-del:hover {background: rgba(239,68,68,0.8); color: #fff; }
       .drawing-meta {display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+      /* 上传弹窗：拖拽放置区 */
+      .drawing-dropzone {display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px 16px; border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; background: rgba(2,6,23,0.35); transition: border-color .2s, background .2s; text-align: center; }
+      .drawing-dropzone:hover {border-color: rgba(167,139,250,0.5); background: rgba(167,139,250,0.05); }
+      .drawing-dropzone .dz-title {font-size: 14px; font-weight: 700; color: #cbd5e1; }
+      .drawing-dropzone .dz-sub {font-size: 11px; color: #64748b; line-height: 1.6; }
+      .drawing-dropzone .dz-btn {margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #c4b5fd; background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.35); padding: 7px 18px; border-radius: 8px; cursor: pointer; transition: .2s; }
+      .drawing-dropzone .dz-btn:hover {background: rgba(167,139,250,0.22); }
+      /* 待上传文件列表 */
+      .drawing-uplist {margin-top: 14px; display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow: auto; }
+      .drawing-uplist-row {display: flex; align-items: center; gap: 8px; background: rgba(2,6,23,0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 6px 10px; }
+      .drawing-uplist-row .uplist-name {flex: 1; font-size: 12px; color: #cbd5e1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .drawing-uplist-row .uplist-size {font-size: 11px; color: #64748b; white-space: nowrap; }
+      /* 通用专业文件占位（dxf/pla/prj 等） */
+      .generic-file {display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: rgba(2,6,23,0.55); }
+      .generic-file .generic-ext {font-size: 15px; font-weight: 900; color: #a78bfa; letter-spacing: 1px; }
+      .generic-file .generic-hint {display: flex; align-items: center; gap: 4px; font-size: 11px; color: #64748b; }
+      .drawing-root {position: relative; }
       .active-mode {box-shadow: 0 0 10px rgba(56,189,248,0.3); }

@@ -137,6 +137,13 @@
 - **前端**：src/components/drawing/DrawingLibrary.jsx（分类筛选全部/设计稿/技术图纸/纸样/放码图 + 上传弹窗 createPortal + 卡片网格 PdfThumb 预览 + 标题/备注防抖自动保存 + 删除 confirm）；DetailView 移除占位接入组件；app.css 新增 drawing-grid/card/thumb/badge/del/meta 样式
 - **验证**：API CRUD 全通（UTF-8 中文正常）；生产构建 1771 模块通过；浏览器实测上传→卡片出现（分类徽章/标题默认文件名）→改标题防抖 PATCH 持久化→删除→空态，全部通过
 
+### 图纸资料上传方式升级（2026-09-05）
+- **需求**：上传方式原始（仅点击选择+图片/PDF），需支持拖拽/复制粘贴、不限制文件格式（专业软件 dxf/pla/prj/Zprj/zpac 等）
+- **PdfThumb**：新增通用文件分支——非图片/非 PDF 显示「文件类型图标+扩展名」占位，单击用系统默认软件打开（getExt 提取扩展名 + isGeneric 判断，图片/PDF 行为不变）
+- **DrawingLibrary**：图纸区域整区拖拽（拖入高亮「松开上传」）+ 上传弹窗拖拽放置区 + 文件多选（multiple、去掉 accept）+ 全局 Ctrl+V 粘贴监听（clipboardData.files → 预填弹窗）+ 待上传文件列表（name+size 去重、可移除）+ 批量串行上传
+- **后端**：express.json limit 50mb → 100mb（支持较大专业文件；base64 膨胀 33%）
+- **验证**：浏览器实测拖拽 3 专业格式（dxf/pla/prj）→ 弹窗预填 → 批量上传 → 卡片显示 DXF/PLA/PRJ 占位「单击本地打开」；模拟粘贴 docx → 弹窗自动打开；生产构建通过；测试数据已清理
+
 ## 四、待办事项（按优先级）
 
 ### P0 - 立即修复 ✅ 全部完成

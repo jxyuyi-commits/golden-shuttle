@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, Layout, Trash2, Check, Save, Edit2, Upload, Plus } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import SizeTable from '../size-table/SizeTable';
@@ -32,6 +32,8 @@ const DetailView = ({
   onSetNodeField,
   onPdfUpload,
 }) => {
+  const [dragPdf, setDragPdf] = useState(false);
+
   const getSizeGroup = () => {
     const catObj = settings.categories.find(c => (typeof c === 'string' ? c : c.name) === task.category);
     if (catObj && typeof catObj !== 'string' && catObj.size_group_id) {
@@ -255,18 +257,38 @@ const DetailView = ({
         <div className="side-panel" style={{ display: detailTab === 'base' ? '' : 'none' }}>
           <div className="glass side-box">
             <div className="section-title">设计稿 PDF</div>
-            <div className="pdf-preview-wrap">
-              <PdfThumb pdfUrl={task.pdf_url} />
+            <div
+              className="pdf-upload-zone"
+              style={dragPdf ? { borderColor: 'rgba(56,189,248,0.75)', background: 'rgba(56,189,248,0.06)' } : undefined}
+              onDragOver={e => { e.preventDefault(); e.stopPropagation(); if (!dragPdf) setDragPdf(true); }}
+              onDragEnter={e => { e.preventDefault(); e.stopPropagation(); setDragPdf(true); }}
+              onDragLeave={e => { e.preventDefault(); e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget)) setDragPdf(false); }}
+              onDrop={e => { e.preventDefault(); e.stopPropagation(); setDragPdf(false); const f = e.dataTransfer?.files?.[0]; if (f) onPdfUpload(f); }}
+            >
+              <div className="pdf-preview-wrap">
+                <PdfThumb pdfUrl={task.pdf_url} />
+              </div>
+              <label className="btn-upload-pdf">
+                <Upload size={16} /> {task.pdf_url ? '更换设计稿' : '上传设计稿'}
+                <input type="file" hidden onChange={e => onPdfUpload(e.target.files[0])} />
+              </label>
+              {task.pdf_url && (
+                <button className="btn-ghost-sm" onClick={() => onSetField('pdf_url', '')}>
+                  <Trash2 size={14} /> 移除
+                </button>
+              )}
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 6, textAlign: 'center', lineHeight: 1.6 }}>
+                拖拽文件到此处 / 点击上传，支持任意格式
+                <br />（PDF、图片、dxf、prj、emf 等）
+              </div>
+              {dragPdf && (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.78)', borderRadius: 12, zIndex: 5, pointerEvents: 'none' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#7dd3fc', background: 'rgba(2,6,23,0.85)', padding: '12px 24px', borderRadius: 10, border: '1px dashed rgba(56,189,248,0.6)' }}>
+                    松开鼠标上传设计稿
+                  </div>
+                </div>
+              )}
             </div>
-            <label className="btn-upload-pdf">
-              <Upload size={16} /> 上传设计稿
-              <input type="file" accept="image/*,.pdf" hidden onChange={e => onPdfUpload(e.target.files[0])} />
-            </label>
-            {task.pdf_url && (
-              <button className="btn-ghost-sm" onClick={() => onSetField('pdf_url', '')}>
-                <Trash2 size={14} /> 移除
-              </button>
-            )}
           </div>
 
           <div className="glass side-box" style={{ marginTop: 20 }}>

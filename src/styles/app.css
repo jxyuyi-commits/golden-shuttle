@@ -205,6 +205,8 @@
       .side-panel { }
       .side-box {padding: 24px; }
       .pdf-preview-wrap {height: 180px; border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: #0f172a; display: flex; align-items: center; justify-content: center; }
+      /* 设计稿拖拽上传区：与图纸资料页统一拖拽逻辑 */
+      .pdf-upload-zone {position: relative; border: 1px dashed rgba(255,255,255,0.18); border-radius: 12px; padding: 10px; transition: border-color .2s, background .2s; }
       .pdf-preview-wrap img {width: 100%; height: 100%; object-fit: cover; }
       .btn-upload-pdf {display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border: 1px dashed rgba(255,255,255,.15); border-radius: 10px; color: #64748b; cursor: pointer; font-size: 13px; font-weight: 600; transition: .2s; }
       .btn-upload-pdf:hover {border-color: #38bdf8; color: #38bdf8; }

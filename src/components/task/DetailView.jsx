@@ -32,6 +32,7 @@ const DetailView = ({
   onSetField,
   onSetNodeField,
   onPdfUpload,
+  pdfSyncState,
 }) => {
   const [dragPdf, setDragPdf] = useState(false);
   const [showPdfPicker, setShowPdfPicker] = useState(false);
@@ -260,6 +261,9 @@ const DetailView = ({
         <div className="side-panel" style={{ display: detailTab === 'base' ? '' : 'none' }}>
           <div className="glass side-box">
             <div className="section-title">设计稿 PDF</div>
+            {pdfSyncState === 'syncing' && <div className="pdf-sync-tip">正在同步到图纸资料库…</div>}
+            {pdfSyncState === 'ok' && <div className="pdf-sync-tip ok">已同步到图纸资料库</div>}
+            {pdfSyncState && pdfSyncState.error && <div className="pdf-sync-tip err">同步失败：{pdfSyncState.error}</div>}
             <div
               className="pdf-upload-zone"
               style={dragPdf ? { borderColor: 'rgba(56,189,248,0.75)', background: 'rgba(56,189,248,0.06)' } : undefined}

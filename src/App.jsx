@@ -40,6 +40,7 @@ const App = () => {
   const [showNewModal, setShowNewModal] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle');
+  const [pdfSyncState, setPdfSyncState] = useState(null); // null | 'syncing' | 'ok' | { error }
 
   // 业务数据 hooks
   const { tasks, loadTasks } = useTasks();
@@ -160,16 +161,20 @@ const App = () => {
   // PDF 上传并更新 pdf_url；同步进入图纸资料库（设计稿分类，工作成果可追溯版本）
   const handlePdfUpload = async (file) => {
     if (!file) return;
+    setPdfSyncState(null);
     try {
       const { url } = await uploadDesignFile(file);
       setField('pdf_url', url);
+      setPdfSyncState('syncing');
       try {
         await createDrawing({ task_id: editingTask.id, url, category: '设计稿', filename: file.name });
+        setPdfSyncState('ok');
       } catch (e) {
-        // 同步失败不静默：明确告知，便于定位（文件已上传成功，pdf_url 已设置）
-        alert('设计稿已上传，但同步到图纸资料库失败：' + e.message);
+        console.error('设计稿同步图纸资料失败:', e);
+        setPdfSyncState({ error: e.message });
       }
     } catch (err) {
+      setPdfSyncState(null);
       alert('上传失败: ' + err.message);
     }
   };
@@ -239,6 +244,7 @@ const App = () => {
           onSetField={setField}
           onSetNodeField={setNodeField}
           onPdfUpload={handlePdfUpload}
+          pdfSyncState={pdfSyncState}
         />
       )}
 
@@ -272,6 +278,10 @@ const App = () => {
               <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="menu-item" onClick={() => { setShowLogs(true); setShowSidebar(false); }}>
                   <Clock size={20} /> 操作日志
+                </div>
+                <div style={{ fontSize: 11, color: '#475569', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                  <span>PatternMaster v3.1.0</span>
+                  <span>{typeof window !== 'undefined' && !!window.api ? 'IPC 通道' : 'HTTP 通道'}</span>
                 </div>
               </div>
             </div>

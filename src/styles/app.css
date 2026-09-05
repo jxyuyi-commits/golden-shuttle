@@ -212,6 +212,10 @@
       /* 无稿：整块可点击上传的提示 */
       .pdf-empty-hover-tip {position: absolute; left: 12px; bottom: 12px; right: 12px; text-align: center; font-size: 11px; color: #64748b; background: rgba(2,6,23,0.7); border-radius: 8px; padding: 6px 8px; opacity: 0; transition: opacity .2s; pointer-events: none; }
       .pdf-upload-zone:hover .pdf-empty-hover-tip {opacity: 1; }
+      /* 同步状态提示条 */
+      .pdf-sync-tip {font-size: 11px; color: #94a3b8; padding: 4px 2px 0; margin-bottom: 6px; }
+      .pdf-sync-tip.ok {color: #34d399; }
+      .pdf-sync-tip.err {color: #f87171; }
       /* 有稿：悬停浮出的更换/移除 */
       .pdf-hover-actions {position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; opacity: 0; transform: translateY(-4px); transition: opacity .18s, transform .18s; }
       .pdf-upload-zone:hover .pdf-hover-actions {opacity: 1; transform: translateY(0); }

@@ -205,8 +205,21 @@
       .side-panel { }
       .side-box {padding: 24px; }
       .pdf-preview-wrap {height: 180px; border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: #0f172a; display: flex; align-items: center; justify-content: center; }
-      /* 设计稿拖拽上传区：与图纸资料页统一拖拽逻辑 */
-      .pdf-upload-zone {position: relative; border: 1px dashed rgba(255,255,255,0.18); border-radius: 12px; padding: 10px; transition: border-color .2s, background .2s; }
+      /* 设计稿拖拽上传区：预览即入口，操作悬停显示 */
+      .pdf-upload-zone {position: relative; border: 1px dashed rgba(255,255,255,0.14); border-radius: 12px; padding: 10px; transition: border-color .2s, background .2s; cursor: default; }
+      .pdf-upload-zone:hover {border-color: rgba(56,189,248,0.45); }
+      .pdf-upload-zone .pdf-preview-wrap {margin-bottom: 0; }
+      /* 无稿：整块可点击上传的提示 */
+      .pdf-empty-hover-tip {position: absolute; left: 12px; bottom: 12px; right: 12px; text-align: center; font-size: 11px; color: #64748b; background: rgba(2,6,23,0.7); border-radius: 8px; padding: 6px 8px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+      .pdf-upload-zone:hover .pdf-empty-hover-tip {opacity: 1; }
+      /* 有稿：悬停浮出的更换/移除 */
+      .pdf-hover-actions {position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; opacity: 0; transform: translateY(-4px); transition: opacity .18s, transform .18s; }
+      .pdf-upload-zone:hover .pdf-hover-actions {opacity: 1; transform: translateY(0); }
+      .pdf-action-btn {width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: rgba(2,6,23,0.75); border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; color: #cbd5e1; cursor: pointer; transition: .15s; }
+      .pdf-action-btn:hover {background: rgba(56,189,248,0.18); color: #38bdf8; border-color: rgba(56,189,248,0.35); }
+      /* 有稿：右下角常驻小角标，保证可发现性 */
+      .pdf-corner-edit {position: absolute; right: 16px; bottom: 16px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: rgba(2,6,23,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; color: #94a3b8; cursor: pointer; opacity: 0.7; transition: .15s; }
+      .pdf-corner-edit:hover {opacity: 1; color: #38bdf8; }
       .pdf-preview-wrap img {width: 100%; height: 100%; object-fit: cover; }
       .btn-upload-pdf {display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border: 1px dashed rgba(255,255,255,.15); border-radius: 10px; color: #64748b; cursor: pointer; font-size: 13px; font-weight: 600; transition: .2s; }
       .btn-upload-pdf:hover {border-color: #38bdf8; color: #38bdf8; }

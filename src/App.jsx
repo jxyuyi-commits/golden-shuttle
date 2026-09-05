@@ -9,7 +9,7 @@ import {
   fetchSettings, saveSettings,
   fetchSizeGroups, saveSizeGroups, deleteSizeGroup,
   fetchMeasurementTemplates, saveMeasurementTemplate, deleteMeasurementTemplate,
-  uploadDesignFile, openFileLocally,
+  uploadDesignFile, openFileLocally, createDrawing, fetchDrawings,
 } from './api';
 import { loadPdfJs, renderPdfThumb, isImageFile } from './utils/pdf';
 import { autoSign, formatTime } from './utils/format';

@@ -9,7 +9,7 @@
 > **先读本文件 +&#x20;**
 > `ITERATION_STATE.md`
 > 即可无缝接续。
-> 更新日期：2026-09-05（图纸资料页迭代合入：版本管控 v8 + EMF/DXF 缩略图 + 统一单击放大/双击打开 + 文件类型标签 + 工作动态修复）
+> 更新日期：2026-09-06（操作日志迁移 v9：任务关键动作追踪 + 侧边栏弹窗；此前图纸资料页迭代：版本管控 v8 + EMF/DXF 缩略图 + 统一单击放大/双击打开 + 文件类型标签 + 工作动态修复）
 
 
 
@@ -26,7 +26,7 @@
 | 技术栈  | Electron 34（ABI 132）+ Vite 7 + React 19 + Express 5 + better-sqlite3 12                                                                                                                                              |
 | 数据库  | 本地 SQLite（dev: `server/database.sqlite`；生产: `%APPDATA%/PatternMaster Pro/database.sqlite`，首次启动从 resources 拷示例库）                                                                                                      |
 | 模块   | 看板（Kanban）/ 打样需求单详情（Detail）/ 设置，路由 8 个 + services 9 个（含 drawings.cjs / thumbs.cjs）                                                                                                                                                |
-| 关键文件 | `server/index.cjs`（66 行入口）+ `routes/` + `services/`（含 drawings.cjs / thumbs.cjs）+ `db.cjs`（迁移 v8：drawings 版本管控 4 列）；`src/App.jsx`（288 行）+ `src/components/**`（含 drawing/DrawingLibrary.jsx）；`src/utils/exportTechPack.js`（Excel 导出）+ `exportTechPackPdf.js`（PDF 导出）+ `pdfTechPackVfs.js`（字体 vfs） |
+| 关键文件 | `server/index.cjs`（66 行入口）+ `routes/` + `services/`（含 drawings.cjs / thumbs.cjs）+ `db.cjs`（迁移 v9：drawings 版本管控 4 列 + operation_logs）；`src/App.jsx`（288 行）+ `src/components/**`（含 drawing/DrawingLibrary.jsx）；`src/utils/exportTechPack.js`（Excel 导出）+ `exportTechPackPdf.js`（PDF 导出）+ `pdfTechPackVfs.js`（字体 vfs） |
 | 当前版本 | `package.json` version 1.0.0（Electron-builder 用）                                                                                                                                                                     |
 | Git  | main 分支，75 个受管文件；远端 `https://github.com/jxyuyi-commits/golden-shuttle.git`                                                                                                                                           |
 
@@ -215,7 +215,7 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 
 
-* Excel 导入、操作日志、逾期提醒、品牌 / 分类 / 设计师 ID 引用重构
+* Excel 导入、品牌 / 分类 / 设计师 ID 引用重构（逾期提醒、操作日志已于 2026-09-06 完成）
 
 
 

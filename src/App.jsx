@@ -157,12 +157,17 @@ const App = () => {
       .catch(err => alert('删除失败: ' + err.message));
   };
 
-  // PDF 上传并更新 pdf_url
+  // PDF 上传并更新 pdf_url；同步进入图纸资料库（设计稿分类，工作成果可追溯版本）
   const handlePdfUpload = async (file) => {
     if (!file) return;
     try {
       const { url } = await uploadDesignFile(file);
       setField('pdf_url', url);
+      try {
+        await createDrawing({ task_id: editingTask.id, url, category: '设计稿', filename: file.name });
+      } catch (e) {
+        console.warn('设计稿同步图纸资料失败:', e.message);
+      }
     } catch (err) {
       alert('上传失败: ' + err.message);
     }

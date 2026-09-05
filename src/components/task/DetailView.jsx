@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Layout, Trash2, Check, Save, Edit2, Upload, Plus } from 'lucide-react';
+import { ArrowLeft, Layout, Trash2, Check, Save, Edit2, Upload, Plus, FolderOpen } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
+import PdfPickerModal from '../common/PdfPickerModal';
 import SizeTable from '../size-table/SizeTable';
 import SmartSelect from '../common/SmartSelect';
 import ExportButton from '../common/ExportButton';
@@ -33,6 +34,7 @@ const DetailView = ({
   onPdfUpload,
 }) => {
   const [dragPdf, setDragPdf] = useState(false);
+  const [showPdfPicker, setShowPdfPicker] = useState(false);
   const pdfInputRef = useRef(null);
 
   const getSizeGroup = () => {
@@ -277,22 +279,33 @@ const DetailView = ({
                 <div className="pdf-empty-hover-tip">点击或拖拽上传，支持任意格式</div>
               )}
 
+              {!task.pdf_url && (
+                <div className="pdf-hover-actions">
+                  <button className="pdf-action-btn" title="从图纸资料选择" onClick={() => setShowPdfPicker(true)}>
+                    <FolderOpen size={14} />
+                  </button>
+                </div>
+              )}
+
               {task.pdf_url && (
-                <>
-                  <div className="pdf-hover-actions">
-                    <label className="pdf-action-btn" title="更换设计稿">
-                      <Upload size={14} />
-                      <input type="file" hidden onChange={e => { onPdfUpload(e.target.files[0]); e.target.value = ''; }} />
-                    </label>
-                    <button className="pdf-action-btn" title="移除设计稿" onClick={() => onSetField('pdf_url', '')}>
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                  <label className="pdf-corner-edit" title="更换设计稿">
-                    <Upload size={12} />
+                <div className="pdf-hover-actions">
+                  <label className="pdf-action-btn" title="更换设计稿">
+                    <Upload size={14} />
                     <input type="file" hidden onChange={e => { onPdfUpload(e.target.files[0]); e.target.value = ''; }} />
                   </label>
-                </>
+                  <button className="pdf-action-btn" title="从图纸资料选择" onClick={() => setShowPdfPicker(true)}>
+                    <FolderOpen size={14} />
+                  </button>
+                  <button
+                    className="pdf-action-btn"
+                    title="移除设计稿"
+                    onClick={() => {
+                      if (window.confirm('确定移除该设计稿吗？\n（图纸资料库中的文件不会被删除）')) onSetField('pdf_url', '');
+                    }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               )}
 
               {dragPdf && (
@@ -369,6 +382,14 @@ const DetailView = ({
           </div>
         </div>
       </div>
+      {showPdfPicker && (
+        <PdfPickerModal
+          taskId={task.id}
+          currentUrl={task.pdf_url}
+          onSelect={url => { onSetField('pdf_url', url); setShowPdfPicker(false); }}
+          onClose={() => setShowPdfPicker(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { fetchStyleByNo, createTask } from '../../api';
+import SmartSelect from '../common/SmartSelect';
 
 /** 新建打样需求单弹窗（款号自动带出款式信息 + 分类联动号型） */
 const NewTaskModal = ({ settings, onClose, onSuccess }) => {
@@ -103,10 +104,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess }) => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div className="field">
               <label>打样版次</label>
-              <select value={fd.sample_type} onChange={e => setFd({ ...fd, sample_type: e.target.value })}>
-                <option value="">请选择</option>
-                {settings.sampleTypes.map(t => <option key={t}>{t}</option>)}
-              </select>
+              <SmartSelect value={fd.sample_type} onChange={v => setFd({ ...fd, sample_type: v })} options={settings.sampleTypes || []} />
             </div>
             <div className="field">
               <label>制作尺码 *</label>

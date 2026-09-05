@@ -197,6 +197,13 @@
 - **修复**：THUMB_DIR 弃用，改为惰性 getThumbDir()（每次调用现算，getUploadsDir() 为空时回退 server/uploads）；emfToPng/getThumb 内部改用 getThumbDir()；删除误生成的根目录 thumbs/
 - **验证**：重启 dev 后 EMF→PNG/DXF→SVG 全部缓存正确写入 server/uploads/thumbs/（2 PNG + 3 SVG + ps1），根目录无残留；浏览器缩略图全部正常渲染
 
+### 版次自定义值筛选补齐 + 设置页滚动条（2026-09-06）
+- **需求**：①看板版次筛选器缺自定义版次值——26AWW526 版次为自定义「V2」（版次库预设为 胚样/头版样/复版一…），筛选器只列预设，筛不出该单；②系统设置页内容超高无滚动条，底部区域（尺寸部位管理）被裁
+- **版次方案（三处协同）**：编辑页 SmartSelect 本就支持自定义输入（无需改）；新建单 NewTaskModal 版次普通 select 改为 SmartSelect（可手动输入 V1/V2 等）；看板 KanbanView 版次筛选器选项改为「版次库预设 ∪ 所有任务实际使用值去重」（useMemo），自定义值自动出现在筛选项
+- **滚动条根因**：App.jsx 根容器 `overflow:hidden; height:100vh`（全局不滚动），各视图需内部自滚——详情页有 `.detail-content{overflow-y:auto}`，设置页缺失；修复 SettingsView 最外层改 `height:100vh + overflowY:auto`（custom-scrollbar）
+- **验证**：构建通过；用户重新导出的看板数据样本确认版次筛选器已含 V2；设置页可滚动至底部
+- **说明**：用户确认分类为可自定义主数据（此前"筛选缺下装"判断撤销）；Excel 导入功能待定搁置，后续再加入
+
 ## 四、待办事项（按优先级）
 
 ### P0 - 立即修复 ✅ 全部完成

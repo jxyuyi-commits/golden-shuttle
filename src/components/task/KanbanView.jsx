@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Layout, Plus, FileText, Database, CheckCircle2, Circle,
   GripVertical, ChevronUp, ChevronDown, AlertCircle
@@ -37,6 +37,13 @@ const KanbanView = ({
   onNewTask,
   onTaskClick,
 }) => {
+  // 版次筛选选项 = 版次库预设 ∪ 任务实际使用值（含自定义值如 V2，保证能筛出）
+  const sampleTypeOptions = useMemo(() => {
+    const set = new Set(settings.sampleTypes || []);
+    (tasks || []).forEach(t => { if (t.sample_type) set.add(t.sample_type); });
+    return [...set];
+  }, [settings.sampleTypes, tasks]);
+
   const filterTasks = (list) => list.filter(t => {
     if (filters.keyword && !(t.title?.includes(filters.keyword) || t.style_no?.includes(filters.keyword))) return false;
     if (filters.category && t.category !== filters.category) return false;
@@ -107,7 +114,7 @@ const KanbanView = ({
             onChange={e => setFilters({ ...filters, sample_type: e.target.value })}
           >
             <option value="">全部打样版次</option>
-            {settings.sampleTypes.map(s => <option key={s} value={s}>{s}</option>)}
+            {sampleTypeOptions.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <select
             style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 14px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}

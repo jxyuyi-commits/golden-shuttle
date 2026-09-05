@@ -8,7 +8,7 @@ import MeasurementTemplateManager from '../measurement/MeasurementTemplateManage
 /** 系统设置视图：品牌/设计师/版次库 + 号型规格 + 款式分类 + 尺寸部位预设 */
 const SettingsView = ({ settings, saveSetting, loadSettings, onBack, onOpenSidebar }) => {
   return (
-    <div style={{ background: '#020617', minHeight: '100vh' }}>
+    <div className="custom-scrollbar" style={{ background: '#020617', height: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
       <header className="top-bar glass">
         <div className="logo" onClick={onOpenSidebar}>
           <Layout size={28} color="#38bdf8" /><span>PatternMaster Pro</span>

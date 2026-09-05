@@ -37,6 +37,15 @@ const isAllowedOrigin = (origin, callback) => {
 app.use(cors({ origin: isAllowedOrigin }));
 app.use(express.json({ limit: '100mb' })); // 支持 base64 大文件（含 dxf 等专业格式）
 
+// 请求日志（dev 排查用）：打印 method/path/body 摘要，便于定位前端调用链路
+app.use((req, res, next) => {
+  const body = req.body && typeof req.body === 'object' && Object.keys(req.body).length
+    ? ' body=' + JSON.stringify(req.body).slice(0, 300)
+    : '';
+  console.log(`[REQ] ${new Date().toISOString().slice(11, 19)} ${req.method} ${req.originalUrl}${body}`);
+  next();
+});
+
 // ── 服务启动封装 ─────────────────────────────────────────────
 function startServer(overridePort, dbPath, uploadsPath) {
   // 初始化数据库和文件目录

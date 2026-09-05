@@ -166,7 +166,8 @@ const App = () => {
       try {
         await createDrawing({ task_id: editingTask.id, url, category: '设计稿', filename: file.name });
       } catch (e) {
-        console.warn('设计稿同步图纸资料失败:', e.message);
+        // 同步失败不静默：明确告知，便于定位（文件已上传成功，pdf_url 已设置）
+        alert('设计稿已上传，但同步到图纸资料库失败：' + e.message);
       }
     } catch (err) {
       alert('上传失败: ' + err.message);

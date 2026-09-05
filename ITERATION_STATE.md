@@ -236,6 +236,7 @@
 - **实现**：删右下角常驻 `.pdf-corner-edit` 角标（只留 hover 动作组，解决重复）；移除设计稿加 window.confirm；上传设计稿成功后同步 createDrawing（task_id + category=设计稿 + filename，工作成果可追溯版本）；新增 PdfPickerModal——列出该打样单图纸资料中「设计稿」分类（按 group_id 聚合取最新版，当前选中打勾），hover 动作组加「从图纸资料选择」按钮（有稿/无稿均可用），选中即设 pdf_url
 - **验证**：构建通过；待浏览器确认
 - **实测修复（用户反馈后）**：①「从资料库选择」按钮冒泡——无稿时容器整块 onClick 打开文件选择 + 按钮打开资料库，同时触发；给 从资料库选择/移除 按钮加 stopPropagation；②用户 3:39 上传的 235-6 设计稿未进库——根因是当时同步功能尚未部署（4:02 才生效），非逻辑 bug；同步链路 API 实测通过（upload-pdf→createDrawing→fetchDrawings→清理），并补录 235-6 设计稿进图纸库（task7 V1）；测试产生的孤儿文件已清理
+- **SS26-TS003 仍未进库（第二轮排查）**：上传文件成功（uploads 有 25FWS014.pdf）但图纸库 0 条、pdf_url 空。后端逐环节实测（CORS preflight/带 Origin POST createDrawing/同名归组/400 分支）全部正常——createDrawing 请求要么未到达后端、要么 task_id 参数异常（400 不打日志）。处置：①server/index.cjs 加请求日志中间件（method/path/body 摘要）；②前端同步失败从 console.warn 改为 alert（错误可见）；③待用户下次上传，日志直接定位。机制澄清：styles.pdf_url 与 drawings.url 均引用 server/uploads 同一文件，非复制
 
 ## 四、待办事项（按优先级）
 

@@ -69,6 +69,8 @@ const KanbanView = ({
     if (filters.sample_type && t.sample_type !== filters.sample_type) return false;
     if (filters.designer && t.designer !== filters.designer) return false;
     if (filters.priority && t.priority !== filters.priority) return false;
+    if (filters.design_doc === 'missing' && t.pdf_url) return false;
+    if (filters.design_doc === 'present' && !t.pdf_url) return false;
     return true;
   });
 
@@ -162,6 +164,16 @@ const KanbanView = ({
             <option value="中">中</option>
             <option value="高">高</option>
             <option value="紧急">紧急</option>
+          </select>
+          <select
+            style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.25)', padding: '8px 14px', borderRadius: 8, color: '#fb923c', fontSize: 13, outline: 'none' }}
+            value={filters.design_doc}
+            onChange={e => setFilters({ ...filters, design_doc: e.target.value })}
+            title="按设计稿是否上传筛选"
+          >
+            <option value="">全部设计稿</option>
+            <option value="missing">缺设计稿</option>
+            <option value="present">已有设计稿</option>
           </select>
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -322,6 +334,9 @@ const KanbanView = ({
                     const ov = getOverdueInfo(task);
                     return (
                     <div key={task.id} className="card glass bento-card" onClick={() => onTaskClick(task)} style={{ position: 'relative', ...(ov.state === 'overdue' ? { borderColor: 'rgba(239,68,68,0.55)' } : {}) }}>
+                      {!task.pdf_url && (
+                        <div className="bento-draft-missing" title="该款式尚未上传设计稿">缺设计稿</div>
+                      )}
                       {ov.state === 'overdue' && (
                         <div className="bento-overdue-badge" title={`期望交期 ${task.expected_date}，已逾期`}>⚠ 逾期 {ov.days} 天</div>
                       )}

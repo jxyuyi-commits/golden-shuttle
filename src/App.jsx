@@ -35,7 +35,7 @@ const App = () => {
   const [detailTab, setDetailTab] = useState('base'); // base | size
   const [editingTask, setEditingTask] = useState(null);
   const [isStyleEditing, setIsStyleEditing] = useState(false);
-  const [filters, setFilters] = useState({ keyword: '', category: '', sample_type: '', designer: '', priority: '' });
+  const [filters, setFilters] = useState({ keyword: '', category: '', sample_type: '', designer: '', priority: '', design_doc: '' });
   const [showSidebar, setShowSidebar] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
   const [showLogs, setShowLogs] = useState(false);

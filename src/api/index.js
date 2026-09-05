@@ -14,6 +14,15 @@ export const updateTaskStatus = (id, status) =>
 export const fetchTaskVersions = (styleId) =>
   apiGet(`/api/tasks/versions/${styleId}`);
 
+/* ── 操作日志 ── */
+export const fetchLogs = (params = {}) => {
+  const q = new URLSearchParams();
+  if (params.taskId) q.set('task_id', params.taskId);
+  if (params.limit) q.set('limit', params.limit);
+  const qs = q.toString();
+  return apiGet(`/api/logs${qs ? '?' + qs : ''}`);
+};
+
 /* ── 款式 Styles ── */
 export const fetchStyles = () => apiGet('/api/styles');
 export const fetchStyleByNo = (styleNo) =>

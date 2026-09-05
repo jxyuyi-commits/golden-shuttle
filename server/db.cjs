@@ -263,6 +263,24 @@ const migrations = [
         });
       }
     }
+  },
+  {
+    version: 9,
+    description: '操作日志：operation_logs 表',
+    up: () => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS operation_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          task_id INTEGER,
+          action TEXT NOT NULL,
+          detail TEXT DEFAULT '',
+          operator TEXT DEFAULT '',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_operation_logs_task ON operation_logs(task_id);
+        CREATE INDEX IF NOT EXISTS idx_operation_logs_created ON operation_logs(created_at);
+      `);
+    }
   }
 ];
 

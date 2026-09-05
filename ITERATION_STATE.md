@@ -209,6 +209,13 @@
 - **实现**：KanbanView 加 getOverdueInfo(task) 纯函数——未完结 + 有交期才判定，逾期(>0天)/今日到期(0天)/3天内到期(-3~-1天)/正常/无交期或已完结；关注点下拉新增「逾期情况」分组（已逾期红/今日到期橙/3天内黄/正常绿/无交期灰 5 列）；看板卡片右上角逾期徽章（⚠ 逾期 N 天 / 今日到期 / N 天后到期），逾期卡片红描边
 - **验证**：构建通过；Node 单测 8 组用例（逾期180天/已完结/无交期/逾期1天/今日/2天后/远期）全部符合预期；浏览器工具本轮沙箱不可用，待用户页面确认
 
+### 操作日志（2026-09-06，迁移 v9）
+- **需求**：侧边栏「操作日志 (开发中)」占位转正——追溯每个打样单的关键动作（谁在何时改了状态/版次/优先级/审核/交期/工作动态）
+- **数据层**：迁移 v9 建 operation_logs 表（task_id/action/detail/operator/created_at + task_id/created_at 索引）
+- **后端**：services/tasks.cjs 加 logAction()/listLogs()；create 记「创建打样单 款号…，版单…」；update 埋点去噪——状态/版次/优先级/审核/期望交期变化才记（同值不记），progress_nodes 用 JSON 串比较（前端整单 PATCH 不产生「工作动态更新」噪音）；routes/tasks.cjs 加 GET /api/logs（?task_id= 过滤 + ?limit=）
+- **前端**：api/index.js 加 fetchLogs；新组件 OperationLogsModal.jsx（时间倒序、动作图标/颜色、空态引导）；App.jsx 侧边栏「操作日志」可点开弹窗
+- **验证**：迁移 v9 生效（GET /api/logs 200）；PATCH status→logged:1、PATCH status+priority→logged:2（去噪正确）；task_id=8 过滤返回 3 条可读中文日志；测试后还原任务8优先级；构建通过
+
 ## 四、待办事项（按优先级）
 
 ### P0 - 立即修复 ✅ 全部完成

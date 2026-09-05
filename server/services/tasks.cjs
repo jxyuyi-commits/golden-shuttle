@@ -1,6 +1,27 @@
 // 打样单(Tasks) 业务服务层：纯函数，HTTP路由与IPC handler共用
 const { getDb } = require('../db.cjs');
 
+// ── 操作日志 ──────────────────────────────────────────
+const STATUS_LABELS = { todo: '待处理', doing: '打版中', in_progress: '打版中', done: '已完结', completed: '已完结' };
+
+/** 写入一条操作日志 */
+function logAction(taskId, action, detail, operator) {
+  getDb().prepare('INSERT INTO operation_logs (task_id, action, detail, operator) VALUES (?, ?, ?, ?)')
+    .run(taskId || null, action, detail || '', operator || 'system');
+}
+
+/** 查询操作日志（倒序；可按 task_id 过滤，limit 默认 200） */
+function listLogs({ taskId, limit } = {}) {
+  const conds = [];
+  const args = [];
+  if (taskId) { conds.push('task_id = ?'); args.push(taskId); }
+  let sql = 'SELECT * FROM operation_logs';
+  if (conds.length) sql += ' WHERE ' + conds.join(' AND ');
+  sql += ' ORDER BY id DESC LIMIT ?';
+  args.push(limit || 200);
+  return getDb().prepare(sql).all(...args);
+}
+
 // 工作动态默认模板：按项目事件流推进（可自由增删改，不再按分工角色写死）
 // 每个节点：label 事件名 / status(pending|active|done) / date / by 负责人 / note 备注
 const INITIAL_NODES = [
@@ -125,7 +146,10 @@ function create(b) {
 
     return taskInfo.lastInsertRowid;
   });
-  return insertTransaction(b);
+
+  const newId = insertTransaction(b);
+  logAction(newId, 'create', `创建打样单 ${b.style_no ? `款号 ${b.style_no}` : ''}${b.order_no ? `，版单 ${b.order_no}` : ''}`.trim());
+  return newId;
 }
 
 /**
@@ -139,6 +163,7 @@ function update(id, b) {
   const row = db.prepare('SELECT style_id FROM tasks WHERE id = ?').get(id);
   if (!row) return null;
   const { style_id } = row;
+  const oldTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
 
   const STYLE_KEYS = ['style_no', 'title', 'brand', 'designer', 'year', 'season', 'month', 'category', 'pdf_url'];
   const styleUpdates = {};
@@ -173,7 +198,21 @@ function update(id, b) {
     taskUpdated = true;
   }
 
-  return { success: true, styleUpdated, taskUpdated };
+  // 操作日志：关键动作去噪记录（同值不记）
+  const fmtStatus = (s) => STATUS_LABELS[s] || s || '未设';
+  const diffOf = (key) => ('key' in { key }) && (key in b) && String(b[key] ?? '') !== String(oldTask[key] ?? '');
+  const logs = [];
+  if (diffOf('status')) logs.push(['status', `状态：${fmtStatus(oldTask.status)} → ${fmtStatus(b.status)}`]);
+  if (diffOf('sample_type')) logs.push(['sample_type', `版次：${oldTask.sample_type || '未设'} → ${b.sample_type || '未设'}`]);
+  if (diffOf('priority')) logs.push(['priority', `优先级：${oldTask.priority || '中'} → ${b.priority || '中'}`]);
+  if (diffOf('audit_status')) logs.push(['audit', `审核：${oldTask.audit_status || '待审核'} → ${b.audit_status || '待审核'}`]);
+  if (diffOf('expected_date')) logs.push(['expected_date', `期望交期：${oldTask.expected_date || '未设'} → ${b.expected_date || '未设'}`]);
+  if ('progress_nodes' in b && JSON.stringify(b.progress_nodes) !== JSON.stringify(oldTask.progress_nodes)) {
+    logs.push(['node', '工作动态更新']);
+  }
+  for (const [action, detail] of logs) logAction(id, action, detail);
+
+  return { success: true, styleUpdated, taskUpdated, logged: logs.length };
 }
 
 /**
@@ -186,4 +225,4 @@ function remove(id) {
   return { success: true };
 }
 
-module.exports = { list, get, versions, create, update, remove };
+module.exports = { list, get, versions, create, update, remove, logAction, listLogs };

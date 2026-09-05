@@ -2,6 +2,16 @@
 const taskService = require('../services/tasks.cjs');
 
 function registerTaskRoutes(app) {
+  // 操作日志列表（倒序；?task_id= 过滤，?limit= 条数）
+  app.get('/api/logs', (req, res) => {
+    try {
+      const { task_id, limit } = req.query;
+      res.json(taskService.listLogs({ taskId: task_id || undefined, limit: limit ? parseInt(limit, 10) : 200 }));
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.get('/api/tasks', (req, res) => {
     try { res.json(taskService.list()); }
     catch (err) { res.status(500).json({ error: err.message }); }

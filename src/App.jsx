@@ -18,6 +18,7 @@ import useSettings from './hooks/useSettings';
 
 import SmartSelect from './components/common/SmartSelect';
 import PdfThumb from './components/common/PdfThumb';
+import OperationLogsModal from './components/common/OperationLogsModal';
 import MeasurementModal from './components/measurement/MeasurementModal';
 import MeasurementTemplateManager from './components/measurement/MeasurementTemplateManager';
 import SizeTable from './components/size-table/SizeTable';
@@ -37,6 +38,7 @@ const App = () => {
   const [filters, setFilters] = useState({ keyword: '', category: '', sample_type: '', designer: '', priority: '' });
   const [showSidebar, setShowSidebar] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle');
 
   // 业务数据 hooks
@@ -262,8 +264,8 @@ const App = () => {
                 <Settings size={20} /> 系统设置
               </div>
               <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="menu-item" style={{ opacity: 0.5, cursor: 'not-allowed' }}>
-                  <Clock size={20} /> 操作日志 (开发中)
+                <div className="menu-item" onClick={() => { setShowLogs(true); setShowSidebar(false); }}>
+                  <Clock size={20} /> 操作日志
                 </div>
               </div>
             </div>
@@ -272,6 +274,11 @@ const App = () => {
       }
 
       {/* ═══ 各种弹窗组件 ═════════════════════════════════════════ */}
+      {
+        showLogs && (
+          <OperationLogsModal onClose={() => setShowLogs(false)} />
+        )
+      }
       {
         showNewModal && (
           <NewTaskModal

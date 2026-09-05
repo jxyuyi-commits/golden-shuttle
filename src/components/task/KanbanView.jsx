@@ -13,6 +13,25 @@ const getNodeIcon = (status) => {
   return <Circle size={14} color="#475569" />;
 };
 
+/**
+ * 逾期判定（基于 expected_date 期望交期）
+ * state: overdue(已逾期) / today(今日到期) / soon(3天内到期) / ok(正常) / none(无交期或已完结)
+ */
+function getOverdueInfo(task) {
+  if (task.status === 'done' || task.status === 'completed') return { state: 'none', days: 0 };
+  if (!task.expected_date) return { state: 'none', days: 0 };
+  const m = String(task.expected_date).match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (!m) return { state: 'none', days: 0 };
+  const due = new Date(+m[1], +m[2] - 1, +m[3]);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = Math.round((today - due) / 86400000);
+  if (diff > 0) return { state: 'overdue', days: diff };
+  if (diff === 0) return { state: 'today', days: 0 };
+  if (diff >= -3) return { state: 'soon', days: -diff };
+  return { state: 'ok', days: 0 };
+}
+
 /** 看板/列表双视图：筛选器 + 看板三列 + 任务卡片 + 可配置列表视图 */
 const KanbanView = ({
   tasks,
@@ -71,6 +90,15 @@ const KanbanView = ({
         { id: '高', name: '高', color: '#fb923c' },
         { id: '中', name: '中', color: '#38bdf8' },
         { id: '低', name: '低', color: '#94a3b8' }
+      ];
+    }
+    if (kanbanGroupBy === 'overdue') {
+      return [
+        { id: 'overdue', name: '已逾期', color: '#ef4444' },
+        { id: 'today', name: '今日到期', color: '#f59e0b' },
+        { id: 'soon', name: '3天内到期', color: '#eab308' },
+        { id: 'ok', name: '正常', color: '#4ade80' },
+        { id: 'none', name: '无交期/已完结', color: '#94a3b8' }
       ];
     }
     return [];
@@ -179,6 +207,7 @@ const KanbanView = ({
                 <option value="status">关注点：任务状态</option>
                 <option value="sample_type">关注点：版次进度</option>
                 <option value="priority">关注点：紧急程度</option>
+                <option value="overdue">关注点：逾期情况</option>
               </select>
             )}
 
@@ -272,6 +301,7 @@ const KanbanView = ({
               if (kanbanGroupBy === 'status' && t.status !== col.id) return false;
               if (kanbanGroupBy === 'sample_type' && (t.sample_type || '常规版') !== col.id) return false;
               if (kanbanGroupBy === 'priority' && (t.priority || '中') !== col.id) return false;
+              if (kanbanGroupBy === 'overdue' && (getOverdueInfo(t).state === 'none' ? 'none' : getOverdueInfo(t).state) !== col.id) return false;
               return true;
             });
             return (
@@ -288,8 +318,19 @@ const KanbanView = ({
                   <span className="badge">{colTasks.length}</span>
                 </div>
                 <div className="col-body">
-                  {colTasks.map(task => (
-                    <div key={task.id} className="card glass bento-card" onClick={() => onTaskClick(task)}>
+                  {colTasks.map(task => {
+                    const ov = getOverdueInfo(task);
+                    return (
+                    <div key={task.id} className="card glass bento-card" onClick={() => onTaskClick(task)} style={{ position: 'relative', ...(ov.state === 'overdue' ? { borderColor: 'rgba(239,68,68,0.55)' } : {}) }}>
+                      {ov.state === 'overdue' && (
+                        <div className="bento-overdue-badge" title={`期望交期 ${task.expected_date}，已逾期`}>⚠ 逾期 {ov.days} 天</div>
+                      )}
+                      {ov.state === 'today' && (
+                        <div className="bento-overdue-badge" style={{ background: 'rgba(245,158,11,0.92)' }} title="今日为期望交期">今日到期</div>
+                      )}
+                      {ov.state === 'soon' && (
+                        <div className="bento-overdue-badge" style={{ background: 'rgba(234,179,8,0.85)' }} title={`期望交期 ${task.expected_date}`}>{ov.days} 天后到期</div>
+                      )}
                       <div className="bento-upper">
                         <div className="bento-box bento-left">
                           <div className="bento-img-wrap">
@@ -341,7 +382,8 @@ const KanbanView = ({
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );

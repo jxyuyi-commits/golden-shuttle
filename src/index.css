@@ -1219,14 +1219,40 @@ body {
 
 /* 精准图层控制，解决蒙版覆盖危机 */
 .bento-img-wrap img,
-.bento-img-wrap canvas,
-.bento-img-wrap .pdf-empty,
-.bento-img-wrap .pdf-loading {
+.bento-img-wrap canvas {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
   display: block !important;
   position: static !important;
+}
+
+/* 缺稿占位（空设计稿）：图标 + 提示垂直居中，柔和配色 */
+.bento-img-wrap .pdf-empty {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  background: rgba(2, 6, 23, 0.4) !important;
+  color: #64748b !important;
+  box-sizing: border-box !important;
+}
+.bento-img-wrap .pdf-empty .pdf-empty-icon {
+  color: #475569 !important;
+  opacity: 0.9;
+}
+.bento-img-wrap .pdf-empty .pdf-empty-text {
+  font-size: 11px !important;
+  letter-spacing: 0.5px !important;
+  color: #64748b !important;
+}
+.bento-img-wrap .pdf-empty .pdf-empty-hint {
+  font-size: 10px !important;
+  color: #475569 !important;
+  opacity: 0.7;
 }
 
 .bento-badge {

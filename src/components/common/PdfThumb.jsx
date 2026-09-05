@@ -94,7 +94,11 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover' }) => {
         ) : thumb ? (
           <img src={thumb} alt="PDF 预览（单击放大，双击编辑）" style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, cursor: pdfUrl ? 'pointer' : 'default' }} {...interactiveProps} />
         ) : (
-          <div className="pdf-empty"><Upload size={32} /><span>请上传设计稿</span></div>
+          <div className="pdf-empty">
+            <Upload size={22} className="pdf-empty-icon" />
+            <span className="pdf-empty-text">请上传设计稿</span>
+            <span className="pdf-empty-hint">进入详情可上传</span>
+          </div>
         )
       ) : isVectorThumb ? (
         thumbFailed ? (
@@ -119,7 +123,11 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover' }) => {
           <div className="generic-hint"><FolderOpen size={13} /> 单击本地打开</div>
         </div>
       ) : (
-        <div className="pdf-empty"><Upload size={32} /><span>请上传设计稿</span></div>
+        <div className="pdf-empty">
+          <Upload size={22} className="pdf-empty-icon" />
+          <span className="pdf-empty-text">请上传设计稿</span>
+          <span className="pdf-empty-hint">进入详情可上传</span>
+        </div>
       )}
 
       {enlarged && createPortal(

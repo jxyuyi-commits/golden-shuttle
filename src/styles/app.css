@@ -113,8 +113,6 @@
       .card {padding: 14px; margin-bottom: 16px; cursor: pointer; transition: transform .25s, border-color .25s, box-shadow .25s; }
       /* 逾期提醒徽章（看板卡片右上角） */
       .bento-overdue-badge {position: absolute; top: 10px; right: 10px; background: rgba(239,68,68,0.92); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; z-index: 5; box-shadow: 0 4px 12px rgba(239,68,68,0.4); white-space: nowrap; }
-      /* 缺设计稿徽章（看板卡片左上角） */
-      .bento-draft-missing {position: absolute; top: 10px; left: 10px; background: rgba(249,115,22,0.92); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; z-index: 5; box-shadow: 0 4px 12px rgba(249,115,22,0.4); white-space: nowrap; }
       .card:hover {transform: translateY(-4px); border-color: #38bdf8; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
       .card-header-row {font-size: 11px; color: #64748b; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,.06); font-weight: 600; }
       .card-body-row {display: flex; gap: 12px; }

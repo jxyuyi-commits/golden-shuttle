@@ -281,7 +281,7 @@ const DetailView = ({
 
               {!task.pdf_url && (
                 <div className="pdf-hover-actions">
-                  <button className="pdf-action-btn" title="从图纸资料选择" onClick={() => setShowPdfPicker(true)}>
+                  <button className="pdf-action-btn" title="从图纸资料选择" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
                     <FolderOpen size={14} />
                   </button>
                 </div>
@@ -293,13 +293,14 @@ const DetailView = ({
                     <Upload size={14} />
                     <input type="file" hidden onChange={e => { onPdfUpload(e.target.files[0]); e.target.value = ''; }} />
                   </label>
-                  <button className="pdf-action-btn" title="从图纸资料选择" onClick={() => setShowPdfPicker(true)}>
+                  <button className="pdf-action-btn" title="从图纸资料选择" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
                     <FolderOpen size={14} />
                   </button>
                   <button
                     className="pdf-action-btn"
                     title="移除设计稿"
-                    onClick={() => {
+                    onClick={e => {
+                      e.stopPropagation();
                       if (window.confirm('确定移除该设计稿吗？\n（图纸资料库中的文件不会被删除）')) onSetField('pdf_url', '');
                     }}
                   >

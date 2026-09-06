@@ -1,11 +1,12 @@
 import React from 'react';
 import { Layout } from 'lucide-react';
 import SettingListEditor from './SettingListEditor';
+import PeopleEditor from './PeopleEditor';
 import SizeGroupManager from './SizeGroupManager';
 import CategoryManager from './CategoryManager';
 import MeasurementTemplateManager from '../measurement/MeasurementTemplateManager';
 
-/** 系统设置视图：品牌/设计师/版次库 + 号型规格 + 款式分类 + 尺寸部位预设 */
+/** 系统设置视图：品牌库/人员预设/版次库 + 号型规格 + 款式分类 + 尺寸部位预设 */
 const SettingsView = ({ settings, saveSetting, loadSettings, onBack, onOpenSidebar }) => {
   return (
     <div className="custom-scrollbar" style={{ background: '#020617', height: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
@@ -20,14 +21,12 @@ const SettingsView = ({ settings, saveSetting, loadSettings, onBack, onOpenSideb
 
       <div className="settings-container animate-fade-in">
         <div className="top-settings-grid">
-          {[
-            { key: 'brands', label: '品牌库' },
-            { key: 'designers', label: '设计师库' },
-            { key: 'sampleTypes', label: '打样版次库' },
-          ].map(({ key, label }) => (
-            <SettingListEditor key={key} label={label} items={settings[key] || []}
-              onChange={items => saveSetting(key, items)} />
-          ))}
+          <SettingListEditor label="品牌库" items={settings.brands || []}
+            onChange={items => saveSetting('brands', items)} />
+          <PeopleEditor people={settings.people || []}
+            onChange={items => saveSetting('people', items)} />
+          <SettingListEditor label="打样版次库" items={settings.sampleTypes || []}
+            onChange={items => saveSetting('sampleTypes', items)} />
         </div>
 
         <div className="complex-settings-row glass animate-slide-up" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, padding: 24, marginTop: 24, alignItems: 'start' }}>

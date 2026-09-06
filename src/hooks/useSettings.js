@@ -4,6 +4,7 @@ import { fetchSettings, fetchSizeGroups, saveSettings } from '../api';
 const DEFAULT_SETTINGS = {
   brands: [],
   designers: [],
+  people: [], // 人员预设（REQ-006）：[{ name, roles: [] }]，取代设计师库
   categories: [],
   sources: ['自研样衣', '客户来样', '跟单打样'],
   sampleTypes: ['胚样', '面料样', '成品样', '确认样'],

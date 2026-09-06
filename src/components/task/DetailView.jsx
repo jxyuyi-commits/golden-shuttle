@@ -12,6 +12,7 @@ import SampleRunList from './SampleRunList';
 import { exportTechPack, getTechPackFileName } from '../../utils/exportTechPack';
 import { exportTechPackPdf, getTechPackPdfFileName } from '../../utils/exportTechPackPdf';
 import { fetchBomItems, fetchProcessItems } from '../../api';
+import { peopleByRole } from '../../utils/people';
 
 const years = ['2023', '2024', '2025', '2026', '2027'];
 const seasons = ['春', '夏', '秋', '冬'];
@@ -166,7 +167,7 @@ const DetailView = ({
             </div>
             <div className="field">
               <label>设计师</label>
-              <SmartSelect value={task.designer} onChange={v => onSetField('designer', v)} options={settings.designers} />
+              <SmartSelect value={task.designer} onChange={v => onSetField('designer', v)} options={peopleByRole(settings.people, '设计师')} />
             </div>
             <div className="field"></div>
             <div className="field">

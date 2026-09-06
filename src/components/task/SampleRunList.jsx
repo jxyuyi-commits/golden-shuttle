@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Trash2, Loader2, Link2, X } from 'lucide-react';
 import SmartSelect from '../common/SmartSelect';
 import { fetchRuns, createRun, updateRun, deleteRun, fetchDrawings } from '../../api';
+import { peopleByRole } from '../../utils/people';
 
 // 批次状态（板师手动推进）
 export const RUN_STATUS = [
@@ -195,20 +196,20 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
             </div>
             <div className="field">
               <label>版师</label>
-              <input
+              <SmartSelect
                 value={r.pattern_maker || ''}
-                placeholder="谁负责打版"
-                onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, pattern_maker: e.target.value } : x))}
-                onBlur={e => patch(r.id, { pattern_maker: e.target.value })}
+                onChange={v => patch(r.id, { pattern_maker: v })}
+                options={peopleByRole(settings.people, '版师')}
+                placeholder="选择版师或输入"
               />
             </div>
             <div className="field">
               <label>样衣工</label>
-              <input
+              <SmartSelect
                 value={r.sample_maker || ''}
-                placeholder="谁负责做样衣"
-                onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, sample_maker: e.target.value } : x))}
-                onBlur={e => patch(r.id, { sample_maker: e.target.value })}
+                onChange={v => patch(r.id, { sample_maker: v })}
+                options={peopleByRole(settings.people, '样衣工')}
+                placeholder="选择样衣工或输入"
               />
             </div>
             <div className="field">

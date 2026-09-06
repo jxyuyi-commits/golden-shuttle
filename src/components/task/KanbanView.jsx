@@ -6,6 +6,7 @@ import {
 import PdfThumb from '../common/PdfThumb';
 import ExportButton from '../common/ExportButton';
 import { exportTasksToExcel, getTaskListFileName } from '../../utils/exportTasks';
+import { peopleByRole } from '../../utils/people';
 
 const getNodeIcon = (status) => {
   if (status === 'done' || status === 'completed') return <CheckCircle2 size={14} color="#4ade80" />;
@@ -185,7 +186,7 @@ const KanbanView = ({
             onChange={e => setFilters({ ...filters, designer: e.target.value })}
           >
             <option value="">全部分派设计师</option>
-            {settings.designers.map(d => <option key={d} value={d}>{d}</option>)}
+            {peopleByRole(settings.people, '设计师').map(d => <option key={d} value={d}>{d}</option>)}
           </select>
           <select
             style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 14px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}

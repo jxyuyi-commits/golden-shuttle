@@ -63,6 +63,9 @@ const KanbanView = ({
     return [...set];
   }, [settings.sampleTypes, tasks]);
 
+  // 状态归一：旧数据/脏值（如 in_progress）兜底为 todo，避免看板列匹配不到而消失
+  const normalizeStatus = (s) => ['todo', 'doing', 'done'].includes(s) ? s : 'todo';
+
   const filterTasks = (list) => list.filter(t => {
     if (filters.keyword && !(t.title?.includes(filters.keyword) || t.style_no?.includes(filters.keyword))) return false;
     if (filters.category && t.category !== filters.category) return false;
@@ -298,7 +301,7 @@ const KanbanView = ({
         <div className="board custom-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '0 32px 32px' }}>
           {getActiveCols().map(col => {
             const colTasks = filterTasks(tasks).filter(t => {
-              if (kanbanGroupBy === 'status' && t.status !== col.id) return false;
+              if (kanbanGroupBy === 'status' && normalizeStatus(t.status) !== col.id) return false;
               if (kanbanGroupBy === 'sample_type' && (t.sample_type || '常规版') !== col.id) return false;
               if (kanbanGroupBy === 'priority' && (t.priority || '中') !== col.id) return false;
               if (kanbanGroupBy === 'overdue' && (getOverdueInfo(t).state === 'none' ? 'none' : getOverdueInfo(t).state) !== col.id) return false;

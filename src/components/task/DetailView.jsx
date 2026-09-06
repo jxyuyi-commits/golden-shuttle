@@ -287,20 +287,23 @@ const DetailView = ({
 
               {!task.pdf_url && (
                 <div className="pdf-hover-actions">
-                  <button className="pdf-action-btn" title="从图纸资料选择" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
+                  <button className="pdf-action-btn" title="从图纸资料库选择设计稿" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
                     <FolderOpen size={14} />
+                    <span>从资料库选</span>
                   </button>
                 </div>
               )}
 
               {task.pdf_url && (
                 <div className="pdf-hover-actions">
-                  <label className="pdf-action-btn" title="更换设计稿">
+                  <label className="pdf-action-btn" title="上传新文件更换设计稿">
                     <Upload size={14} />
+                    <span>更换</span>
                     <input type="file" hidden onChange={e => { onPdfUpload(e.target.files[0]); e.target.value = ''; }} />
                   </label>
-                  <button className="pdf-action-btn" title="从图纸资料选择" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
+                  <button className="pdf-action-btn" title="从图纸资料库选择已有设计稿" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
                     <FolderOpen size={14} />
+                    <span>从资料库选</span>
                   </button>
                   <button
                     className="pdf-action-btn"
@@ -311,6 +314,7 @@ const DetailView = ({
                     }}
                   >
                     <Trash2 size={14} />
+                    <span>移除</span>
                   </button>
                 </div>
               )}

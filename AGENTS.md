@@ -33,6 +33,8 @@ Electron + Vite + React + Express + better-sqlite3。根 `D:\dev\golden-shuttle`
 
 ## 数据与历史备注
 
+- **当前重构分支 `feature/sample-run-model`**：以款为主单 + 版次批次（sample_runs）双视角重构，
+  业务决策见 docs/BUSINESS_LOGIC.md（第 4-5 节），7 阶段路径见该文档 5.4。main 保持稳定，重构完成后合并。
 - 同一款式可能存在重复单据（如 AW26-JK001 有 task1/task2 两个实例，共享 styles 行的 pdf_url）——
   涉及此类任务先查清再动，不要盲目合并/删除。
 - 图纸资料分五类：设计稿/参考图/成衣图/纸样/唛架图；参考类防冗余、工作成果可追溯（版本）。

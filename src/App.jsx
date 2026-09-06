@@ -4,7 +4,7 @@ import { Layout, Plus, X, CheckCircle2, Circle, AlertCircle, ArrowLeft, ArrowUp,
 
 import { API } from './api/client';
 import {
-  fetchTasks, createTask, updateTask, deleteTask, updateTaskStatus, fetchTaskVersions,
+  fetchTasks, fetchTask, createTask, updateTask, deleteTask, updateTaskStatus, fetchTaskVersions,
   fetchStyles, fetchStyleByNo,
   fetchSettings, saveSettings,
   fetchSizeGroups, saveSizeGroups, deleteSizeGroup,
@@ -209,6 +209,23 @@ const App = () => {
     persistPdfUrl('');
   };
 
+  // 批次状态变化后，款级 status 已被后端自动同步——重新拉取当前任务更新详情页显示
+  const handleStatusSync = useCallback(async () => {
+    if (!editingTask?.id) return;
+    try {
+      const fresh = await fetchTask(editingTask.id);
+      if (fresh) {
+        const parsed = JSON.parse(JSON.stringify(fresh));
+        if (typeof parsed.size_data === 'string') {
+          try { parsed.size_data = JSON.parse(parsed.size_data); } catch { parsed.size_data = []; }
+        }
+        if (!Array.isArray(parsed.size_data)) parsed.size_data = [];
+        setEditingTask(parsed);
+      }
+    } catch (e) { console.error('刷新款单状态失败', e); }
+    loadTasks();
+  }, [editingTask?.id, loadTasks]);
+
   const years = ['2023', '2024', '2025', '2026', '2027'];
   const seasons = ['春', '夏', '秋', '冬'];
   const months = Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
@@ -278,6 +295,7 @@ const App = () => {
           onPdfSelect={handlePdfSelect}
           onPdfRemove={handlePdfRemove}
           pdfSyncState={pdfSyncState}
+          onStatusSync={handleStatusSync}
         />
       )}
 

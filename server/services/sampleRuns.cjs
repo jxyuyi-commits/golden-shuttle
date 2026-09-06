@@ -35,6 +35,42 @@ function logAction(taskId, action, detail) {
   } catch { /* 日志失败不影响主流程 */ }
 }
 
+/** 批次状态优先级（数值越大越靠后/越先进） */
+const RUN_STATUS_RANK = {
+  waiting_material: 1, pattern_making: 2, sample_making: 3, pending_confirm: 4, done: 5,
+};
+/** 款级聚合状态 → 看板列（todo/doing/done）映射 */
+const TASK_STATUS_MAP = {
+  not_started: 'todo', waiting_material: 'todo',
+  pattern_making: 'doing', sample_making: 'doing', pending_confirm: 'doing',
+  done: 'done',
+};
+
+/**
+ * 款级状态自动同步：从该款全部批次推导聚合状态（最先进批次为准），
+ * 映射为看板列 todo/doing/done 并写回 tasks.status。
+ * 批次是权威数据源，款级看板列不再手动维护。
+ */
+function syncTaskStatus(taskId) {
+  try {
+    const db = getDb();
+    const runs = db.prepare('SELECT status FROM sample_runs WHERE task_id = ?').all(taskId);
+    let derived;
+    if (!runs.length) {
+      derived = 'not_started';
+    } else {
+      let best = 'waiting_material';
+      for (const r of runs) {
+        if ((RUN_STATUS_RANK[r.status] ?? 0) > (RUN_STATUS_RANK[best] ?? 0)) best = r.status;
+      }
+      derived = best;
+    }
+    const status = TASK_STATUS_MAP[derived] || 'todo';
+    db.prepare('UPDATE tasks SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(status, taskId);
+    return status;
+  } catch { return null; }
+}
+
 /** 规范化输入字段 */
 function sanitize(d) {
   const out = {};
@@ -80,6 +116,7 @@ function create(taskId, d) {
     `INSERT INTO sample_runs (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`
   ).run(...cols.map(c => data[c]));
   logAction(taskId, '新增打样批次', `${data.sample_type || '未命名版次'} ${data.size || ''} ${data.sample_color || ''}`.trim());
+  syncTaskStatus(taskId);
   return { id: info.lastInsertRowid };
 }
 
@@ -106,6 +143,7 @@ function update(id, d) {
     logAction(before.task_id, '批次阻塞标记',
       `${after.sample_type || '批次#' + id}：${BLOCKER_LABELS[data.blocker]}`);
   }
+  if (data.status && data.status !== before.status) syncTaskStatus(before.task_id);
   return after;
 }
 
@@ -121,10 +159,11 @@ function remove(id) {
   ).all(row.task_id);
   rest.forEach((r, i) => db.prepare('UPDATE sample_runs SET sort_order = ? WHERE id = ?').run(i, r.id));
   logAction(row.task_id, '删除打样批次', `${row.sample_type || '批次#' + id} ${row.size || ''}`.trim());
+  syncTaskStatus(row.task_id);
   return { deleted: 1 };
 }
 
 module.exports = {
   STATUS_LABELS, BLOCKER_LABELS,
-  listByTask, create, update, remove,
+  listByTask, create, update, remove, syncTaskStatus,
 };

@@ -1,7 +1,68 @@
 # PatternMaster Pro 迭代状态追踪
 
 > 本文件是迭代过程的"外部记忆"，上下文压缩后必须先读本文件再继续。
-> 最后更新：2026-09-05（图纸资料页迭代合入：版本管控 v8 + EMF/DXF 缩略图 + 统一交互 + 类型标签 + 工作动态修复 + 缓存路径修复）
+> 最后更新：2026-09-06（双视角重构阶段 1-7 全部上线：看板归一/建单查重/版次批次/存量合并/设计师仪表盘/视图切换/资料版本绑定 + 款级状态自动同步）
+
+---
+
+## 〇、双视角重构专题（feature/sample-run-model 分支）
+
+### 背景：两种任务管理模式的冲突
+
+- **旧模式（单=版次）**：同一个款（如 AW26-JK001）按版次拆成多张单（task1 胚样、task2 头版样），版次资料隔离、看板重复、数据不共享
+- **新模式（单=款）**：同一个款的所有版次和资料都在一张单下，通过批次迭代管理，资料共享
+- **用户洞察（双视角）**：
+  - 设计师视角：关注宏观款级聚合（总款数/品类占比/开发进度/可下大货）
+  - 板师视角：关注微观版次级明细（手里款的版次进度/样衣做没做/欠料/谁做的）
+- **最终决策（ADR-003，用户确认）**：混合模式——以款为主单 + 版次批次（sample_runs）子状态，同一套分层数据支撑两种可切换视图
+
+### 数据模型（重构后）
+
+```
+styles(style_no UNIQUE, pdf_url 款级共享)
+  └── tasks(style_id FK，款单级，status=todo/doing/done 由批次自动聚合)
+        └── sample_runs(task_id FK ON DELETE CASCADE，版次批次)
+              ├── status: waiting_material/pattern_making/sample_making/pending_confirm/done
+              ├── blocker: none/short_material/wait_designer/wait_tech/other
+              └── linked_drawing_ids: 批次绑定的图纸资料版本(JSON数组)
+        ├── drawings / bom_items / process_items（task_id 隔离）
+        └── operation_logs(task_id)
+```
+
+### 7 阶段实施进度（全部完成）
+
+| 阶段 | 内容 | Commit |
+|---|---|---|
+| 1 | 看板 status 枚举归一（in_progress→doing 兜底） | 3b090d3 |
+| 2 | 建单同款查重（列出已有单/打开/二次确认） | 05fe610 |
+| 3 | sample_runs 版次批次结构化（表/服务/路由） | 13c0103 |
+| 4 | 存量重复单合并（v10 迁移 8单→6单） | 13c0103 |
+| 5 | 设计师仪表盘（款级聚合/品类占比/进度分布/款级列表） | — |
+| 6 | 视图切换（看板⇄仪表盘）+ 默认视图记忆 | 3345fe4 |
+| 7 | 资料版本绑定到批次（linked_drawing_ids） | cc9227b |
+| 8 | 款级状态自动同步（批次变化→task.status 自动推导） | —（本次） |
+
+### 款级状态自动同步规则（本次新增）
+
+- 批次是权威数据源，款级看板列不再手动维护
+- 聚合规则：取**最先进**批次状态（waiting_material < pattern_making < sample_making < pending_confirm < done）
+- 映射：not_started/waiting_material→todo；pattern_making/sample_making/pending_confirm→doing；done→done
+- 触发点：批次 create/update(状态变化)/delete 后自动同步；建单自动建首个批次后同步
+- 前端：SampleRunList 批次状态变化后通过 onStatusSync 回调刷新详情页款单状态
+
+### 当前数据状态
+
+- 6 个 task（一单一款无重复）、6 个 styles、8 个批次
+- task1 AW26-JK001（胚样打版中 + 头版样待配料）、task4 SS26-TS003（2 批次）、其余各 1 批次
+- 数据库迁移最新 **v11**（v10 批次表+存量合并，v11 linked_drawing_ids）
+- 迁移前备份：`server/database.backup_before_v10.sqlite`（.gitignore 忽略，未入库）
+
+### 遗留待办
+
+- 本地 22+ 笔 commit 未推送（需用户开代理）
+- Excel 导入功能待定（用户明确后续再加入）
+- tasks 表旧批次字段（sample_type/size 等）为兼容保留，权威数据已在 sample_runs，后续可清理
+- 4174 端口为生产构建预览（`_preview.cjs` 托管 dist + 代理 API），内置浏览器缓存问题用换端口解决
 
 ---
 
@@ -11,7 +72,7 @@
 - **定位**：服装打样单全流程管理桌面应用
 - **技术栈**：Electron 34 + React 19 + Vite 7 + Express 5 + better-sqlite3 + SQLite
 - **项目路径**：`D:\dev\golden-shuttle`
-- **当前分支**：`main`（2026-09-01 仓库重新初始化后）
+- **当前分支**：`feature/sample-run-model`（双视角重构分支，main 保持稳定待合并）
 - **备份分支**：`backup/pre-review-20260827`（审查前全量备份）
 
 ## 二、环境信息
@@ -19,10 +80,12 @@
 - **Node 版本**：真机系统 Node v24.13.0（ABI 137）；AI 工具通道里的 node 是托管版 v22.22.2（ABI 127）
 - **better-sqlite3**：当前编为 ABI 132（Electron），dev 后端由 Electron Node 运行，无需再 rebuild:node
 - **开发端口**：后端 3001（0.0.0.0），前端 Vite 5173
-- **数据库路径**：`server/database.sqlite`（8 tasks / 6 styles，迁移已到 v5）
-  - task 8 = 26AWW526 褶皱金属丝棒球服：工作动态 8 条 / 尺寸 12 部位 / BOM 10 条 / 工艺 13 条
+- **数据库路径**：`server/database.sqlite`（6 tasks / 6 styles，迁移已到 v11）
+  - task1 AW26-JK001 极地抗寒羽绒服：2 批次（胚样打版中 + 头版样待配料），图纸库 2 条设计稿
+  - task4 SS26-TS003 高支纯棉重磅T恤：2 批次；其余款各 1 批次
 - **启动命令**：`npm run dev:all`（= `node scripts/dev.cjs`，同时启动后端+前端）
-- **启动校验**：后端日志出现 `[DB] All migrations up to date (latest: v5)` 即为正常
+- **启动校验**：后端日志出现 `[DB] All migrations up to date (latest: v11)` 即为正常
+- **生产预览**：`node _preview.cjs`（托管 dist 到 4174 端口 + 代理 API 到 3001）——内置浏览器缓存问题用换端口解决
 - **Git 现状**：仓库 2026-09-01 重新初始化，当前 `main` 分支仅 1 个提交 `5989809 初始提交`
   （远端 github.com/jxyuyi-commits/golden-shuttle），本文件引用的历史提交号已不可查
 - **注意**：仅在换机/升级 Electron 时才需要 rebuild，且需用国内镜像：

@@ -1,5 +1,6 @@
 // 打样单(Tasks) 业务服务层：纯函数，HTTP路由与IPC handler共用
 const { getDb } = require('../db.cjs');
+const { syncTaskStatus } = require('./sampleRuns.cjs');
 
 // ── 操作日志 ──────────────────────────────────────────
 const STATUS_LABELS = { todo: '待处理', doing: '打版中', in_progress: '打版中', done: '已完结', completed: '已完结' };
@@ -191,6 +192,9 @@ function create(b) {
       parseInt(b.sample_count) || 1, b.priority || '中',
       b.fabric_date || '', b.start_date || '', b.expected_date || '', b.finish_date || ''
     );
+
+    // 款级状态自动同步（首个批次为 waiting_material → todo）
+    syncTaskStatus(newTaskId);
 
     return newTaskId;
   });

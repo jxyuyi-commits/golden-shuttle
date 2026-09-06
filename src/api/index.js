@@ -5,6 +5,7 @@ import { apiGet, apiPost, apiPatch, apiDelete, apiUrl, API } from './client';
 
 /* ── 打样单 Tasks ── */
 export const fetchTasks = () => apiGet('/api/tasks');
+export const fetchTask = (id) => apiGet(`/api/tasks/${id}`);
 export const createTask = (data) => apiPost('/api/tasks', data);
 // 后端使用 PATCH 局部更新（REST 语义），修复此前 PUT→404 的保存失败 bug
 export const updateTask = (id, data) => apiPatch(`/api/tasks/${id}`, data);

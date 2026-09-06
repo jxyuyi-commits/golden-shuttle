@@ -36,6 +36,7 @@ const DetailView = ({
   onPdfSelect,
   onPdfRemove,
   pdfSyncState,
+  onStatusSync,
 }) => {
   const [dragPdf, setDragPdf] = useState(false);
   const [showPdfPicker, setShowPdfPicker] = useState(false);
@@ -216,7 +217,7 @@ const DetailView = ({
           <div className="section-title" style={{ marginTop: 32, borderLeftColor: '#fbbf24' }}>
             打样批次 <span>(同款各版次并行，板师工作单元)</span>
           </div>
-          <SampleRunList taskId={task.id} settings={settings} category={task.category} />
+          <SampleRunList taskId={task.id} settings={settings} category={task.category} onStatusSync={onStatusSync} />
 
           <div className="section-title" style={{ marginTop: 32 }}>打样说明与工艺反馈</div>
           <div className="textarea-group">

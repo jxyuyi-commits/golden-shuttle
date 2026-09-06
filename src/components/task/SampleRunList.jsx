@@ -28,8 +28,9 @@ const statusColor = (k) => RUN_STATUS.find(s => s.key === k)?.color || '#94a3b8'
  * @param {string|number} taskId 款单 id
  * @param {object} settings 系统设置（sampleTypes / sizeGroups / category 联动尺码）
  * @param {string} category 当前款单品类（用于联动尺码选项）
+ * @param {function} onStatusSync 批次状态变化后回调（款级状态已自动同步，通知父组件刷新）
  */
-const SampleRunList = ({ taskId, settings, category }) => {
+const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
   const [runs, setRuns] = useState([]);
   const [drawings, setDrawings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +67,8 @@ const SampleRunList = ({ taskId, settings, category }) => {
     setSavingId(id);
     try {
       await updateRun(id, patchData);
+      // 状态变化会触发款级 status 自动同步，通知父组件刷新
+      if (patchData.status) onStatusSync?.();
     } catch (e) {
       console.error('批次保存失败', e);
       load(); // 失败回滚为服务端状态
@@ -78,6 +81,7 @@ const SampleRunList = ({ taskId, settings, category }) => {
     const sampleType = settings.sampleTypes?.[0] || '胚样';
     const { id } = await createRun(taskId, { sample_type: sampleType, status: 'waiting_material' });
     await load();
+    onStatusSync?.();
     return id;
   };
 
@@ -108,6 +112,7 @@ const SampleRunList = ({ taskId, settings, category }) => {
     if (!window.confirm(`确认删除「${r.sample_type || '未命名版次'} ${r.size || ''} ${r.sample_color || ''}」批次？删除后不可恢复。`)) return;
     await deleteRun(r.id);
     load();
+    onStatusSync?.();
   };
 
   if (loading) {

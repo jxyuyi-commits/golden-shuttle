@@ -20,7 +20,7 @@ function getExt(url) {
  * - PDF：pdf.js 渲染首页，单击放大、双击本地打开
  * - 其他专业格式（dxf/pla/prj 等）：通用文件占位（图标+扩展名），单击用系统默认软件打开
  */
-const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems }) => {
+const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive = true }) => {
   const [thumb, setThumb] = useState(null);
   const [loading, setLoading] = useState(false);
   const [enlarged, setEnlarged] = useState(false);
@@ -61,6 +61,7 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems }) => {
   const previewSrc = isImage ? fullUrl : isVectorThumb ? thumbUrl : thumb;
 
   const handleInteract = (e) => {
+    if (!interactive) return; // 弹窗/选择场景：不拦截点击，冒泡给卡片选择
     e.preventDefault();
     e.stopPropagation();
     if (!pdfUrl) return;

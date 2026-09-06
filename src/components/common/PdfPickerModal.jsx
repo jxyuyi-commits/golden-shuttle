@@ -12,6 +12,7 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     if (!taskId) { setLoading(false); return; }
@@ -52,33 +53,55 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
             </div>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 12 }}>
-            {items.map(d => (
-              <div
-                key={d.group_id ?? d.id}
-                onClick={() => onSelect(d.url)}
-                title={d.filename || '设计稿'}
-                style={{
-                  cursor: 'pointer', borderRadius: 10, overflow: 'hidden', position: 'relative',
-                  border: '1px solid rgba(255,255,255,0.1)', transition: 'border-color .15s',
-                  background: '#0f172a',
-                  ...(currentUrl === d.url ? { borderColor: '#38bdf8', boxShadow: '0 0 0 1px rgba(56,189,248,0.5)' } : {}),
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = currentUrl === d.url ? '#38bdf8' : 'rgba(56,189,248,0.5)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = currentUrl === d.url ? '#38bdf8' : 'rgba(255,255,255,0.1)'; }}
-              >
-                <div style={{ height: 130 }}>
-                  <PdfThumb pdfUrl={d.url} />
-                </div>
-                {currentUrl === d.url && (
-                  <div style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: '50%', background: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Check size={13} color="#020617" />
+            {items.map(d => {
+              const isCurrent = currentUrl === d.url;
+              const isSelected = selected === d.url;
+              return (
+                <div
+                  key={d.group_id ?? d.id}
+                  onClick={() => setSelected(d.url)}
+                  title={d.filename || '设计稿'}
+                  style={{
+                    cursor: 'pointer', borderRadius: 10, overflow: 'hidden', position: 'relative',
+                    border: '1px solid rgba(255,255,255,0.1)', transition: 'border-color .15s, box-shadow .15s',
+                    background: '#0f172a',
+                    ...(isSelected
+                      ? { borderColor: '#38bdf8', boxShadow: '0 0 0 2px rgba(56,189,248,0.55)' }
+                      : isCurrent ? { borderColor: 'rgba(56,189,248,0.55)' } : {}),
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = isSelected || isCurrent ? '#38bdf8' : 'rgba(56,189,248,0.5)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = isSelected ? '#38bdf8' : isCurrent ? 'rgba(56,189,248,0.55)' : 'rgba(255,255,255,0.1)'; }}
+                >
+                  <div style={{ height: 130 }}>
+                    <PdfThumb pdfUrl={d.url} interactive={false} />
                   </div>
-                )}
-                {d.version > 1 && (
-                  <div style={{ position: 'absolute', left: 6, bottom: 6, fontSize: 10, color: '#cbd5e1', background: 'rgba(2,6,23,0.75)', borderRadius: 6, padding: '2px 6px' }}>V{d.version}</div>
-                )}
-              </div>
-            ))}
+                  {isCurrent && (
+                    <div style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: '50%', background: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Check size={13} color="#020617" />
+                    </div>
+                  )}
+                  {d.version > 1 && (
+                    <div style={{ position: 'absolute', left: 6, bottom: 6, fontSize: 10, color: '#cbd5e1', background: 'rgba(2,6,23,0.75)', borderRadius: 6, padding: '2px 6px' }}>V{d.version}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <div style={{ fontSize: 12, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+            {selected ? (<>已选择：<span style={{ color: '#e2e8f0' }}>{items.find(x => x.url === selected)?.filename || ''}</span></>) : (<>点击卡片选择要更换的设计稿</>)}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn" style={{ padding: '7px 14px', fontSize: 13 }} onClick={onClose}>取消</button>
+            <button
+              className="btn btn-primary"
+              style={{ padding: '7px 14px', fontSize: 13, opacity: selected ? 1 : 0.45, cursor: selected ? 'pointer' : 'not-allowed' }}
+              disabled={!selected}
+              onClick={() => { if (selected) { onSelect(selected); onClose(); } }}
+            >
+              确认更换
+            </button>
           </div>
         </div>
       </div>

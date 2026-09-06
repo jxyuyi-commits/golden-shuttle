@@ -326,6 +326,7 @@ const App = () => {
             settings={settings}
             onClose={() => setShowNewModal(false)}
             onSuccess={() => { setShowNewModal(false); loadTasks(); }}
+            onOpenExisting={(task) => { setShowNewModal(false); handleEnterDetail(task); }}
           />
         )
       }

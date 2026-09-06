@@ -32,7 +32,13 @@ import SettingsView from './components/settings/SettingsView';
 import DesignerDashboard from './components/dashboard/DesignerDashboard';
 
 const App = () => {
-  const [view, setView] = useState('kanban'); // kanban | detail | settings
+  const [view, setViewState] = useState(() => {
+    try { return localStorage.getItem('pm_default_view') || 'kanban'; } catch { return 'kanban'; }
+  }); // kanban | detail | settings | dashboard（默认视图按用户上次选择记忆）
+  const setView = (v) => {
+    setViewState(v);
+    try { localStorage.setItem('pm_default_view', v); } catch {}
+  };
   const [detailTab, setDetailTab] = useState('base'); // base | size
   const [editingTask, setEditingTask] = useState(null);
   const [isStyleEditing, setIsStyleEditing] = useState(false);
@@ -248,6 +254,7 @@ const App = () => {
           onOpenSidebar={() => setShowSidebar(true)}
           onNewTask={() => setShowNewModal(true)}
           onTaskClick={handleEnterDetail}
+          onGoDashboard={() => setView('dashboard')}
         />
       )}
 

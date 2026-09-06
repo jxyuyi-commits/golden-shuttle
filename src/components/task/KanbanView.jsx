@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import {
   Layout, Plus, FileText, Database, CheckCircle2, Circle,
-  GripVertical, ChevronUp, ChevronDown, AlertCircle
+  GripVertical, ChevronUp, ChevronDown, AlertCircle, BarChart3
 } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import ExportButton from '../common/ExportButton';
@@ -79,6 +79,7 @@ const KanbanView = ({
   onOpenSidebar,
   onNewTask,
   onTaskClick,
+  onGoDashboard,
 }) => {
   // 版次筛选选项 = 版次库预设 ∪ 各批次实际使用值（含自定义值如 V2，保证能筛出）
   const sampleTypeOptions = useMemo(() => {
@@ -137,9 +138,16 @@ const KanbanView = ({
         <div className="logo" onClick={onOpenSidebar}>
           <Layout size={28} color="#38bdf8" /><span>PatternMaster Pro</span>
         </div>
-        <button className="btn-blue" onClick={onNewTask}>
-          <Plus size={16} /> 新建打样单
-        </button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {onGoDashboard && (
+            <button className="btn-ghost" onClick={onGoDashboard} title="切换到设计师仪表盘（款级宏观视角）">
+              <BarChart3 size={16} /> 仪表盘
+            </button>
+          )}
+          <button className="btn-blue" onClick={onNewTask}>
+            <Plus size={16} /> 新建打样单
+          </button>
+        </div>
       </header>
 
       {/* 筛选区 */}

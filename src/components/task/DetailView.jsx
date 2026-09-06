@@ -4,6 +4,7 @@ import PdfThumb from '../common/PdfThumb';
 import PdfPickerModal from '../common/PdfPickerModal';
 import ConfirmModal from '../common/ConfirmModal';
 import VersionHistoryModal from '../common/VersionHistoryModal';
+import DatePicker from '../common/DatePicker';
 import SizeTable from '../size-table/SizeTable';
 import SmartSelect from '../common/SmartSelect';
 import ExportButton from '../common/ExportButton';
@@ -358,11 +359,10 @@ const DetailView = ({
                       <option value="pending">待开始</option>
                     </select>
                   </div>
-                  <input
-                    type="date"
+                  <DatePicker
                     className="tl-date"
                     value={node.date || ''}
-                    onChange={e => { onSetNodeField(i, 'date', e.target.value); scheduleNodeCommit(); }}
+                    onChange={v => { onSetNodeField(i, 'date', v); scheduleNodeCommit(); }}
                   />
                   <input
                     className="tl-by"

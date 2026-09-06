@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Trash2, Loader2, Link2, X } from 'lucide-react';
 import SmartSelect from '../common/SmartSelect';
 import ConfirmModal from '../common/ConfirmModal';
+import DatePicker from '../common/DatePicker';
 import { fetchRuns, createRun, updateRun, deleteRun, fetchDrawings } from '../../api';
 import { peopleByRole } from '../../utils/people';
 
@@ -225,10 +226,10 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
                 {BLOCKERS.map(b => <option key={b.key} value={b.key}>{b.label}</option>)}
               </select>
             </div>
-            <div className="field"><label>面料到库</label><input type="date" value={r.fabric_date || ''} onChange={e => patch(r.id, { fabric_date: e.target.value })} /></div>
-            <div className="field"><label>任务开始</label><input type="date" value={r.start_date || ''} onChange={e => patch(r.id, { start_date: e.target.value })} /></div>
-            <div className="field"><label>预计完工</label><input type="date" value={r.expected_date || ''} onChange={e => patch(r.id, { expected_date: e.target.value })} /></div>
-            <div className="field"><label>实际完工</label><input type="date" value={r.finish_date || ''} onChange={e => patch(r.id, { finish_date: e.target.value })} /></div>
+            <div className="field"><label>面料到库</label><DatePicker value={r.fabric_date || ''} onChange={v => patch(r.id, { fabric_date: v })} /></div>
+            <div className="field"><label>任务开始</label><DatePicker value={r.start_date || ''} onChange={v => patch(r.id, { start_date: v })} /></div>
+            <div className="field"><label>预计完工</label><DatePicker value={r.expected_date || ''} onChange={v => patch(r.id, { expected_date: v })} /></div>
+            <div className="field"><label>实际完工</label><DatePicker value={r.finish_date || ''} onChange={v => patch(r.id, { finish_date: v })} /></div>
             <div className="field">
               <label>审核状态</label>
               <select

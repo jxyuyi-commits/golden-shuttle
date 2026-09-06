@@ -19,6 +19,7 @@ import useSettings from './hooks/useSettings';
 import SmartSelect from './components/common/SmartSelect';
 import PdfThumb from './components/common/PdfThumb';
 import OperationLogsModal from './components/common/OperationLogsModal';
+import ConfirmModal from './components/common/ConfirmModal';
 import MeasurementModal from './components/measurement/MeasurementModal';
 import MeasurementTemplateManager from './components/measurement/MeasurementTemplateManager';
 import SizeTable from './components/size-table/SizeTable';
@@ -52,6 +53,7 @@ const App = () => {
   const [isStyleEditing, setIsStyleEditing] = useState(false);
   const [filters, setFilters] = useState({ keyword: '', category: '', sample_type: '', designer: '', priority: '' });
   const [showSidebar, setShowSidebar] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false); // REQ-006② 删除单据确认弹窗
   const [showNewModal, setShowNewModal] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle');
@@ -111,6 +113,13 @@ const App = () => {
   // 初始加载业务数据
   useEffect(() => { loadTasks(); loadSettings(); }, [loadTasks, loadSettings]);
 
+  // REQ-006①：侧边栏边缘热区自动展开（鼠标靠近屏幕左缘即展开，无需点击）
+  useEffect(() => {
+    const onMove = (e) => { if (e.clientX <= 8 && !showSidebar) setShowSidebar(true); };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
+  }, [showSidebar]);
+
   // 新建任务弹窗组件集成在底部
   // 详见 NewTaskModal
 
@@ -160,11 +169,12 @@ const App = () => {
       .catch(err => { setSaveStatus('idle'); alert('保存失败: ' + err.message); });
   };
 
-  // 删除当前单据
+  // 删除当前单据（REQ-006②：二次确认弹窗）
   const handleDelete = () => {
-    if (!editingTask?.id) return;
-    if (!window.confirm(`确定要彻底删除该打样单[单号: ${editingTask.order_no || '未分配'}]吗？\n此操作不可恢复！`)) return;
-
+    if (editingTask?.id) setConfirmDelete(true);
+  };
+  const doDelete = () => {
+    setConfirmDelete(false);
     deleteTask(editingTask.id)
       .then(() => {
         loadTasks();
@@ -376,6 +386,16 @@ const App = () => {
             onClose={() => setShowNewModal(false)}
             onSuccess={() => { setShowNewModal(false); loadTasks(); }}
             onOpenExisting={(task) => { setShowNewModal(false); handleEnterDetail(task); }}
+          />
+        )
+      }
+      {
+        confirmDelete && (
+          <ConfirmModal
+            title="删除打样单"
+            message={`确定要彻底删除该打样单「${editingTask?.title || '未命名'}」（款号: ${editingTask?.style_no || '—'}）吗？\n此操作不可恢复，同款打样批次、尺寸表等数据将一并删除。`}
+            onConfirm={doDelete}
+            onCancel={() => setConfirmDelete(false)}
           />
         )
       }

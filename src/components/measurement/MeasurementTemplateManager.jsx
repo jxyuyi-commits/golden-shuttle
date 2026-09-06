@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, X, Edit2, Trash2, FileText } from 'lucide-react';
 import { autoSign } from '../../utils/format';
 import { fetchMeasurementTemplates, saveMeasurementTemplate, deleteMeasurementTemplate } from '../../api';
+import ConfirmModal from '../common/ConfirmModal';
 
 /** 尺寸部位预设管理（品类目录 + 部位明细表格 + 新增/编辑弹窗） */
 const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => {
@@ -10,6 +11,8 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
   const [editing, setEditing] = useState(null);
   const [newCatName, setNewCatName] = useState('');
   const [editingCatIndex, setEditingCatIndex] = useState(-1);
+  const [confirmCatIdx, setConfirmCatIdx] = useState(null); // REQ-006② 待删除品类 index
+  const [confirmTplId, setConfirmTplId] = useState(null); // 待删除预设部位 id
 
   const refresh = useCallback(() => {
     if (!activeCat) return;
@@ -28,7 +31,13 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
   };
 
   const removeCategory = (idx) => {
-    if (!window.confirm('确定删除该品类？')) return;
+    setConfirmCatIdx(idx);
+  };
+
+  const doRemoveCategory = () => {
+    if (confirmCatIdx == null) return;
+    const idx = confirmCatIdx;
+    setConfirmCatIdx(null);
     const next = categories.filter((_, i) => i !== idx);
     onCategoriesChange(next);
     if (activeCat === categories[idx]) setActiveCat(next[0] || '');
@@ -46,8 +55,10 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
     saveMeasurementTemplate(payload).then(() => { setEditing(null); refresh(); });
   };
 
-  const deleteTemplate = (id) => {
-    if (!window.confirm('确定删除该预设部位？')) return;
+  const doDeleteTemplate = () => {
+    if (confirmTplId == null) return;
+    const id = confirmTplId;
+    setConfirmTplId(null);
     deleteMeasurementTemplate(id).then(refresh);
   };
 
@@ -75,7 +86,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
                   <span className="cat-name" onDoubleClick={() => setEditingCatIndex(i)}>{c}</span>
                 )}
               </div>
-              <button className="del-btn-mini" onClick={ev => { ev.stopPropagation(); removeCategory(i); }}><Trash2 size={12} /></button>
+              <button className="del-btn-mini" onClick={ev => { ev.stopPropagation(); setConfirmCatIdx(i); }}><Trash2 size={12} /></button>
             </div>
           ))}
           {categories.length === 0 && <div className="empty-tip">暂无分类</div>}
@@ -117,7 +128,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
                   <td>
                     <div className="row-ops-v4">
                       <button className="op-btn edit" onClick={() => setEditing({ ...t })}><Edit2 size={14} /></button>
-                      <button className="op-btn delete" onClick={() => deleteTemplate(t.id)}><Trash2 size={14} /></button>
+                      <button className="op-btn delete" onClick={() => setConfirmTplId(t.id)}><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
@@ -183,6 +194,24 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
             </div>
           </div>
         </div>
+      )}
+
+      {/* REQ-006② 删除确认 */}
+      {confirmCatIdx != null && (
+        <ConfirmModal
+          title="删除品类"
+          message={`确定删除品类「${categories[confirmCatIdx] || ''}」吗？\n该品类下的预设部位不会被物理删除（仍保留在库中）。`}
+          onConfirm={doRemoveCategory}
+          onCancel={() => setConfirmCatIdx(null)}
+        />
+      )}
+      {confirmTplId != null && (
+        <ConfirmModal
+          title="删除预设部位"
+          message="确定删除该预设部位吗？\n删除后无法恢复。"
+          onConfirm={doDeleteTemplate}
+          onCancel={() => setConfirmTplId(null)}
+        />
       )}
     </div>
   );

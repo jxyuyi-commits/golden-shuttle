@@ -340,7 +340,7 @@
       .drawing-ver-row .ver-name {font-size: 13px; font-weight: 600; color: #e2e8f0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .drawing-ver-row .ver-sub {font-size: 11px; color: #64748b; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .drawing-ver-row .ver-actions {flex-shrink: 0; }
-      .drawing-del {background: rgba(0,0,0,0.55); border: none; color: #fca5a5; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity .2s; }
+      .drawing-del {background: rgba(0,0,0,0.55); border: none; color: #fca5a5; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.75; transition: opacity .2s; }
       .drawing-card:hover .drawing-del {opacity: 1; }
       .drawing-del:hover {background: rgba(239,68,68,0.8); color: #fff; }
       /* 右上角：文件类型标签 + 删除按钮 */
@@ -474,3 +474,28 @@
 .run-linked-vers { display: flex; flex-wrap: wrap; gap: 8px; }
 .run-linked-ver { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #cbd5e1; cursor: pointer; padding: 3px 8px; border-radius: 5px; background: rgba(148,163,184,0.08); }
 .run-linked-ver input { cursor: pointer; }
+
+/* ═══ REQ-006/007 交互与控件规范 ═══ */
+/* 统一确认弹窗（REQ-006②） */
+.confirm-modal { width: min(400px, 90vw); padding: 26px 28px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.confirm-icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.confirm-title { font-size: 16px; font-weight: 800; color: #f1f5f9; }
+.confirm-msg { font-size: 13px; color: #94a3b8; line-height: 1.7; white-space: pre-line; }
+.confirm-actions { display: flex; gap: 12px; margin-top: 8px; }
+.btn-danger { display: flex; align-items: center; gap: 8px; background: #ef4444; color: #fff; font-weight: 800; border: none; padding: 10px 22px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+.btn-danger:hover { background: #dc2626; }
+
+/* 统一操作图标规范（REQ-007）：常驻显示 + 悬停高亮 */
+.icon-btn { background: transparent; border: none; color: #64748b; cursor: pointer; width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; flex: none; }
+.icon-btn:hover { color: #38bdf8; background: rgba(56,189,248,0.12); }
+.icon-btn-danger { background: transparent; border: none; color: #f87171; cursor: pointer; width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; flex: none; }
+.icon-btn-danger:hover { color: #ef4444; background: rgba(239,68,68,0.14); }
+
+/* 统一 select 控件（自绘箭头深色，覆盖 run-grid 等散落样式） */
+select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px !important; }
+select option { background: #0f172a; color: #e2e8f0; }
+
+/* 统一日期输入控件（深色指示器） */
+input[type="date"] { color-scheme: dark; }
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; opacity: 0.7; }
+input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }

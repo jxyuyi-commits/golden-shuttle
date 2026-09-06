@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { ArrowLeft, Layout, Trash2, Check, Save, Edit2, Upload, Plus, FolderOpen } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import PdfPickerModal from '../common/PdfPickerModal';
+import ConfirmModal from '../common/ConfirmModal';
 import SizeTable from '../size-table/SizeTable';
 import SmartSelect from '../common/SmartSelect';
 import ExportButton from '../common/ExportButton';
@@ -41,6 +42,8 @@ const DetailView = ({
 }) => {
   const [dragPdf, setDragPdf] = useState(false);
   const [showPdfPicker, setShowPdfPicker] = useState(false);
+  const [confirmNode, setConfirmNode] = useState(null); // REQ-006② 待删除工作动态条目 index
+  const [confirmPdfRemove, setConfirmPdfRemove] = useState(false); // REQ-006② 移除设计稿确认
   const pdfInputRef = useRef(null);
 
   const getSizeGroup = () => {
@@ -267,10 +270,7 @@ const DetailView = ({
                   <button
                     className="pdf-action-btn"
                     title="移除设计稿"
-                    onClick={e => {
-                      e.stopPropagation();
-                      if (window.confirm('确定移除该设计稿吗？\n（图纸资料库中的文件不会被删除）')) onPdfRemove();
-                    }}
+                    onClick={e => { e.stopPropagation(); setConfirmPdfRemove(true); }}
                   >
                     <Trash2 size={14} />
                     <span>移除</span>
@@ -309,10 +309,9 @@ const DetailView = ({
                   />
                   <button
                     type="button"
-                    className="btn-icon"
+                    className="icon-btn-danger"
                     title="删除该事件"
-                    style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: 4, flex: '0 0 auto' }}
-                    onClick={() => onSetField('progress_nodes', (task.progress_nodes || []).filter((_, x) => x !== i))}
+                    onClick={() => setConfirmNode(i)}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -358,6 +357,27 @@ const DetailView = ({
           currentUrl={task.pdf_url}
           onSelect={url => { onPdfSelect(url); setShowPdfPicker(false); }}
           onClose={() => setShowPdfPicker(false)}
+        />
+      )}
+
+      {/* REQ-006② 删除确认 */}
+      {confirmPdfRemove && (
+        <ConfirmModal
+          title="移除设计稿"
+          message="确定移除该设计稿吗？\n（图纸资料库中的文件不会被删除）"
+          onConfirm={() => { onPdfRemove(); setConfirmPdfRemove(false); }}
+          onCancel={() => setConfirmPdfRemove(false)}
+        />
+      )}
+      {confirmNode !== null && (
+        <ConfirmModal
+          title="删除工作动态条目"
+          message={`确定删除「${(task.progress_nodes || [])[confirmNode]?.label || '未命名事件'}」这条记录？`}
+          onConfirm={() => {
+            onSetField('progress_nodes', (task.progress_nodes || []).filter((_, x) => x !== confirmNode));
+            setConfirmNode(null);
+          }}
+          onCancel={() => setConfirmNode(null)}
         />
       )}
     </div>

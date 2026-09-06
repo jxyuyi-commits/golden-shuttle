@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Plus } from 'lucide-react';
 import { PEOPLE_ROLES } from '../../utils/people';
+import ConfirmModal from '../common/ConfirmModal';
 
 const roleColor = (r) => (
   r === '设计师' ? 'rgba(56,189,248,0.18)'
@@ -18,6 +19,7 @@ const PeopleEditor = ({ people, onChange }) => {
   const [input, setInput] = useState('');
   const [roleInputFor, setRoleInputFor] = useState(null); // 正在输入角色的人员 name
   const [roleInput, setRoleInput] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState(null); // REQ-006② 待移除人员
 
   const addPerson = () => {
     const v = input.trim();
@@ -26,9 +28,10 @@ const PeopleEditor = ({ people, onChange }) => {
     setInput('');
   };
 
-  const removePerson = (p) => {
-    if (!window.confirm(`确认移除人员「${p.name}」？仅移出预设，历史单据中的记录不受影响。`)) return;
-    onChange(people.filter(x => x.name !== p.name));
+  const doRemovePerson = () => {
+    if (!confirmRemove) return;
+    onChange(people.filter(x => x.name !== confirmRemove));
+    setConfirmRemove(null);
   };
 
   const addRole = (p, role) => {
@@ -89,7 +92,7 @@ const PeopleEditor = ({ people, onChange }) => {
                 </span>
               )}
             </span>
-            <button className="tag-del" title="移除人员" onClick={() => removePerson(p)}><X size={11} /></button>
+            <button className="tag-del" title="移除人员" onClick={() => setConfirmRemove(p.name)}><X size={11} /></button>
           </div>
         ))}
       </div>
@@ -98,6 +101,15 @@ const PeopleEditor = ({ people, onChange }) => {
           onKeyDown={e => e.key === 'Enter' && addPerson()} />
         <button className="btn-add-mini" onClick={addPerson}><Plus size={14} /></button>
       </div>
+
+      {confirmRemove && (
+        <ConfirmModal
+          title="移除人员"
+          message={`确定将「${confirmRemove}」移出人员预设吗？\n仅移出预设，历史单据中的记录不受影响。`}
+          onConfirm={doRemovePerson}
+          onCancel={() => setConfirmRemove(null)}
+        />
+      )}
     </div>
   );
 };

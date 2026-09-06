@@ -3,6 +3,7 @@ import { Plus, CheckCircle2, Calculator, AlertCircle, ChevronUp, ChevronDown, Tr
 import { autoSign, formatTime } from '../../utils/format';
 import { fetchMeasurementTemplates, fetchTaskVersions, saveMeasurementTemplate } from '../../api';
 import MeasurementModal from '../measurement/MeasurementModal';
+import ConfirmModal from '../common/ConfirmModal';
 
 /** 尺寸指标表格：排序 + 批量操作 + 预设导入 + 拓码 + 成衣实测公差报警 + 版次对比 */
 const SizeTable = ({
@@ -23,6 +24,10 @@ const SizeTable = ({
   const [pulse, setPulse] = useState({ row: -1, field: '' });
   const [shake, setShake] = useState({ row: -1, field: '' });
   const [isActualMode, setIsActualMode] = useState(false);
+  // REQ-006② 删除确认
+  const [confirmIdx, setConfirmIdx] = useState(null); // 单行删除 index
+  const [confirmBatch, setConfirmBatch] = useState(false); // 批量删除
+  const [confirmClear, setConfirmClear] = useState(false); // 清空全部
 
   // -- 核心部位提醒 --
   const [requiredParts, setRequiredParts] = useState([]);
@@ -131,10 +136,21 @@ const SizeTable = ({
     setSelectedIndices(prev => prev.filter(i => i !== idx).map(i => i > idx ? i - 1 : i));
   };
 
-  const batchDelete = () => {
-    if (!window.confirm('确定删除选中的 ' + selectedIndices.length + ' 个部位？')) return;
+  const doRemoveRow = () => {
+    if (confirmIdx === null) return;
+    removeRow(confirmIdx);
+    setConfirmIdx(null);
+  };
+
+  const doBatchDelete = () => {
+    setConfirmBatch(false);
     onChange(data.filter((_, i) => !selectedIndices.includes(i)));
     setSelectedIndices([]);
+  };
+
+  const doClear = () => {
+    setConfirmClear(false);
+    onChange([]);
   };
 
   const moveRow = (idx, dir) => {
@@ -176,11 +192,11 @@ const SizeTable = ({
             <span>拓码模式</span>
           </div>
           {selectedIndices.length > 0 && (
-            <button className="btn-ghost" style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.25)' }} onClick={batchDelete}>
+            <button className="btn-ghost" style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.25)' }} onClick={() => setConfirmBatch(true)}>
               批量删除 ({selectedIndices.length})
             </button>
           )}
-          <button className="btn-ghost" onClick={() => { if (window.confirm('确定清空所有行？')) onChange([]); }}>清空</button>
+          <button className="btn-ghost" onClick={() => setConfirmClear(true)}>清空</button>
           <button
             className={`btn-mode-toggle ${isActualMode ? 'active' : ''}`}
             onClick={() => setIsActualMode(!isActualMode)}
@@ -381,7 +397,7 @@ const SizeTable = ({
                     placeholder="0.5" /></td>
                   <td><input value={row.note || ''} onChange={e => updateRow(i, 'note', e.target.value)} /></td>
                   <td>
-                    <button className="btn-icon" style={{ color: '#ef4444' }} onClick={() => removeRow(i)}><Trash2 size={14} /></button>
+                    <button className="icon-btn-danger" title="删除该部位" onClick={() => setConfirmIdx(i)}><Trash2 size={14} /></button>
                   </td>
                 </tr>
               );
@@ -486,6 +502,32 @@ const SizeTable = ({
         onConfirm={addPoints}
         categories={catList}
       />
+
+      {/* REQ-006② 删除确认 */}
+      {confirmIdx !== null && (
+        <ConfirmModal
+          title="删除尺寸部位"
+          message={`确定删除「${data[confirmIdx]?.name || '该部位'}」吗？\n删除后该部位尺寸数据不可恢复。`}
+          onConfirm={doRemoveRow}
+          onCancel={() => setConfirmIdx(null)}
+        />
+      )}
+      {confirmBatch && (
+        <ConfirmModal
+          title="批量删除部位"
+          message={`确定删除选中的 ${selectedIndices.length} 个部位吗？\n删除后不可恢复。`}
+          onConfirm={doBatchDelete}
+          onCancel={() => setConfirmBatch(false)}
+        />
+      )}
+      {confirmClear && (
+        <ConfirmModal
+          title="清空尺寸表"
+          message="确定清空所有行吗？\n清空后当前尺寸表数据不可恢复。"
+          onConfirm={doClear}
+          onCancel={() => setConfirmClear(false)}
+        />
+      )}
     </div>
   );
 };

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Edit2, Trash2, Plus } from 'lucide-react';
 import { saveSizeGroups, deleteSizeGroup } from '../../api';
+import ConfirmModal from '../common/ConfirmModal';
 
 /** 号型规格系列管理（列表 + 新增/编辑弹窗） */
 const SizeGroupManager = ({ groups, onChange }) => {
   const [editing, setEditing] = useState(null);
+  const [confirmDel, setConfirmDel] = useState(null); // REQ-006② 待删除系列 id
 
   const save = async () => {
     if (!editing.name || !editing.size_list) return;
@@ -14,8 +16,10 @@ const SizeGroupManager = ({ groups, onChange }) => {
     onChange();
   };
 
-  const del = async (id) => {
-    if (!window.confirm('确定删除该号型系列？')) return;
+  const doDelete = async () => {
+    if (confirmDel == null) return;
+    const id = confirmDel;
+    setConfirmDel(null);
     await deleteSizeGroup(id);
     onChange();
   };
@@ -49,8 +53,8 @@ const SizeGroupManager = ({ groups, onChange }) => {
                   <td style={{ fontSize: 12, color: '#64748b' }}>{g.size_list}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn-icon-xs" onClick={() => setEditing(g)}><Edit2 size={12} /></button>
-                      <button className="btn-icon-xs" style={{ color: '#ef4444' }} onClick={() => del(g.id)}><Trash2 size={12} /></button>
+                      <button className="icon-btn" onClick={() => setEditing(g)} title="编辑"><Edit2 size={14} /></button>
+                      <button className="icon-btn-danger" onClick={() => setConfirmDel(g.id)} title="删除"><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
@@ -60,6 +64,14 @@ const SizeGroupManager = ({ groups, onChange }) => {
         </div>
       </div>
       {modal}
+      {confirmDel != null && (
+        <ConfirmModal
+          title="删除号型系列"
+          message={`确定删除该号型系列吗？\n删除后，绑定此系列的款式分类将失去尺码关联。`}
+          onConfirm={doDelete}
+          onCancel={() => setConfirmDel(null)}
+        />
+      )}
     </>
   );
 };

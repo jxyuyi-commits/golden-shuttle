@@ -4,6 +4,7 @@ import { Plus, Trash2, Loader2 } from 'lucide-react';
 import {
   fetchProcessItems, createProcessItem, updateProcessItem, deleteProcessItem
 } from '../../api';
+import ConfirmModal from '../common/ConfirmModal';
 
 const SECTIONS = ['部位工艺', '缝制工艺', '后整理', '特殊工艺', '其他'];
 
@@ -19,6 +20,7 @@ const ProcessEditor = ({ taskId }) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [confirmDelId, setConfirmDelId] = useState(null); // REQ-006② 待删除工艺 id
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,8 +55,10 @@ const ProcessEditor = ({ taskId }) => {
     finally { setBusy(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('确认删除该工艺指示？')) return;
+  const doDelete = async () => {
+    if (confirmDelId == null) return;
+    const id = confirmDelId;
+    setConfirmDelId(null);
     try { await deleteProcessItem(id); await load(); }
     catch (e) { alert('删除失败: ' + e.message); }
   };
@@ -109,8 +113,8 @@ const ProcessEditor = ({ taskId }) => {
                     <input style={cellStyle} value={row.note || ''} placeholder="备注" onChange={e => { setField(row.id, 'note', e.target.value); scheduleCommit(row.id, 'note', e.target.value); }} />
                   </td>
                   <td style={{ padding: 6, textAlign: 'center' }}>
-                    <button className="btn-icon-sm" onClick={() => handleDelete(row.id)} title="删除" style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>
-                      <Trash2 size={15} />
+                    <button className="icon-btn-danger" onClick={() => setConfirmDelId(row.id)} title="删除">
+                      <Trash2 size={14} />
                     </button>
                   </td>
                 </tr>
@@ -118,6 +122,15 @@ const ProcessEditor = ({ taskId }) => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {confirmDelId != null && (
+        <ConfirmModal
+          title="删除工艺指示"
+          message="确定删除该工艺指示吗？\n删除后不可恢复。"
+          onConfirm={doDelete}
+          onCancel={() => setConfirmDelId(null)}
+        />
       )}
     </div>
   );

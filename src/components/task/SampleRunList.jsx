@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Trash2, Loader2, Link2, X } from 'lucide-react';
 import SmartSelect from '../common/SmartSelect';
+import ConfirmModal from '../common/ConfirmModal';
 import { fetchRuns, createRun, updateRun, deleteRun, fetchDrawings } from '../../api';
 import { peopleByRole } from '../../utils/people';
 
@@ -39,6 +40,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
   const [manageId, setManageId] = useState(null); // 当前展开"管理绑定"的批次 id
+  const [confirmRun, setConfirmRun] = useState(null); // REQ-006② 待删除批次（确认弹窗）
 
   const load = useCallback(async () => {
     try {
@@ -111,11 +113,12 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
     await patch(run.id, { linked_drawing_ids: JSON.stringify(next) });
   };
 
-  const removeRun = async (r) => {
-    if (!window.confirm(`确认删除「${r.sample_type || '未命名版次'} ${r.size || ''} ${r.sample_color || ''}」批次？删除后不可恢复。`)) return;
-    await deleteRun(r.id);
-    load();
-    onStatusSync?.();
+  const askRemoveRun = (r) => setConfirmRun(r);
+  const doRemoveRun = () => {
+    if (!confirmRun) return;
+    const r = confirmRun;
+    setConfirmRun(null);
+    deleteRun(r.id).then(() => { load(); onStatusSync?.(); }).catch(() => { load(); });
   };
 
   if (loading) {
@@ -158,7 +161,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
               </select>
               {savingId === r.id && <Loader2 size={13} className="run-spin" />}
             </div>
-            <button type="button" className="run-del-btn" title="删除批次" onClick={() => removeRun(r)}>
+            <button type="button" className="icon-btn-danger" title="删除批次" onClick={() => askRemoveRun(r)}>
               <Trash2 size={14} />
             </button>
           </div>
@@ -315,6 +318,16 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
       <button type="button" className="run-add-btn" onClick={addRun}>
         <Plus size={15} /> 新增打样批次
       </button>
+
+      {/* REQ-006② 删除批次确认 */}
+      {confirmRun && (
+        <ConfirmModal
+          title="删除打样批次"
+          message={`确认删除「${confirmRun.sample_type || '未命名版次'} ${confirmRun.size || ''} ${confirmRun.sample_color || ''}」批次（${confirmRun.order_no || ''}）？\n删除后不可恢复。`}
+          onConfirm={doRemoveRun}
+          onCancel={() => setConfirmRun(null)}
+        />
+      )}
     </div>
   );
 };

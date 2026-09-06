@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Trash2, Loader2, X, Upload, FileText, ClipboardPaste, History, AlertTriangle } from 'lucide-react';
+import ConfirmModal from '../common/ConfirmModal';
 import PdfThumb from '../common/PdfThumb';
 import {
   fetchDrawings, fetchDrawingGroup, createDrawing, updateDrawing,
@@ -71,6 +72,8 @@ const DrawingLibrary = ({ taskId }) => {
   // 版本历史弹窗
   const [groupModal, setGroupModal] = useState(null); // { groupId, versions: [] }
   const [groupLoading, setGroupLoading] = useState(false);
+  const [confirmCard, setConfirmCard] = useState(null); // REQ-006② 待删除资料卡
+  const [confirmVerId, setConfirmVerId] = useState(null); // 待删除版本 id
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -197,16 +200,20 @@ const DrawingLibrary = ({ taskId }) => {
   };
 
   // ── 删除：多版本组整组删除（二次确认），单版直接删 ──
-  const handleDelete = async (card) => {
-    if (card._versionCount > 1) {
-      if (!window.confirm(`该资料有 ${card._versionCount} 个版本（V1~V${card._versionCount}）。确认删除整组全部版本？`)) return;
-      try { await deleteDrawingGroup(card.group_id); await load(); }
-      catch (e) { alert('删除失败: ' + e.message); }
-    } else {
-      if (!window.confirm('确认删除该图纸资料？')) return;
-      try { await deleteDrawing(card.id); await load(); }
-      catch (e) { alert('删除失败: ' + e.message); }
-    }
+  const handleDelete = (card) => setConfirmCard(card);
+
+  const doDeleteCard = async () => {
+    if (!confirmCard) return;
+    const card = confirmCard;
+    setConfirmCard(null);
+    try {
+      if (card._versionCount > 1) {
+        await deleteDrawingGroup(card.group_id);
+      } else {
+        await deleteDrawing(card.id);
+      }
+      await load();
+    } catch (e) { alert('删除失败: ' + e.message); }
   };
 
   // ── 版本历史弹窗 ──
@@ -220,8 +227,12 @@ const DrawingLibrary = ({ taskId }) => {
     finally { setGroupLoading(false); }
   };
 
-  const handleDeleteVersion = async (id) => {
-    if (!window.confirm('确认删除该版本记录？')) return;
+  const handleDeleteVersion = (id) => setConfirmVerId(id);
+
+  const doDeleteVersion = async () => {
+    if (confirmVerId == null) return;
+    const id = confirmVerId;
+    setConfirmVerId(null);
     try { await deleteDrawing(id); setGroupModal(null); await load(); }
     catch (e) { alert('删除失败: ' + e.message); }
   };
@@ -340,7 +351,7 @@ const DrawingLibrary = ({ taskId }) => {
                     );
                   })()}
                   <button
-                    className="drawing-del"
+                    className="drawing-del icon-btn-danger"
                     title={d._versionCount > 1 ? `删除整组（${d._versionCount} 个版本）` : '删除'}
                     onClick={() => handleDelete(d)}
                   >
@@ -488,7 +499,7 @@ const DrawingLibrary = ({ taskId }) => {
                         </div>
                       </div>
                       <div className="ver-actions">
-                        <button className="btn-icon" title="删除该版本" onClick={() => handleDeleteVersion(v.id)} style={{ color: '#ef4444' }}>
+                        <button className="icon-btn-danger" title="删除该版本" onClick={() => handleDeleteVersion(v.id)}>
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -500,6 +511,26 @@ const DrawingLibrary = ({ taskId }) => {
           </div>
         </div>,
         document.body
+      )}
+
+      {/* REQ-006② 删除确认 */}
+      {confirmCard && (
+        <ConfirmModal
+          title="删除图纸资料"
+          message={confirmCard._versionCount > 1
+            ? `该资料有 ${confirmCard._versionCount} 个版本（V1~V${confirmCard._versionCount}）。\n确认删除整组全部版本？删除后不可恢复。`
+            : `确认删除「${confirmCard.title || confirmCard.filename || '该资料'}」？删除后不可恢复。`}
+          onConfirm={doDeleteCard}
+          onCancel={() => setConfirmCard(null)}
+        />
+      )}
+      {confirmVerId != null && (
+        <ConfirmModal
+          title="删除版本记录"
+          message="确认删除该版本记录？\n删除后不可恢复。"
+          onConfirm={doDeleteVersion}
+          onCancel={() => setConfirmVerId(null)}
+        />
       )}
     </div>
   );

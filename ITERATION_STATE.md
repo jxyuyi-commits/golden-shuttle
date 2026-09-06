@@ -1,7 +1,7 @@
-# PatternMaster Pro 迭代状态追踪
+﻿# PatternMaster Pro 迭代状态追踪
 
 > 本文件是迭代过程的"外部记忆"，上下文压缩后必须先读本文件再继续。
-> 最后更新：2026-09-07（迁移 v12 清理 tasks 旧批次字段 + 详情/设置页刷新白屏修复 + seed 脚本适配新模型）
+> 最后更新：2026-09-07（REQ-002 图纸缩略图完整展示 + REQ-003 仪表盘清单展示优化完成：品类筛选/版师样衣工列/最先进批次主进度/待确认卡，迁移 v13）
 
 ---
 
@@ -54,7 +54,7 @@ styles(style_no UNIQUE, pdf_url 款级共享)
 
 - 6 个 task（一单一款无重复）、6 个 styles、8 个批次
 - task1 AW26-JK001（胚样打版中 + 头版样待配料）、task4 SS26-TS003（2 批次）、其余各 1 批次
-- 数据库迁移最新 **v12**（v10 批次表+存量合并，v11 linked_drawing_ids，v12 清理 tasks 旧批次字段）
+- 数据库迁移最新 **v13**（v10 批次表+存量合并，v11 linked_drawing_ids，v12 清理 tasks 旧批次字段，v13 批次负责人拆分版师/样衣工）
 - 迁移前备份：`server/database.backup_before_v10.sqlite`（.gitignore 忽略，未入库）
 
 ### tasks 旧批次字段清理 + 刷新白屏修复（2026-09-07，迁移 v12）
@@ -69,6 +69,17 @@ styles(style_no UNIQUE, pdf_url 款级共享)
   - HTTP：GET /api/tasks（6 单、runs 附带、派生字段正确）；versions API 正常；PATCH 旧键忽略（taskUpdated=False/logged=0）；建单→批次（类型/尺码/颜色/件数/日期全落位）→批次状态变更→款单状态自动同步→删除→孤儿款式清理，全链路通过
   - 浏览器 E2E（Puppeteer + 系统 Chrome，全新配置目录）：看板 7 项/列表（26AWW526 行 V2—M 2 正确）/仪表盘/详情批次/新建弹窗全 PASS，零 console 错误；空白复现脚本修复前 goto 后 textLen=0 → 修复后 1073
   - 生产构建 `npm run build` 通过（8.5s）
+
+### REQ-002 + REQ-003 仪表盘/清单展示优化（2026-09-07，迁移 v13）
+
+- **REQ-002 图纸资料缩略图完整展示**：DrawingLibrary 卡片网格与版本历史缩略图由 object-fit:cover（上下裁切）改为 contain（完整显示留白），`.drawing-thumb img` CSS 同步；非图片占位（PRJ/EMF/DXF 图标）与矢量缩略图天然完整，无需调整
+- **REQ-003① 品类占比点击筛选**：品类条可点击，选中态高亮，再次点击恢复；与统计卡状态筛选**可叠加**（AND 交集），标题计数联动
+- **REQ-003② 版师/样衣工列**：迁移 v13 sample_runs 加 pattern_maker/sample_maker（旧 assignee 并入版师后删列）；批次表单「负责人」拆为「版师」「样衣工」两个输入；清单新增两列（取最先进批次，未分配显示「未分配」）；KanbanView 批次 tooltip 同步
+- **REQ-003③ 进度展示优化**：清单合并「当前进度+最先进批次」为单列主进度，显示 `版次·批次状态`（如「胚样·打版中」「复版三·已完成」），按批次状态着色，一眼识别在打胚/头版样/复板等环节；无批次显示「无批次」
+- **REQ-003④ 统计卡粒度**：4 卡 → 5 卡（总数/进行中/待配料未开始/**待确认**/已完成）；进行中口径改为 打版中+样衣中（待确认独立，分类互斥），统计卡筛选与卡片数字严格一致
+- **验证**（全部实测通过）：浏览器 E2E 17 项全 PASS（5 卡/表头 8 列/主进度显示/未分配/品类筛选与选中态/叠加筛选/待确认卡/缩略图 contain/零 console 错误）；生产构建通过（12.3s）
+- **注意**：期间用户实际使用推进了批次状态（26AWW526 V2→待确认、SS26-TS003 胚样→样衣中），仪表盘数字随之真实变化——验证了卡片数字非写死
+- **REQ-004（款/版次信息归属重构）仍待开发**：数据模型+页面大改，涉及单号下沉版次、审核按版次独立、历史数据迁移；需先定设计决策（见 docs/待开发文档.md 备注），未在本轮实施
 
 ### 遗留待办
 
@@ -93,11 +104,11 @@ styles(style_no UNIQUE, pdf_url 款级共享)
 - **Node 版本**：真机系统 Node v24.13.0（ABI 137）；AI 工具通道里的 node 是托管版 v22.22.2（ABI 127）
 - **better-sqlite3**：当前编为 ABI 132（Electron），dev 后端由 Electron Node 运行，无需再 rebuild:node
 - **开发端口**：后端 3001（0.0.0.0），前端 Vite 5173
-- **数据库路径**：`server/database.sqlite`（6 tasks / 6 styles，迁移已到 v12）
+- **数据库路径**：`server/database.sqlite`（6 tasks / 6 styles，迁移已到 v13）
   - task1 AW26-JK001 极地抗寒羽绒服：2 批次（胚样打版中 + 头版样待配料），图纸库 2 条设计稿
   - task4 SS26-TS003 高支纯棉重磅T恤：2 批次；其余款各 1 批次
 - **启动命令**：`npm run dev:all`（= `node scripts/dev.cjs`，同时启动后端+前端）
-- **启动校验**：后端日志出现 `[DB] All migrations up to date (latest: v12)` 即为正常
+- **启动校验**：后端日志出现 `[DB] All migrations up to date (latest: v13)` 即为正常
 - **生产预览**：`node _preview.cjs`（托管 dist 到 4174 端口 + 代理 API 到 3001）——内置浏览器缓存问题用换端口解决
 - **Git 现状**：仓库 2026-09-01 重新初始化，当前 `main` 分支仅 1 个提交 `5989809 初始提交`
   （远端 github.com/jxyuyi-commits/golden-shuttle），本文件引用的历史提交号已不可查

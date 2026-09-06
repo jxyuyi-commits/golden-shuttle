@@ -187,12 +187,21 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
               </select>
             </div>
             <div className="field">
-              <label>负责人（板师/样衣工）</label>
+              <label>版师</label>
               <input
-                value={r.assignee || ''}
-                placeholder="谁负责这个批次"
-                onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, assignee: e.target.value } : x))}
-                onBlur={e => patch(r.id, { assignee: e.target.value })}
+                value={r.pattern_maker || ''}
+                placeholder="谁负责打版"
+                onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, pattern_maker: e.target.value } : x))}
+                onBlur={e => patch(r.id, { pattern_maker: e.target.value })}
+              />
+            </div>
+            <div className="field">
+              <label>样衣工</label>
+              <input
+                value={r.sample_maker || ''}
+                placeholder="谁负责做样衣"
+                onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, sample_maker: e.target.value } : x))}
+                onBlur={e => patch(r.id, { sample_maker: e.target.value })}
               />
             </div>
             <div className="field">

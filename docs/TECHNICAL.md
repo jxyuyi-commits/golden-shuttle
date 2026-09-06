@@ -72,12 +72,13 @@ created_at, updated_at
 ### sample_runs（版次批次 = 板师工作单元，v10 新增）
 ```
 id, task_id(FK→tasks, ON DELETE CASCADE), sample_type(版次), size, sample_color,
-sample_count, priority, status, blocker, assignee,
+sample_count, priority, status, blocker, pattern_maker(版师), sample_maker(样衣工),
 fabric_date, start_date, expected_date, finish_date, note, sort_order, created_at, updated_at
 ```
 - 一款单 1──N 批次：胚样/头版样/复版/生产样可并行
 - status 枚举：waiting_material(待配料)/pattern_making(打版中)/sample_making(样衣中)/pending_confirm(待确认)/done(已完成)
 - blocker 枚举：none/short_material(欠面辅料)/wait_designer(待设计师确认)/wait_tech(待工艺单)/other(其他)，独立字段不走备注
+- 负责人（v13 起）：pattern_maker 版师 / sample_maker 样衣工 两个字段；原单一 assignee 已在 v13 并入 pattern_maker 后删除（REQ-003②）
 - 建单（tasks.create）事务内自动建首个批次；批次增删改写 operation_logs
 
 ### drawings（图纸资料，按 task_id 隔离，款单内共享）
@@ -130,6 +131,7 @@ PATCH /api/tasks/:id 的 STYLE_KEYS 白名单：style_no, title, brand, designer
 | v10 | **版次批次 sample_runs 表 + 存量同款重复单合并（8单→6单）** |
 | v11 | sample_runs 加 linked_drawing_ids（批次绑定的图纸资料版本，JSON 数组） |
 | v12 | 清理 tasks 旧批次字段（sample_type/sample_color/size/sample_count/fabric_date，权威数据已在 sample_runs；API 层改为从首个批次兼容投影） |
+| v13 | 批次负责人拆分版师/样衣工（sample_runs 加 pattern_maker/sample_maker；旧 assignee 值并入版师后删除，REQ-003②） |
 
 迁移通过 `_migrations` 表记录已执行版本，每个版本只执行一次；v10 执行前数据库自动备份为 `server/database.backup_before_v10.sqlite`。
 

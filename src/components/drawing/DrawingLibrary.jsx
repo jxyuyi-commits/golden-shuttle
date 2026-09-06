@@ -299,7 +299,7 @@ const DrawingLibrary = ({ taskId }) => {
           {filtered.map(d => (
             <div key={d.group_id || d.id} className="drawing-card">
               <div className="drawing-thumb">
-                <PdfThumb pdfUrl={d.url} />
+                <PdfThumb pdfUrl={d.url} objectFit="contain" />
                 <div className="drawing-badges">
                   <select
                     className="drawing-cat-sel"
@@ -465,7 +465,7 @@ const DrawingLibrary = ({ taskId }) => {
                   return (
                     <div key={v.id} className="drawing-ver-row" style={{ borderColor: latest ? 'rgba(167,139,250,0.5)' : 'rgba(255,255,255,0.06)' }}>
                       <div className="ver-thumb">
-                        <PdfThumb pdfUrl={v.url} />
+                        <PdfThumb pdfUrl={v.url} objectFit="contain" />
                       </div>
                       <div className="ver-info">
                         <div className="ver-title">

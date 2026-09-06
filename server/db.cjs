@@ -292,7 +292,8 @@ const migrations = [
           priority TEXT DEFAULT '中',
           status TEXT DEFAULT 'waiting_material',
           blocker TEXT DEFAULT 'none',
-          assignee TEXT DEFAULT '',
+          pattern_maker TEXT DEFAULT '',
+          sample_maker TEXT DEFAULT '',
           fabric_date TEXT DEFAULT '',
           start_date TEXT DEFAULT '',
           expected_date TEXT DEFAULT '',
@@ -385,6 +386,20 @@ const migrations = [
     up: () => {
       const LEGACY_COLS = ['sample_type', 'sample_color', 'size', 'sample_count', 'fabric_date'];
       for (const col of LEGACY_COLS) dropColumnIfExists('tasks', col);
+    }
+  },
+  {
+    version: 13,
+    description: '批次负责人拆分版师/样衣工（sample_runs 加 pattern_maker/sample_maker；旧 assignee 值并入版师后删除，REQ-003②）',
+    up: () => {
+      const cols = db.prepare("PRAGMA table_info(sample_runs)").all().map(c => c.name);
+      if (!cols.includes('pattern_maker')) db.exec("ALTER TABLE sample_runs ADD COLUMN pattern_maker TEXT DEFAULT ''");
+      if (!cols.includes('sample_maker')) db.exec("ALTER TABLE sample_runs ADD COLUMN sample_maker TEXT DEFAULT ''");
+      if (cols.includes('assignee')) {
+        // 原单一「负责人」语义更接近版师（打版阶段主导），并入 pattern_maker 后删列
+        db.exec("UPDATE sample_runs SET pattern_maker = assignee WHERE assignee IS NOT NULL AND assignee != '' AND pattern_maker = ''");
+        dropColumnIfExists('sample_runs', 'assignee');
+      }
     }
   }
 ];

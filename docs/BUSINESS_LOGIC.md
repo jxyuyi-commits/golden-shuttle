@@ -15,7 +15,7 @@
 - 款单（tasks）：6 张（一款一单，已无重复）
 - 版次批次（sample_runs）：8 条（AW26-JK001 2 条、SS26-TS003 2 条，其余各 1 条）
 - 款式（styles）：6 个
-- 数据库迁移版本：v12（v10 批次表+存量合并，v11 linked_drawing_ids，v12 清理 tasks 旧批次字段，权威数据全部落位 sample_runs）
+- 数据库迁移版本：v13（v10 批次表+存量合并，v11 linked_drawing_ids，v12 清理 tasks 旧批次字段，v13 批次负责人拆分版师/样衣工；权威数据全部落位 sample_runs）
 
 ### 已完成功能清单
 | 模块 | 功能 |

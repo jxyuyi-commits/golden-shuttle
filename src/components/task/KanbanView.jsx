@@ -396,9 +396,10 @@ const KanbanView = ({
                                   <>
                                     {shown.map((r, i) => {
                                       const meta = RUN_STATUS_META[r.status];
+                                      const who = [r.pattern_maker, r.sample_maker].filter(Boolean).join(' / ');
                                       return (
                                         <div className="bento-row bento-run-row" key={i}
-                                          title={`${r.sample_type || '未命名版次'}${meta ? ' · ' + meta.label : ''}${r.assignee ? ' · ' + r.assignee : ''}`}>
+                                          title={`${r.sample_type || '未命名版次'}${meta ? ' · ' + meta.label : ''}${who ? ' · ' + who : ''}`}>
                                           {meta && <span className="bento-run-dot" style={{ background: meta.color }} />}
                                           <em>{r.sample_type || '—'}</em>
                                           <span className="bento-run-sub">

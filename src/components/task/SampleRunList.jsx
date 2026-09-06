@@ -235,17 +235,17 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
                 {AUDIT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <div className="field">
-              <label>审版意见</label>
-              <textarea
-                rows={3}
-                value={r.audit_comment || ''}
-                placeholder="本版次审版意见 / 修改点（各版次独立，可多行）"
-                onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, audit_comment: e.target.value } : x))}
-                onBlur={e => patch(r.id, { audit_comment: e.target.value })}
-                style={{ width: '100%', resize: 'vertical', minHeight: 56 }}
-              />
-            </div>
+          </div>
+          <div className="field" style={{ marginTop: 10 }}>
+            <label>审版意见（各版次独立）</label>
+            <textarea
+              rows={5}
+              value={r.audit_comment || ''}
+              placeholder="本版次审版意见 / 修改点，可多行输入，各版次互不影响"
+              onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, audit_comment: e.target.value } : x))}
+              onBlur={e => patch(r.id, { audit_comment: e.target.value })}
+              style={{ width: '100%', resize: 'vertical', minHeight: 120, lineHeight: 1.6 }}
+            />
           </div>
           <div className="field" style={{ marginTop: 8 }}>
             <label>批次备注</label>

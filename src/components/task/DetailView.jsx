@@ -192,23 +192,6 @@ const DetailView = ({
             </div>
           </div>
 
-          <div className="section-title" style={{ marginTop: 40, borderLeftColor: '#38bdf8' }}>
-            款单信息
-            <span style={{ fontWeight: 400, fontSize: 12, color: '#64748b' }}>
-              （单号/审核按版次独立，见下方批次；看板状态为款级）
-            </span>
-          </div>
-          <div className="field-grid">
-            <div className="field">
-              <label>款单看板状态</label>
-              <select value={task.status || 'todo'} onChange={e => onSetField('status', e.target.value)}>
-                <option value="todo">待处理</option>
-                <option value="doing">打版中</option>
-                <option value="done">已完结</option>
-              </select>
-            </div>
-          </div>
-
           <div className="section-title" style={{ marginTop: 32, borderLeftColor: '#fbbf24' }}>
             打样批次 <span>(同款各版次并行，板师工作单元；各自独立打样单号与审核)</span>
           </div>

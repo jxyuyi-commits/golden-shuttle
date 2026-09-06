@@ -271,10 +271,11 @@ function update(id, b) {
     styleUpdated = true;
   }
 
+  // 注：status（款单看板状态）由 syncTaskStatus 按最先进批次自动判定，禁止手动覆盖，故不在白名单
   const TASK_KEYS = [
     'priority',
     'start_date', 'expected_date', 'finish_date',
-    'status', 'progress_nodes', 'image_url',
+    'progress_nodes', 'image_url',
     'fabric_req', 'trim_req', 'process_req', 'note', 'size_data'
   ];
   const taskUpdates = {};

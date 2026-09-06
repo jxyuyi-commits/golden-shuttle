@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Plus, Layout, BarChart3, PieChart, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 
 // 款级聚合状态元数据（与后端 tasks.cjs DERIVED_STATUS_LABEL 一致）
@@ -12,11 +12,22 @@ const STATUS_META = {
 };
 const STATUS_ORDER = ['not_started', 'waiting_material', 'pattern_making', 'sample_making', 'pending_confirm', 'done'];
 
+// 统计卡点击筛选：key 对应卡片，match 判定款式是否命中（与 stats 计算口径完全一致，保证卡片数字=筛选结果数）
+const STAT_FILTERS = {
+  inProgress: { match: (s) => ['pattern_making', 'sample_making', 'pending_confirm'].includes(s) },
+  waiting:    { match: (s) => ['waiting_material', 'not_started'].includes(s) },
+  done:       { match: (s) => s === 'done' },
+};
+
 /**
  * 设计师仪表盘：款级宏观视角（总款数、品类占比、进度分布、款级列表）
  * 数据来自 tasks（含 derived_status 聚合状态 + runs 批次）
+ * 顶部统计卡可点击筛选下方「款式开发清单」（REQ-001）
  */
 const DesignerDashboard = ({ tasks, settings, onTaskClick, onBack, onOpenSidebar, onNewTask }) => {
+  // 清单状态筛选：null=全部 | 'inProgress' | 'waiting' | 'done'；点击「总款数」或再次点击已选中卡片恢复全部
+  const [statusFilter, setStatusFilter] = useState(null);
+
   // 统计
   const stats = useMemo(() => {
     const total = tasks.length;
@@ -36,15 +47,27 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onBack, onOpenSidebar
     return { total, byStatus, inProgress, doneCount, byCategory };
   }, [tasks]);
 
+  // 清单筛选结果（与卡片数字联动）
+  const filteredTasks = useMemo(() => {
+    if (!statusFilter) return tasks;
+    const f = STAT_FILTERS[statusFilter];
+    return tasks.filter(t => f && f.match(t.derived_status || 'not_started'));
+  }, [tasks, statusFilter]);
+
+  const toggleFilter = (key) => {
+    if (key === 'all') { setStatusFilter(null); return; } // 「总款数」= 恢复全部
+    setStatusFilter(prev => (prev === key ? null : key)); // 再次点击已选中卡片 = 恢复全部
+  };
+
   const maxCat = Math.max(1, ...Object.values(stats.byCategory));
   const maxStatus = Math.max(1, ...Object.values(stats.byStatus));
   const catEntries = Object.entries(stats.byCategory).sort((a, b) => b[1] - a[1]);
 
   const statCards = [
-    { label: '总款数', value: stats.total, icon: <BarChart3 size={22} />, color: '#38bdf8' },
-    { label: '进行中', value: stats.inProgress, icon: <Clock size={22} />, color: '#fbbf24' },
-    { label: '待配料/未开始', value: stats.byStatus.waiting_material + stats.byStatus.not_started, icon: <AlertCircle size={22} />, color: '#94a3b8' },
-    { label: '已完成(可下大货)', value: stats.doneCount, icon: <CheckCircle2 size={22} />, color: '#4ade80' },
+    { filterKey: 'all', label: '总款数', value: stats.total, icon: <BarChart3 size={22} />, color: '#38bdf8' },
+    { filterKey: 'inProgress', label: '进行中', value: stats.inProgress, icon: <Clock size={22} />, color: '#fbbf24' },
+    { filterKey: 'waiting', label: '待配料/未开始', value: stats.byStatus.waiting_material + stats.byStatus.not_started, icon: <AlertCircle size={22} />, color: '#94a3b8' },
+    { filterKey: 'done', label: '已完成(可下大货)', value: stats.doneCount, icon: <CheckCircle2 size={22} />, color: '#4ade80' },
   ];
 
   return (
@@ -65,17 +88,28 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onBack, onOpenSidebar
       </header>
 
       <div style={{ padding: '24px 32px', maxWidth: 1400, margin: '0 auto' }}>
-        {/* 统计卡片 */}
+        {/* 统计卡片（可点击筛选清单） */}
         <div className="dash-stat-row">
-          {statCards.map(c => (
-            <div key={c.label} className="dash-stat-card">
-              <div className="dash-stat-icon" style={{ background: `${c.color}22`, color: c.color }}>{c.icon}</div>
-              <div>
-                <div className="dash-stat-value" style={{ color: c.color }}>{c.value}</div>
-                <div className="dash-stat-label">{c.label}</div>
+          {statCards.map(c => {
+            const active = statusFilter === c.filterKey;
+            return (
+              <div
+                key={c.label}
+                className={`dash-stat-card${active ? ' active' : ''}`}
+                role="button"
+                tabIndex={0}
+                title={c.filterKey === 'all' ? '显示全部款式' : '点击筛选款式开发清单，再次点击恢复全部'}
+                onClick={() => toggleFilter(c.filterKey)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFilter(c.filterKey); } }}
+              >
+                <div className="dash-stat-icon" style={{ background: `${c.color}22`, color: c.color }}>{c.icon}</div>
+                <div>
+                  <div className="dash-stat-value" style={{ color: c.color }}>{c.value}</div>
+                  <div className="dash-stat-label">{c.label}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* 两列：品类占比 + 进度分布 */}
@@ -121,9 +155,9 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onBack, onOpenSidebar
           </div>
         </div>
 
-        {/* 款级列表 */}
+        {/* 款级列表（随统计卡筛选联动） */}
         <div className="dash-panel glass" style={{ marginTop: 20 }}>
-          <div className="dash-panel-title">款式开发清单（{tasks.length} 款）</div>
+          <div className="dash-panel-title">款式开发清单（{filteredTasks.length} 款）</div>
           <div className="dash-table-wrap">
             <table className="dash-table">
               <thead>
@@ -138,7 +172,7 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onBack, onOpenSidebar
                 </tr>
               </thead>
               <tbody>
-                {tasks.map(t => {
+                {filteredTasks.map(t => {
                   const meta = STATUS_META[t.derived_status] || STATUS_META.not_started;
                   const runs = t.runs || [];
                   // 最先进批次

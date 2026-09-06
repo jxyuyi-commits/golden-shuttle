@@ -404,6 +404,15 @@
   display: flex; align-items: center; gap: 14px; padding: 18px 20px;
   background: rgba(148,163,184,0.06); border: 1px solid rgba(148,163,184,0.15);
   border-radius: 12px;
+  cursor: pointer; user-select: none;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.dash-stat-card:hover { background: rgba(148,163,184,0.1); }
+.dash-stat-card:focus-visible { outline: 2px solid rgba(56,189,248,0.6); outline-offset: 2px; }
+.dash-stat-card.active {
+  background: rgba(56,189,248,0.10);
+  border-color: rgba(56,189,248,0.6);
+  box-shadow: 0 0 0 1px rgba(56,189,248,0.3), 0 6px 22px rgba(56,189,248,0.12);
 }
 .dash-stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: none; }
 .dash-stat-value { font-size: 26px; font-weight: 700; line-height: 1.1; }

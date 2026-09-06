@@ -44,13 +44,37 @@ const TASK_JOIN_SELECT = `
   LEFT JOIN styles s ON t.style_id = s.id
 `;
 
-/** 给任务行附带其全部版次批次（sample_runs），一次查询按 task_id 分组避免 N+1 */
+// 版次批次状态优先级（数值越大越靠后/越先进），用于款级状态自动聚合
+const RUN_STATUS_RANK = {
+  waiting_material: 1, pattern_making: 2, sample_making: 3, pending_confirm: 4, done: 5,
+};
+const DERIVED_STATUS_LABEL = {
+  not_started: '未开始', waiting_material: '待配料', pattern_making: '打版中',
+  sample_making: '样衣中', pending_confirm: '待确认', done: '已完成',
+};
+
+/** 从批次列表推导款级状态：取最先进（优先级最高）批次的状态；无批次为未开始 */
+function deriveStyleStatus(runs) {
+  if (!runs || !runs.length) return 'not_started';
+  let best = 'waiting_material';
+  for (const r of runs) {
+    if ((RUN_STATUS_RANK[r.status] ?? 0) > (RUN_STATUS_RANK[best] ?? 0)) best = r.status;
+  }
+  return best;
+}
+
+/** 给任务行附带其全部版次批次（sample_runs），一次查询按 task_id 分组避免 N+1；
+ *  同时计算 derived_status（款级聚合状态，设计师视角） */
 function attachRuns(rows) {
   if (!rows.length) return rows;
   const all = getDb().prepare('SELECT * FROM sample_runs ORDER BY sort_order ASC, id ASC').all();
   const byTask = {};
   for (const r of all) (byTask[r.task_id] ||= []).push(r);
-  return rows.map(t => ({ ...t, runs: byTask[t.id] || [] }));
+  return rows.map(t => {
+    const runs = byTask[t.id] || [];
+    const derived = deriveStyleStatus(runs);
+    return { ...t, runs, derived_status: derived, derived_status_label: DERIVED_STATUS_LABEL[derived] };
+  });
 }
 
 /**

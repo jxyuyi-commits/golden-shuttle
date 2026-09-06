@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Layout, Plus, X, CheckCircle2, Circle, AlertCircle, ArrowLeft, ArrowUp, ArrowDown, Save, Calculator, Clock, Settings, Check, FileText, Upload, Trash2, ChevronDown, ChevronUp, Edit2, Database, GripVertical } from 'lucide-react';
+import { Layout, Plus, X, CheckCircle2, Circle, AlertCircle, ArrowLeft, ArrowUp, ArrowDown, Save, Calculator, Clock, Settings, Check, FileText, Upload, Trash2, ChevronDown, ChevronUp, Edit2, Database, GripVertical, BarChart3 } from 'lucide-react';
 
 import { API } from './api/client';
 import {
@@ -29,6 +29,7 @@ import SizeGroupManager from './components/settings/SizeGroupManager';
 import CategoryManager from './components/settings/CategoryManager';
 import SettingListEditor from './components/settings/SettingListEditor';
 import SettingsView from './components/settings/SettingsView';
+import DesignerDashboard from './components/dashboard/DesignerDashboard';
 
 const App = () => {
   const [view, setView] = useState('kanban'); // kanban | detail | settings
@@ -285,6 +286,18 @@ const App = () => {
         />
       )}
 
+      {/* ═══ 设计师仪表盘视图 ════════════════════════════════════ */}
+      {view === 'dashboard' && (
+        <DesignerDashboard
+          tasks={tasks}
+          settings={settings}
+          onTaskClick={handleEnterDetail}
+          onBack={() => setView('kanban')}
+          onOpenSidebar={() => setShowSidebar(true)}
+          onNewTask={() => setShowNewModal(true)}
+        />
+      )}
+
       {/* ═══ 全局侧边栏菜单 ════════════════════════════════════════ */}
       {
         showSidebar && (
@@ -296,6 +309,9 @@ const App = () => {
               </div>
               <div className="menu-item" onClick={() => { setView('kanban'); setShowSidebar(false); }}>
                 <Layout size={20} /> 看板主页
+              </div>
+              <div className="menu-item" onClick={() => { setView('dashboard'); setShowSidebar(false); }}>
+                <BarChart3 size={20} /> 设计师仪表盘
               </div>
               <div className="menu-item" onClick={() => { setView('settings'); setShowSidebar(false); }}>
                 <Settings size={20} /> 系统设置

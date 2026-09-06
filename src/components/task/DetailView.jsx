@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Layout, Trash2, Check, Save, Edit2, Upload, Plus, FolderOpen } from 'lucide-react';
+import { ArrowLeft, Layout, Trash2, Edit2, Upload, Plus, FolderOpen } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import PdfPickerModal from '../common/PdfPickerModal';
 import ConfirmModal from '../common/ConfirmModal';
@@ -25,15 +25,14 @@ const DetailView = ({
   settings,
   detailTab,
   isStyleEditing,
-  saveStatus,
   onBack,
   onOpenSidebar,
   onDelete,
-  onSave,
   onSetDetailTab,
   onSetIsStyleEditing,
   onSetField,
   onSetNodeField,
+  onCommitField,
   onPdfUpload,
   onPdfSelect,
   onPdfRemove,
@@ -45,6 +44,19 @@ const DetailView = ({
   const [confirmNode, setConfirmNode] = useState(null); // REQ-006② 待删除工作动态条目 index
   const [confirmPdfRemove, setConfirmPdfRemove] = useState(false); // REQ-006② 移除设计稿确认
   const pdfInputRef = useRef(null);
+
+  // 自动保存（REQ-006③ 修订）：工作动态条目输入防抖 400ms 提交，镜像最新 progress_nodes
+  const progressRef = useRef(task.progress_nodes || []);
+  progressRef.current = task.progress_nodes || [];
+  const nodeCommitTimer = useRef(null);
+  const scheduleNodeCommit = () => {
+    if (nodeCommitTimer.current) clearTimeout(nodeCommitTimer.current);
+    nodeCommitTimer.current = setTimeout(() => onCommitField('progress_nodes', progressRef.current), 400);
+  };
+  const commitNodesNow = (nodes) => {
+    if (nodeCommitTimer.current) { clearTimeout(nodeCommitTimer.current); nodeCommitTimer.current = null; }
+    onCommitField('progress_nodes', nodes);
+  };
 
   const getSizeGroup = () => {
     const catObj = settings.categories.find(c => (typeof c === 'string' ? c : c.name) === task.category);
@@ -64,7 +76,7 @@ const DetailView = ({
       <header className="top-bar glass">
         <div className="detail-breadcrumb">
           <button className="btn-icon" onClick={onBack}><ArrowLeft size={20} /></button>
-          <div className="logo" onClick={onOpenSidebar} style={{ marginLeft: -10, marginRight: 20 }}>
+          <div className="logo sidebar-hotzone" onClick={onOpenSidebar} onMouseEnter={onOpenSidebar} style={{ marginLeft: -10, marginRight: 20 }}>
             <Layout size={28} color="#38bdf8" />
           </div>
           <div>
@@ -108,11 +120,6 @@ const DetailView = ({
           >
             <Trash2 size={14} /> 删除单据
           </button>
-          {saveStatus === 'saved' && <span className="saved-tip" style={{ padding: '4px 12px' }}><Check size={14} /> 已保存</span>}
-          <button className="btn-ghost" style={{ padding: '8px 20px' }} onClick={onBack}>取消</button>
-          <button className="btn-blue" onClick={onSave} disabled={saveStatus === 'saving'}>
-            <Save size={16} /> {saveStatus === 'saving' ? '保存中…' : '保存'}
-          </button>
         </div>
       </header>
 
@@ -132,7 +139,7 @@ const DetailView = ({
           <div className="glass" style={{ gridColumn: '1/-1', padding: 32 }}>
             <SizeTable
               data={task.size_data || []}
-              onChange={val => onSetField('size_data', val)}
+              onChange={val => { onSetField('size_data', val); onCommitField('size_data', val); }}
               updatedAt={task.updated_at}
               standardSize={task.size || 'M'}
               sizeGroup={getSizeGroup()}
@@ -158,38 +165,38 @@ const DetailView = ({
             </div>
             <div className="field">
               <label>款式名称</label>
-              <input value={task.title || ''} onChange={e => onSetField('title', e.target.value)} />
+              <input value={task.title || ''} onChange={e => onSetField('title', e.target.value)} onBlur={e => onCommitField('title', e.target.value)} />
             </div>
             <div className="field">
               <label>款式类别</label>
-              <SmartSelect value={task.category} onChange={v => onSetField('category', v)} options={settings.categories} />
+              <SmartSelect value={task.category} onChange={v => { onSetField('category', v); onCommitField('category', v); }} options={settings.categories} />
             </div>
             <div className="field">
               <label>品牌</label>
-              <SmartSelect value={task.brand} onChange={v => onSetField('brand', v)} options={settings.brands} />
+              <SmartSelect value={task.brand} onChange={v => { onSetField('brand', v); onCommitField('brand', v); }} options={settings.brands} />
             </div>
             <div className="field">
               <label>设计师</label>
-              <SmartSelect value={task.designer} onChange={v => onSetField('designer', v)} options={peopleByRole(settings.people, '设计师')} />
+              <SmartSelect value={task.designer} onChange={v => { onSetField('designer', v); onCommitField('designer', v); }} options={peopleByRole(settings.people, '设计师')} />
             </div>
             <div className="field"></div>
             <div className="field">
               <label>年度</label>
-              <select value={task.year || ''} onChange={e => onSetField('year', e.target.value)}>
+              <select value={task.year || ''} onChange={e => { onSetField('year', e.target.value); onCommitField('year', e.target.value); }}>
                 <option value="">请选择</option>
                 {years.map(y => <option key={y}>{y}</option>)}
               </select>
             </div>
             <div className="field">
               <label>季节</label>
-              <select value={task.season || ''} onChange={e => onSetField('season', e.target.value)}>
+              <select value={task.season || ''} onChange={e => { onSetField('season', e.target.value); onCommitField('season', e.target.value); }}>
                 <option value="">请选择</option>
                 {seasons.map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
             <div className="field">
               <label>波段</label>
-              <select value={task.month || ''} onChange={e => onSetField('month', e.target.value)}>
+              <select value={task.month || ''} onChange={e => { onSetField('month', e.target.value); onCommitField('month', e.target.value); }}>
                 <option value="">请选择</option>
                 {months.map(m => <option key={m}>{m}</option>)}
               </select>
@@ -210,7 +217,7 @@ const DetailView = ({
             ].map(({ label, key }) => (
               <div key={key} className="field">
                 <label>{label}</label>
-                <textarea value={task[key] || ''} onChange={e => onSetField(key, e.target.value)} />
+                <textarea value={task[key] || ''} onChange={e => onSetField(key, e.target.value)} onBlur={e => onCommitField(key, e.target.value)} />
               </div>
             ))}
           </div>
@@ -291,7 +298,10 @@ const DetailView = ({
           <div className="glass side-box" style={{ marginTop: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <div className="section-title" style={{ margin: 0, border: 'none', padding: 0 }}>工作动态</div>
-              <button type="button" className="btn-blue-sm" onClick={() => onSetField('progress_nodes', [...(task.progress_nodes || []), { label: '', status: 'pending', date: '', by: '', note: '' }])}>
+              <button type="button" className="btn-blue-sm" onClick={() => {
+                const next = [...(task.progress_nodes || []), { label: '', status: 'pending', date: '', by: '', note: '' }];
+                onSetField('progress_nodes', next); commitNodesNow(next);
+              }}>
                 <Plus size={14} /> 添加事件
               </button>
             </div>
@@ -305,7 +315,7 @@ const DetailView = ({
                     className="tl-label-input"
                     value={node.label || ''}
                     placeholder="事件名称（如：完成头样）"
-                    onChange={e => onSetNodeField(i, 'label', e.target.value)}
+                    onChange={e => { onSetNodeField(i, 'label', e.target.value); scheduleNodeCommit(); }}
                   />
                   <button
                     type="button"
@@ -321,7 +331,11 @@ const DetailView = ({
                     <select
                       className="t-status-sel"
                       value={node.status}
-                      onChange={e => onSetNodeField(i, 'status', e.target.value)}
+                      onChange={e => {
+                        const nodes = [...(task.progress_nodes || [])];
+                        nodes[i] = { ...nodes[i], status: e.target.value };
+                        onSetField('progress_nodes', nodes); commitNodesNow(nodes);
+                      }}
                     >
                       <option value="done">已完成</option>
                       <option value="active">进行中</option>
@@ -332,13 +346,13 @@ const DetailView = ({
                     type="date"
                     className="tl-date"
                     value={node.date || ''}
-                    onChange={e => onSetNodeField(i, 'date', e.target.value)}
+                    onChange={e => { onSetNodeField(i, 'date', e.target.value); scheduleNodeCommit(); }}
                   />
                   <input
                     className="tl-by"
                     value={node.by || ''}
                     placeholder="负责人"
-                    onChange={e => onSetNodeField(i, 'by', e.target.value)}
+                    onChange={e => { onSetNodeField(i, 'by', e.target.value); scheduleNodeCommit(); }}
                   />
                 </div>
               </div>
@@ -374,7 +388,9 @@ const DetailView = ({
           title="删除工作动态条目"
           message={`确定删除「${(task.progress_nodes || [])[confirmNode]?.label || '未命名事件'}」这条记录？`}
           onConfirm={() => {
-            onSetField('progress_nodes', (task.progress_nodes || []).filter((_, x) => x !== confirmNode));
+            const next = (task.progress_nodes || []).filter((_, x) => x !== confirmNode);
+            onSetField('progress_nodes', next);
+            commitNodesNow(next);
             setConfirmNode(null);
           }}
           onCancel={() => setConfirmNode(null)}

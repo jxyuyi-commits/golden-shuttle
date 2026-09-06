@@ -93,7 +93,7 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onBack, onOpenSidebar
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button className="btn-ghost" onClick={onOpenSidebar}><Layout size={16} /> 菜单</button>
+          <button className="btn-ghost sidebar-hotzone" onClick={onOpenSidebar} onMouseEnter={onOpenSidebar}><Layout size={16} /> 菜单</button>
           <button className="btn-blue" onClick={onNewTask}><Plus size={16} /> 新建打样单</button>
         </div>
       </header>

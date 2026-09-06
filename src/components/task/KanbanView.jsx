@@ -136,7 +136,7 @@ const KanbanView = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       <header className="top-bar glass">
-        <div className="logo" onClick={onOpenSidebar}>
+        <div className="logo sidebar-hotzone" onClick={onOpenSidebar} onMouseEnter={onOpenSidebar}>
           <Layout size={28} color="#38bdf8" /><span>PatternMaster Pro</span>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

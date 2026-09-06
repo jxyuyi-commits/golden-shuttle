@@ -127,8 +127,8 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
                   <td><span className="tpl-tag-blue" style={{ background: 'rgba(56,189,248,0.05)', borderColor: 'rgba(56,189,248,0.1)' }}>{t.grading_rule || '-'}</span></td>
                   <td>
                     <div className="row-ops-v4">
-                      <button className="op-btn edit" onClick={() => setEditing({ ...t })}><Edit2 size={14} /></button>
-                      <button className="op-btn delete" onClick={() => setConfirmTplId(t.id)}><Trash2 size={14} /></button>
+                      <button className="icon-btn" onClick={() => setEditing({ ...t })} title="编辑"><Edit2 size={14} /></button>
+                      <button className="icon-btn-danger" onClick={() => setConfirmTplId(t.id)} title="删除"><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>

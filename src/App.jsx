@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Layout, Plus, X, CheckCircle2, Circle, AlertCircle, ArrowLeft, ArrowUp, ArrowDown, Save, Calculator, Clock, Settings, Check, FileText, Upload, Trash2, ChevronDown, ChevronUp, Edit2, Database, GripVertical, BarChart3 } from 'lucide-react';
+import { Layout, Plus, X, CheckCircle2, Circle, AlertCircle, ArrowLeft, ArrowUp, ArrowDown, Calculator, Clock, Settings, FileText, Upload, Trash2, ChevronDown, ChevronUp, Edit2, Database, GripVertical, BarChart3 } from 'lucide-react';
 
 import { API } from './api/client';
 import {
@@ -56,7 +56,6 @@ const App = () => {
   const [confirmDelete, setConfirmDelete] = useState(false); // REQ-006② 删除单据确认弹窗
   const [showNewModal, setShowNewModal] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('idle');
   const [pdfSyncState, setPdfSyncState] = useState(null); // null | 'syncing' | 'ok' | { error }
 
   // 业务数据 hooks
@@ -113,12 +112,8 @@ const App = () => {
   // 初始加载业务数据
   useEffect(() => { loadTasks(); loadSettings(); }, [loadTasks, loadSettings]);
 
-  // REQ-006①：侧边栏边缘热区自动展开（鼠标靠近屏幕左缘即展开，无需点击）
-  useEffect(() => {
-    const onMove = (e) => { if (e.clientX <= 8 && !showSidebar) setShowSidebar(true); };
-    window.addEventListener('mousemove', onMove);
-    return () => window.removeEventListener('mousemove', onMove);
-  }, [showSidebar]);
+  // REQ-006①（修订）：侧边栏自动展开——仅鼠标靠近顶栏主按钮（logo/菜单）时触发，取消全屏左缘热区防误触
+  // 实现见各视图 <div className="logo sidebar-hotzone" onMouseEnter={onOpenSidebar}>
 
   // 新建任务弹窗组件集成在底部
   // 详见 NewTaskModal
@@ -149,25 +144,20 @@ const App = () => {
     });
   };
 
-  // 保存详情
-  const handleSave = () => {
+  // 自动保存（REQ-006③ 修订）：详情页所有字段即改即存，尺寸表/工作动态防抖 400ms 批量提交
+  const commitTimers = useRef({});
+  const commitField = useCallback((key, value) => {
     if (!editingTask?.id) return;
-    setSaveStatus('saving');
-    // 关键：所有数组字段必须序列化为字符串，否则服务端 PATCH 会 500
-    const toStr = (v) => Array.isArray(v) ? JSON.stringify(v) : (typeof v === 'string' ? v : '[]');
-    const payload = {
-      ...editingTask,
-      size_data: toStr(editingTask.size_data),
-      progress_nodes: toStr(editingTask.progress_nodes),
-    };
-    updateTask(editingTask.id, payload)
-      .then(() => {
-        setSaveStatus('saved');
-        loadTasks();
-        setTimeout(() => { setSaveStatus('idle'); }, 1500);
-      })
-      .catch(err => { setSaveStatus('idle'); alert('保存失败: ' + err.message); });
-  };
+    const patch = () => updateTask(editingTask.id, { [key]: value })
+      .then(loadTasks)
+      .catch(err => console.error(`自动保存 ${key} 失败:`, err));
+    if (key === 'size_data' || key === 'progress_nodes') {
+      if (commitTimers.current[key]) clearTimeout(commitTimers.current[key]);
+      commitTimers.current[key] = setTimeout(patch, 400);
+    } else {
+      patch();
+    }
+  }, [editingTask?.id, loadTasks]);
 
   // 删除当前单据（REQ-006②：二次确认弹窗）
   const handleDelete = () => {
@@ -300,15 +290,14 @@ const App = () => {
           settings={settings}
           detailTab={detailTab}
           isStyleEditing={isStyleEditing}
-          saveStatus={saveStatus}
           onBack={() => setView('kanban')}
           onOpenSidebar={() => setShowSidebar(true)}
           onDelete={handleDelete}
-          onSave={handleSave}
           onSetDetailTab={setDetailTab}
           onSetIsStyleEditing={setIsStyleEditing}
           onSetField={setField}
           onSetNodeField={setNodeField}
+          onCommitField={commitField}
           onPdfUpload={handlePdfUpload}
           onPdfSelect={handlePdfSelect}
           onPdfRemove={handlePdfRemove}

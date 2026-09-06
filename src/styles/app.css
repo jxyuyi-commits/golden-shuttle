@@ -28,6 +28,8 @@
       .top-bar .bc-title {line-height: 1.2; }
       .top-bar .header-ops-v4 {display: flex; align-items: center; gap: 12px; margin-left: auto; }
       .logo {display: flex; align-items: center; gap: 14px; cursor: pointer; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; background: linear-gradient(135deg, #fff 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-fill-color: transparent; }
+      /* REQ-006①（修订）：侧边栏热区=主按钮外扩 14px 邻域，鼠标靠近即展开（勿改回全屏左缘热区） */
+      .sidebar-hotzone {padding: 7px 14px !important; margin: -7px -14px !important; border-radius: 10px; }
 
       /* 号型规格与分类增强样式 */
       .mini-table {width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -69,7 +71,7 @@
       .cat-edit-input {width: 100%; background: rgba(0,0,0,0.3); border: 1px solid #38bdf8; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 13px; outline: none; }
       .cat-name {font-size: 14px; font-weight: 600; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .cat-item.active .cat-name {color: #38bdf8; }
-      .del-btn-mini {opacity: 0; color: #475569; background: none; border: none; cursor: pointer; padding: 4px; transition: 0.2s; }
+      .del-btn-mini {opacity: 0.8; color: #f87171; background: none; border: none; cursor: pointer; padding: 4px; transition: 0.2s; }
       .cat-item:hover .del-btn-mini {opacity: 1; }
       .del-btn-mini:hover {color: #f43f5e; }
 

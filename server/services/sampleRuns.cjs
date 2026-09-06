@@ -6,7 +6,7 @@ const FIELDS = [
   'sample_type', 'size', 'sample_color', 'sample_count', 'priority',
   'status', 'blocker', 'assignee',
   'fabric_date', 'start_date', 'expected_date', 'finish_date',
-  'note', 'sort_order',
+  'note', 'sort_order', 'linked_drawing_ids',
 ];
 
 /** 批次状态枚举（板师手动推进） */

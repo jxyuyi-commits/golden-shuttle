@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, Link2, X } from 'lucide-react';
 import SmartSelect from '../common/SmartSelect';
-import { fetchRuns, createRun, updateRun, deleteRun } from '../../api';
+import { fetchRuns, createRun, updateRun, deleteRun, fetchDrawings } from '../../api';
 
 // 批次状态（板师手动推进）
 export const RUN_STATUS = [
@@ -31,13 +31,16 @@ const statusColor = (k) => RUN_STATUS.find(s => s.key === k)?.color || '#94a3b8'
  */
 const SampleRunList = ({ taskId, settings, category }) => {
   const [runs, setRuns] = useState([]);
+  const [drawings, setDrawings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
+  const [manageId, setManageId] = useState(null); // 当前展开"管理绑定"的批次 id
 
   const load = useCallback(async () => {
     try {
-      const list = await fetchRuns(taskId);
+      const [list, drs] = await Promise.all([fetchRuns(taskId), fetchDrawings(taskId).catch(() => [])]);
       setRuns(list || []);
+      setDrawings(drs || []);
     } catch (e) {
       console.error('加载批次失败', e);
     } finally {
@@ -76,6 +79,29 @@ const SampleRunList = ({ taskId, settings, category }) => {
     const { id } = await createRun(taskId, { sample_type: sampleType, status: 'waiting_material' });
     await load();
     return id;
+  };
+
+  // ── 资料版本绑定 ──
+  const parseLinkedIds = (r) => {
+    try { return JSON.parse(r.linked_drawing_ids || '[]'); } catch { return []; }
+  };
+  // drawings 按 group_id 分组（同组=同一文件的不同版本）
+  const drawingGroups = (() => {
+    const map = {};
+    for (const d of drawings) {
+      const gid = d.group_id || `g_${d.id}`;
+      const name = d.filename || d.title || '未命名';
+      if (!map[gid]) map[gid] = { group_id: gid, file_name: name, versions: [] };
+      map[gid].versions.push(d);
+    }
+    return Object.values(map).sort((a, b) => (a.file_name || '').localeCompare(b.file_name || ''));
+  })();
+  const drawingById = (id) => drawings.find(d => d.id === id);
+
+  const toggleLink = async (run, drawingId) => {
+    const ids = parseLinkedIds(run);
+    const next = ids.includes(drawingId) ? ids.filter(x => x !== drawingId) : [...ids, drawingId];
+    await patch(run.id, { linked_drawing_ids: JSON.stringify(next) });
   };
 
   const removeRun = async (r) => {
@@ -187,6 +213,58 @@ const SampleRunList = ({ taskId, settings, category }) => {
               onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, note: e.target.value } : x))}
               onBlur={e => patch(r.id, { note: e.target.value })}
             />
+          </div>
+
+          {/* 绑定资料版本 */}
+          <div className="run-linked-section">
+            <div className="run-linked-head">
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#cbd5e1' }}>
+                <Link2 size={13} /> 绑定资料版本
+              </span>
+              <button
+                type="button"
+                className="run-linked-manage"
+                onClick={() => setManageId(manageId === r.id ? null : r.id)}
+              >
+                {manageId === r.id ? '收起' : '管理绑定'}
+              </button>
+            </div>
+            <div className="run-linked-tags">
+              {parseLinkedIds(r).length === 0 && <span style={{ color: '#64748b', fontSize: 12 }}>未绑定（本批次使用哪版纸样/唛架）</span>}
+              {parseLinkedIds(r).map(id => {
+                const d = drawingById(id);
+                if (!d) return null;
+                return (
+                  <span key={id} className="run-linked-tag">
+                    {d.filename || d.title || '未命名'} <span style={{ color: '#38bdf8' }}>V{d.version}</span>
+                    <button type="button" onClick={() => toggleLink(r, id)} title="移除绑定"><X size={11} /></button>
+                  </span>
+                );
+              })}
+            </div>
+            {manageId === r.id && (
+              <div className="run-linked-picker">
+                {drawingGroups.length === 0 && <div style={{ color: '#64748b', fontSize: 12 }}>该款暂无图纸资料，请先在「图纸资料」页上传</div>}
+                {drawingGroups.map(g => (
+                  <div key={g.group_id} className="run-linked-group">
+                    <div className="run-linked-group-title">{g.file_name}</div>
+                    <div className="run-linked-vers">
+                      {g.versions.map(v => (
+                        <label key={v.id} className="run-linked-ver">
+                          <input
+                            type="checkbox"
+                            checked={parseLinkedIds(r).includes(v.id)}
+                            onChange={() => toggleLink(r, v.id)}
+                          />
+                          <span>V{v.version}</span>
+                          <span style={{ color: '#64748b' }}>({v.category || '未分类'})</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       ))}

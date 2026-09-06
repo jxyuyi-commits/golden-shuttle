@@ -373,6 +373,16 @@ const migrations = [
         runs.forEach((r, i) => db.prepare('UPDATE sample_runs SET sort_order = ? WHERE id = ?').run(i, r.id));
       }
     }
+  },
+  {
+    version: 11,
+    description: 'sample_runs 加 linked_drawing_ids（批次绑定的图纸资料版本，JSON 数组）',
+    up: () => {
+      const cols = db.prepare("PRAGMA table_info(sample_runs)").all().map(c => c.name);
+      if (!cols.includes('linked_drawing_ids')) {
+        db.exec("ALTER TABLE sample_runs ADD COLUMN linked_drawing_ids TEXT DEFAULT '[]'");
+      }
+    }
   }
 ];
 

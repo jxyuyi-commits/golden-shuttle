@@ -127,6 +127,7 @@ PATCH /api/tasks/:id 的 STYLE_KEYS 白名单：style_no, title, brand, designer
 | v8 | 图纸版本管控：kind/file_hash/version/group_id + 历史数据归组 |
 | v9 | 操作日志 operation_logs 表 |
 | v10 | **版次批次 sample_runs 表 + 存量同款重复单合并（8单→6单）** |
+| v11 | sample_runs 加 linked_drawing_ids（批次绑定的图纸资料版本，JSON 数组） |
 
 迁移通过 `_migrations` 表记录已执行版本，每个版本只执行一次；v10 执行前数据库自动备份为 `server/database.backup_before_v10.sqlite`。
 
@@ -203,7 +204,7 @@ npm run dist         # electron-builder 打包（需配置）
 
 - [ ] shell node 与 better-sqlite3 ABI 不匹配（127 vs 132），需 rebuild 或统一 node 版本；当前一律走 HTTP 验证数据
 - [ ] tasks 表上的 sample_type/size/sample_color/sample_count/fabric_date 等批次字段为兼容保留，权威数据已在 sample_runs；后续可清理
-- [ ] 款级 status（todo/doing/done）当前仍手动维护，阶段 5 将改为从最先进批次自动聚合
+- [ ] 款级 status（todo/doing/done）当前仍手动维护，derived_status 已从批次自动聚合但未同步回 task.status
 - [ ] ITERATION_STATE.md 未随最近 commit 补记
 - [ ] puppeteer-core 以 --no-save 安装在 node_modules，未入 package.json（新环境需重装）
 - [ ] Excel 导入功能待定（用户明确后续再加入）

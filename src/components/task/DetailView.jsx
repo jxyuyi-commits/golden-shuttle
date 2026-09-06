@@ -277,7 +277,14 @@ const DetailView = ({
               title={task.pdf_url ? '' : '点击或拖拽上传设计稿'}
             >
               <div className="pdf-preview-wrap">
-                <PdfThumb pdfUrl={task.pdf_url} />
+                <PdfThumb
+                  key={task.pdf_url || 'empty'}
+                  pdfUrl={task.pdf_url}
+                  enlargeActionItems={[
+                    { label: '更换设计稿', icon: <Upload size={14} />, onClick: () => pdfInputRef.current?.click() },
+                    { label: '从资料库选', icon: <FolderOpen size={14} />, onClick: () => setShowPdfPicker(true) },
+                  ]}
+                />
               </div>
               <input ref={pdfInputRef} type="file" hidden onChange={e => { onPdfUpload(e.target.files[0]); e.target.value = ''; }} />
 
@@ -296,11 +303,10 @@ const DetailView = ({
 
               {task.pdf_url && (
                 <div className="pdf-hover-actions">
-                  <label className="pdf-action-btn" title="上传新文件更换设计稿">
+                  <button className="pdf-action-btn" title="上传新文件更换设计稿" onClick={e => { e.stopPropagation(); pdfInputRef.current?.click(); }}>
                     <Upload size={14} />
                     <span>更换</span>
-                    <input type="file" hidden onChange={e => { onPdfUpload(e.target.files[0]); e.target.value = ''; }} />
-                  </label>
+                  </button>
                   <button className="pdf-action-btn" title="从图纸资料库选择已有设计稿" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
                     <FolderOpen size={14} />
                     <span>从资料库选</span>

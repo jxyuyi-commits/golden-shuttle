@@ -221,6 +221,9 @@
       .pdf-upload-zone:hover .pdf-hover-actions {opacity: 1; transform: translateY(0); }
       .pdf-action-btn {height: 30px; padding: 0 10px; display: flex; align-items: center; gap: 5px; background: rgba(2,6,23,0.78); border: 1px solid rgba(255,255,255,0.16); border-radius: 8px; color: #e2e8f0; cursor: pointer; transition: .15s; font-size: 11px; font-weight: 600; white-space: nowrap; }
       .pdf-action-btn:hover {background: rgba(56,189,248,0.2); color: #38bdf8; border-color: rgba(56,189,248,0.4); }
+      /* 放大预览内的操作按钮（单击预览图后出现，不依赖 hover） */
+      .pdf-enlarge-btn {display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 18px; background: rgba(2,6,23,0.82); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #e2e8f0; cursor: pointer; font-size: 13px; font-weight: 600; transition: .15s; }
+      .pdf-enlarge-btn:hover {background: rgba(56,189,248,0.25); color: #38bdf8; border-color: rgba(56,189,248,0.45); }
       .pdf-preview-wrap img {width: 100%; height: 100%; object-fit: cover; }
       .btn-upload-pdf {display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border: 1px dashed rgba(255,255,255,.15); border-radius: 10px; color: #64748b; cursor: pointer; font-size: 13px; font-weight: 600; transition: .2s; }
       .btn-upload-pdf:hover {border-color: #38bdf8; color: #38bdf8; }

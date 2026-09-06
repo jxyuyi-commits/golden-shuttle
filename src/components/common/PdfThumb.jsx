@@ -20,7 +20,7 @@ function getExt(url) {
  * - PDF：pdf.js 渲染首页，单击放大、双击本地打开
  * - 其他专业格式（dxf/pla/prj 等）：通用文件占位（图标+扩展名），单击用系统默认软件打开
  */
-const PdfThumb = ({ pdfUrl, objectFit = 'cover' }) => {
+const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems }) => {
   const [thumb, setThumb] = useState(null);
   const [loading, setLoading] = useState(false);
   const [enlarged, setEnlarged] = useState(false);
@@ -163,6 +163,20 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover' }) => {
             >
               <X size={24} />
             </button>
+            {enlargeActionItems && enlargeActionItems.length > 0 && (
+              <div style={{ position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                {enlargeActionItems.map(item => (
+                  <button
+                    key={item.label}
+                    className="pdf-enlarge-btn"
+                    onClick={(e) => { e.stopPropagation(); setEnlarged(false); if (item.onClick) item.onClick(); }}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>,
         document.body

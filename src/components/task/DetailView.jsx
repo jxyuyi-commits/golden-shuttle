@@ -8,6 +8,7 @@ import ExportButton from '../common/ExportButton';
 import BomEditor from '../bom/BomEditor';
 import ProcessEditor from '../process/ProcessEditor';
 import DrawingLibrary from '../drawing/DrawingLibrary';
+import SampleRunList from './SampleRunList';
 import { exportTechPack, getTechPackFileName } from '../../utils/exportTechPack';
 import { exportTechPackPdf, getTechPackPdfFileName } from '../../utils/exportTechPackPdf';
 import { fetchBomItems, fetchProcessItems } from '../../api';
@@ -190,44 +191,12 @@ const DetailView = ({
             </div>
           </div>
 
-          <div className="section-title" style={{ marginTop: 40, borderLeftColor: '#38bdf8' }}>打样信息 <span>(仅当前单号独立有效)</span></div>
+          <div className="section-title" style={{ marginTop: 40, borderLeftColor: '#38bdf8' }}>款单信息</div>
           <div className="field-grid">
             <div className="field">
               <label>打样单号</label>
               <input value={task.order_no || ''} onChange={e => onSetField('order_no', e.target.value)} />
             </div>
-            <div className="field">
-              <label>版次</label>
-              <SmartSelect value={task.sample_type} onChange={v => onSetField('sample_type', v)} options={settings.sampleTypes} />
-            </div>
-            <div className="field">
-              <label>打样需求优先级</label>
-              <select value={task.priority || '中'} onChange={e => onSetField('priority', e.target.value)}>
-                <option value="低">低</option>
-                <option value="中">中</option>
-                <option value="高">高</option>
-                <option value="紧急">紧急</option>
-              </select>
-            </div>
-            <div className="field">
-              <label>样衣颜色</label>
-              <input value={task.sample_color || ''} onChange={e => onSetField('sample_color', e.target.value)} placeholder="如：黑色" />
-            </div>
-            <div className="field">
-              <label>尺码</label>
-              <select value={task.size || ''} onChange={e => onSetField('size', e.target.value)}>
-                <option value="">选择尺码</option>
-                {getSizeList().map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="field">
-              <label>打样件数</label>
-              <input type="number" min="1" value={task.sample_count || 1} onChange={e => onSetField('sample_count', e.target.value)} />
-            </div>
-            <div className="field"><label>预计完工日期</label><input type="date" value={task.expected_date || ''} onChange={e => onSetField('expected_date', e.target.value)} /></div>
-            <div className="field"><label>任务开始日期</label><input type="date" value={task.start_date || ''} onChange={e => onSetField('start_date', e.target.value)} /></div>
-            <div className="field"><label>实际完工日期</label><input type="date" value={task.finish_date || ''} onChange={e => onSetField('finish_date', e.target.value)} /></div>
-            <div className="field"><label>面料到库日期</label><input type="date" value={task.fabric_date || ''} onChange={e => onSetField('fabric_date', e.target.value)} /></div>
             <div className="field">
               <label>审核状态</label>
               <select value={task.audit_status || ''} onChange={e => onSetField('audit_status', e.target.value)}>
@@ -235,7 +204,7 @@ const DetailView = ({
               </select>
             </div>
             <div className="field">
-              <label>看板追踪状态</label>
+              <label>款单看板状态</label>
               <select value={task.status || 'todo'} onChange={e => onSetField('status', e.target.value)}>
                 <option value="todo">待处理</option>
                 <option value="doing">打版中</option>
@@ -243,6 +212,11 @@ const DetailView = ({
               </select>
             </div>
           </div>
+
+          <div className="section-title" style={{ marginTop: 32, borderLeftColor: '#fbbf24' }}>
+            打样批次 <span>(同款各版次并行，板师工作单元)</span>
+          </div>
+          <SampleRunList taskId={task.id} settings={settings} category={task.category} />
 
           <div className="section-title" style={{ marginTop: 32 }}>打样说明与工艺反馈</div>
           <div className="textarea-group">

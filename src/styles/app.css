@@ -355,3 +355,44 @@
       .drawing-svg-preview svg {width: auto; height: auto; max-width: 92vw; max-height: 90vh; background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
       .drawing-root {position: relative; }
       .active-mode {box-shadow: 0 0 10px rgba(56,189,248,0.3); }
+/* ── 版次批次 SampleRunList ── */
+.run-list { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+.run-card {
+  border: 1px solid rgba(148,163,184,0.22); border-radius: 10px;
+  padding: 12px 14px; background: rgba(148,163,184,0.05);
+}
+.run-card[data-blocked="1"] { border-color: rgba(248,113,113,0.5); background: rgba(248,113,113,0.05); }
+.run-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.run-card-title { display: flex; align-items: center; gap: 8px; }
+.run-idx { font-size: 12px; font-weight: 700; color: #94a3b8; }
+.run-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.run-status-select {
+  width: auto !important; min-width: 96px; font-weight: 600; font-size: 12.5px;
+  background: rgba(255,255,255,0.04);
+}
+.run-spin { color: #38bdf8; animation: run-rotate 1s linear infinite; }
+@keyframes run-rotate { to { transform: rotate(360deg); } }
+.run-del-btn {
+  background: transparent; border: none; color: #94a3b8; cursor: pointer;
+  padding: 5px; border-radius: 6px; display: inline-flex;
+}
+.run-del-btn:hover { color: #f87171; background: rgba(248,113,113,0.1); }
+.run-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px 12px;
+}
+.run-grid .field { margin: 0; }
+.run-grid .field label { font-size: 11px; margin-bottom: 3px; }
+.run-grid input, .run-grid select { font-size: 12.5px; padding: 6px 8px; }
+.run-add-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px; border: 1px dashed rgba(56,189,248,0.45); border-radius: 10px;
+  background: rgba(56,189,248,0.06); color: #38bdf8; font-size: 13px;
+  cursor: pointer; width: 100%;
+}
+.run-add-btn:hover { background: rgba(56,189,248,0.14); }
+
+/* ── 看板卡片：版次批次摘要行 ── */
+.bento-run-row { display: flex; align-items: center; gap: 5px; }
+.bento-run-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.bento-run-sub { color: #94a3b8; font-size: 10.5px; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

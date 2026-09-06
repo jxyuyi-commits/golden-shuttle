@@ -51,7 +51,7 @@ id, style_no(UNIQUE), title, brand, designer, year, season, month, category, pdf
 ```
 - 一款一行；pdf_url 款级共享（同款式所有 task 共享设计稿引用）
 
-### tasks（开发单）
+### tasks（款单，新模型一款一单）
 ```
 id, style_id(FK→styles), order_no, priority, sample_type, sample_color, size,
 sample_count, fabric_date, start_date, expected_date, finish_date,
@@ -59,11 +59,23 @@ audit_status, audit_comment, status(todo/doing/done), progress_nodes(JSON),
 image_url, fabric_req, trim_req, process_req, note, size_data(JSON),
 created_at, updated_at
 ```
-- 一款可有多张 task（旧模式：一版次一单）
-- status 枚举：todo(待处理) / doing(打版中) / done(已完结)
-- progress_nodes：状态机节点数组（用户可自由增删改）
+- **新模型（v10 起）一款一 task（款单）**，版次维度下沉到 sample_runs；sample_type/size 等批次字段仅为兼容保留，权威数据在 sample_runs
+- status 为**款单看板状态**：todo(待处理) / doing(打版中) / done(已完结)；后续款级状态将自动从最先进批次聚合
+- progress_nodes：款级状态机时间线（用户可自由增删改，与看板 status 解耦）
+- `GET /api/tasks`、`/api/tasks/:id` 返回体附带 `runs` 数组（一次查询按 task_id 分组，无 N+1）
 
-### drawings（图纸资料，按 task_id 隔离）
+### sample_runs（版次批次 = 板师工作单元，v10 新增）
+```
+id, task_id(FK→tasks, ON DELETE CASCADE), sample_type(版次), size, sample_color,
+sample_count, priority, status, blocker, assignee,
+fabric_date, start_date, expected_date, finish_date, note, sort_order, created_at, updated_at
+```
+- 一款单 1──N 批次：胚样/头版样/复版/生产样可并行
+- status 枚举：waiting_material(待配料)/pattern_making(打版中)/sample_making(样衣中)/pending_confirm(待确认)/done(已完成)
+- blocker 枚举：none/short_material(欠面辅料)/wait_designer(待设计师确认)/wait_tech(待工艺单)/other(其他)，独立字段不走备注
+- 建单（tasks.create）事务内自动建首个批次；批次增删改写 operation_logs
+
+### drawings（图纸资料，按 task_id 隔离，款单内共享）
 ```
 id, task_id(FK), category(设计稿/参考图/成衣图/纸样/唛架图), kind, title,
 filename, url, file_hash, note, version, group_id, sort_order, created_at
@@ -79,11 +91,15 @@ filename, url, file_hash, note, version, group_id, sort_order, created_at
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | /api/tasks | 全部任务（含 styles join） |
-| GET | /api/tasks/:id | 单任务详情 |
-| POST | /api/tasks | 新建任务（自动 upsert styles） |
-| PATCH | /api/tasks/:id | 更新任务（STYLE_KEYS 白名单合并） |
-| DELETE | /api/tasks/:id | 删除任务（级联删子数据） |
+| GET | /api/tasks | 全部款单（含 styles join + runs 批次数组） |
+| GET | /api/tasks/:id | 单款单详情（含 runs） |
+| POST | /api/tasks | 新建款单（自动 upsert styles + 建首个批次） |
+| PATCH | /api/tasks/:id | 更新款单（STYLE_KEYS 白名单合并） |
+| DELETE | /api/tasks/:id | 删除款单（级联删子数据；款式下无单时清理孤儿 style） |
+| GET | /api/tasks/:taskId/runs | 某款单的全部批次 |
+| POST | /api/tasks/:taskId/runs | 新增批次（自动排末尾） |
+| PATCH | /api/runs/:id | 更新批次（状态/阻塞变化写日志） |
+| DELETE | /api/runs/:id | 删除批次（剩余重排） |
 | GET | /api/drawings?task_id=N | 某单图纸列表 |
 | POST | /api/drawings | 新增图纸（防冗余/版本归组） |
 | DELETE | /api/drawings/:id | 删除图纸记录 |

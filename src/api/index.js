@@ -14,6 +14,12 @@ export const updateTaskStatus = (id, status) =>
 export const fetchTaskVersions = (styleId) =>
   apiGet(`/api/tasks/versions/${styleId}`);
 
+/* ── 版次批次 Sample Runs（一款单下多个打样批次） ── */
+export const fetchRuns = (taskId) => apiGet(`/api/tasks/${taskId}/runs`);
+export const createRun = (taskId, data) => apiPost(`/api/tasks/${taskId}/runs`, data);
+export const updateRun = (runId, data) => apiPatch(`/api/runs/${runId}`, data);
+export const deleteRun = (runId) => apiDelete(`/api/runs/${runId}`);
+
 /* ── 操作日志 ── */
 export const fetchLogs = (params = {}) => {
   const q = new URLSearchParams();

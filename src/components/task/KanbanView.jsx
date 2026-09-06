@@ -13,6 +13,30 @@ const getNodeIcon = (status) => {
   return <Circle size={14} color="#475569" />;
 };
 
+// 版次批次状态元数据（与 SampleRunList / 后端 sampleRuns.cjs 保持一致）
+const RUN_STATUS_META = {
+  waiting_material: { label: '待配料', color: '#94a3b8' },
+  pattern_making: { label: '打版中', color: '#38bdf8' },
+  sample_making: { label: '样衣中', color: '#fbbf24' },
+  pending_confirm: { label: '待确认', color: '#a78bfa' },
+  done: { label: '已完成', color: '#4ade80' },
+};
+const PRIO_RANK = { '紧急': 3, '高': 2, '中': 1, '低': 0 };
+/** 取任务的批次列表（兼容迁移前旧字段，无 runs 时用 task 顶层字段拼一条） */
+const taskRuns = (t) => {
+  if (Array.isArray(t.runs) && t.runs.length) return t.runs;
+  if (t.sample_type) return [{ sample_type: t.sample_type, size: t.size, sample_color: t.sample_color, sample_count: t.sample_count, priority: t.priority, status: '' }];
+  return [];
+};
+/** 任务涉及的全部版次 */
+const taskRunTypes = (t) => [...new Set(taskRuns(t).map(r => r.sample_type).filter(Boolean))];
+/** 任务的最高优先级（批次中取最高，兼容顶层字段） */
+const taskTopPriority = (t) => {
+  const ps = taskRuns(t).map(r => r.priority).filter(Boolean);
+  if (!ps.length) return t.priority || '中';
+  return ps.sort((a, b) => (PRIO_RANK[b] ?? 1) - (PRIO_RANK[a] ?? 1))[0];
+};
+
 /**
  * 逾期判定（基于 expected_date 期望交期）
  * state: overdue(已逾期) / today(今日到期) / soon(3天内到期) / ok(正常) / none(无交期或已完结)
@@ -56,10 +80,10 @@ const KanbanView = ({
   onNewTask,
   onTaskClick,
 }) => {
-  // 版次筛选选项 = 版次库预设 ∪ 任务实际使用值（含自定义值如 V2，保证能筛出）
+  // 版次筛选选项 = 版次库预设 ∪ 各批次实际使用值（含自定义值如 V2，保证能筛出）
   const sampleTypeOptions = useMemo(() => {
     const set = new Set(settings.sampleTypes || []);
-    (tasks || []).forEach(t => { if (t.sample_type) set.add(t.sample_type); });
+    (tasks || []).forEach(t => taskRunTypes(t).forEach(x => set.add(x)));
     return [...set];
   }, [settings.sampleTypes, tasks]);
 
@@ -69,9 +93,9 @@ const KanbanView = ({
   const filterTasks = (list) => list.filter(t => {
     if (filters.keyword && !(t.title?.includes(filters.keyword) || t.style_no?.includes(filters.keyword))) return false;
     if (filters.category && t.category !== filters.category) return false;
-    if (filters.sample_type && t.sample_type !== filters.sample_type) return false;
+    if (filters.sample_type && !taskRunTypes(t).includes(filters.sample_type)) return false;
     if (filters.designer && t.designer !== filters.designer) return false;
-    if (filters.priority && t.priority !== filters.priority) return false;
+    if (filters.priority && taskTopPriority(t) !== filters.priority) return false;
     return true;
   });
 
@@ -302,8 +326,8 @@ const KanbanView = ({
           {getActiveCols().map(col => {
             const colTasks = filterTasks(tasks).filter(t => {
               if (kanbanGroupBy === 'status' && normalizeStatus(t.status) !== col.id) return false;
-              if (kanbanGroupBy === 'sample_type' && (t.sample_type || '常规版') !== col.id) return false;
-              if (kanbanGroupBy === 'priority' && (t.priority || '中') !== col.id) return false;
+              if (kanbanGroupBy === 'sample_type' && !taskRunTypes(t).includes(col.id)) return false;
+              if (kanbanGroupBy === 'priority' && taskTopPriority(t) !== col.id) return false;
               if (kanbanGroupBy === 'overdue' && (getOverdueInfo(t).state === 'none' ? 'none' : getOverdueInfo(t).state) !== col.id) return false;
               return true;
             });
@@ -355,9 +379,31 @@ const KanbanView = ({
                             </div>
                             <div className="bento-box bento-info">
                               <div className="bento-order-no" title={task.order_no}>版单：{task.order_no || '—'}</div>
-                              <div className="bento-row" title={task.sample_type}><span>版次：</span><em>{task.sample_type || '—'}</em> {task.sample_color ? `(${task.sample_color})` : ''}</div>
-                              <div className="bento-row" title={task.priority}><span>优先：</span><em className={`prio-${task.priority === '紧急' ? 'high' : task.priority === '高' ? 'mid' : 'low'}`}>{task.priority || '中'}</em></div>
-                              <div className="bento-row" title={task.sample_count}><span>件数：</span>{task.sample_count ? `${task.sample_count}件` : ''} {task.size ? `${task.size}码` : ''}</div>
+                              {(() => {
+                                const rs = taskRuns(task);
+                                if (!rs.length) return <div className="bento-row"><span>批次：</span><em>未建批次</em></div>;
+                                const shown = rs.slice(0, 3);
+                                const hidden = rs.length - shown.length;
+                                return (
+                                  <>
+                                    {shown.map((r, i) => {
+                                      const meta = RUN_STATUS_META[r.status];
+                                      return (
+                                        <div className="bento-row bento-run-row" key={i}
+                                          title={`${r.sample_type || '未命名版次'}${meta ? ' · ' + meta.label : ''}${r.assignee ? ' · ' + r.assignee : ''}`}>
+                                          {meta && <span className="bento-run-dot" style={{ background: meta.color }} />}
+                                          <em>{r.sample_type || '—'}</em>
+                                          <span className="bento-run-sub">
+                                            {meta ? meta.label : ''}{r.sample_color ? `·${r.sample_color}` : ''}{r.sample_count ? `·${r.sample_count}件` : ''}{r.size ? `·${r.size}码` : ''}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                    {hidden > 0 && <div className="bento-row"><span></span><em>+{hidden} 个批次</em></div>}
+                                  </>
+                                );
+                              })()}
+                              <div className="bento-row"><span>优先：</span><em className={`prio-${taskTopPriority(task) === '紧急' ? 'high' : taskTopPriority(task) === '高' ? 'mid' : 'low'}`}>{taskTopPriority(task)}</em></div>
                               <div className="bento-row" title={task.audit_status}><span>审核：</span><em className={`audit-${task.audit_status === '已通过' ? 'pass' : 'wait'}`}>{task.audit_status || '待审核'}</em></div>
                             </div>
                           </div>
@@ -474,8 +520,8 @@ const KanbanView = ({
                           ) : col.id === 'action' ? (
                             <button className="btn-blue-sm" style={{ padding: '6px 16px' }} onClick={(e) => { e.stopPropagation(); onTaskClick(task); }}>详情</button>
                           ) : col.id === 'priority' ? (
-                            <span className={`prio-${task.priority === '紧急' ? 'high' : task.priority === '高' ? 'mid' : 'low'}`} style={{ fontSize: 11, fontWeight: 700 }}>
-                              {task.priority || '中'}
+                            <span className={`prio-${taskTopPriority(task) === '紧急' ? 'high' : taskTopPriority(task) === '高' ? 'mid' : 'low'}`} style={{ fontSize: 11, fontWeight: 700 }}>
+                              {taskTopPriority(task)}
                             </span>
                           ) : col.id === 'status_text' ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

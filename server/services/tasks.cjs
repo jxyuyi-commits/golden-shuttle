@@ -44,13 +44,23 @@ const TASK_JOIN_SELECT = `
   LEFT JOIN styles s ON t.style_id = s.id
 `;
 
+/** 给任务行附带其全部版次批次（sample_runs），一次查询按 task_id 分组避免 N+1 */
+function attachRuns(rows) {
+  if (!rows.length) return rows;
+  const all = getDb().prepare('SELECT * FROM sample_runs ORDER BY sort_order ASC, id ASC').all();
+  const byTask = {};
+  for (const r of all) (byTask[r.task_id] ||= []).push(r);
+  return rows.map(t => ({ ...t, runs: byTask[t.id] || [] }));
+}
+
 /**
- * 获取全部打样单（含款式信息，progress_nodes 已解析）
+ * 获取全部打样单（含款式信息，progress_nodes 已解析，附带版次批次）
  * @returns {Array<object>}
  */
 function list() {
-  const rows = getDb().prepare(`${TASK_JOIN_SELECT} ORDER BY t.created_at DESC`).all();
-  return rows.map(t => ({ ...t, progress_nodes: safeParse(t.progress_nodes, []) }));
+  const rows = getDb().prepare(`${TASK_JOIN_SELECT} ORDER BY t.created_at DESC`).all()
+    .map(t => ({ ...t, progress_nodes: safeParse(t.progress_nodes, []) }));
+  return attachRuns(rows);
 }
 
 /**
@@ -62,7 +72,7 @@ function get(id) {
   const row = getDb().prepare(`${TASK_JOIN_SELECT} WHERE t.id = ?`).get(id);
   if (!row) return null;
   row.progress_nodes = safeParse(row.progress_nodes, []);
-  return row;
+  return attachRuns([row])[0];
 }
 
 /**
@@ -143,8 +153,22 @@ function create(b) {
       process_req: b.process_req || '',
       note: b.note || ''
     });
+    const newTaskId = taskInfo.lastInsertRowid;
 
-    return taskInfo.lastInsertRowid;
+    // 新模型：建单即建首个打样批次（版次/尺码/颜色/件数/优先级/日期来自建单表单）
+    db.prepare(`
+      INSERT INTO sample_runs
+        (task_id, sample_type, size, sample_color, sample_count, priority, status,
+         fabric_date, start_date, expected_date, finish_date, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, 'waiting_material', ?, ?, ?, ?, 0)
+    `).run(
+      newTaskId,
+      b.sample_type || '', b.size || '', b.sample_color || '',
+      parseInt(b.sample_count) || 1, b.priority || '中',
+      b.fabric_date || '', b.start_date || '', b.expected_date || '', b.finish_date || ''
+    );
+
+    return newTaskId;
   });
 
   const newId = insertTransaction(b);
@@ -221,7 +245,14 @@ function update(id, b) {
  * @returns {{success: boolean}}
  */
 function remove(id) {
-  getDb().prepare('DELETE FROM tasks WHERE id = ?').run(id);
+  const db = getDb();
+  const row = db.prepare('SELECT style_id FROM tasks WHERE id = ?').get(id);
+  db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+  // 一款一单模型下，删单即删款：若该款式下已无任何单据，清理孤儿款式行（上传文件不物理删除）
+  if (row && row.style_id) {
+    const left = db.prepare('SELECT COUNT(*) AS c FROM tasks WHERE style_id = ?').get(row.style_id);
+    if (left.c === 0) db.prepare('DELETE FROM styles WHERE id = ?').run(row.style_id);
+  }
   return { success: true };
 }
 

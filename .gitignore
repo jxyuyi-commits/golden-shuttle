@@ -10,7 +10,15 @@ build/
 # 运行时数据
 server/uploads/
 server/database.sqlite
+server/database.backup_*.sqlite
 dbtmp_*
+
+# 自测临时产物（Puppeteer userDataDir / 临时脚本与截图）
+_chrome_*/
+_pptr_*/
+_*.cjs
+_*.png
+_*.txt
 
 # 日志
 *.log

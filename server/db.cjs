@@ -281,6 +281,98 @@ const migrations = [
         CREATE INDEX IF NOT EXISTS idx_operation_logs_created ON operation_logs(created_at);
       `);
     }
+  },
+  {
+    version: 10,
+    description: '版次批次 sample_runs 表 + 存量同款重复单合并（一单一款）',
+    up: () => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS sample_runs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          task_id INTEGER NOT NULL,
+          sample_type TEXT DEFAULT '',
+          size TEXT DEFAULT '',
+          sample_color TEXT DEFAULT '',
+          sample_count INTEGER DEFAULT 1,
+          priority TEXT DEFAULT '中',
+          status TEXT DEFAULT 'waiting_material',
+          blocker TEXT DEFAULT 'none',
+          assignee TEXT DEFAULT '',
+          fabric_date TEXT DEFAULT '',
+          start_date TEXT DEFAULT '',
+          expected_date TEXT DEFAULT '',
+          finish_date TEXT DEFAULT '',
+          note TEXT DEFAULT '',
+          sort_order INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_sample_runs_task ON sample_runs(task_id);
+      `);
+
+      // 1) 为每个现有 task 用其批次字段建一条 sample_run（task.status 粗略映射批次状态）
+      const tasks = db.prepare('SELECT * FROM tasks').all();
+      const insRun = db.prepare(`
+        INSERT INTO sample_runs
+          (task_id, sample_type, size, sample_color, sample_count, priority, status,
+           fabric_date, start_date, expected_date, finish_date, note, sort_order)
+        VALUES (@task_id, @sample_type, @size, @sample_color, @sample_count, @priority, @status,
+                @fabric_date, @start_date, @expected_date, @finish_date, @note, @sort_order)
+      `);
+      const mapStatus = (s) => s === 'done' ? 'done' : s === 'doing' || s === 'in_progress' ? 'pattern_making' : 'waiting_material';
+      for (const t of tasks) {
+        insRun.run({
+          task_id: t.id,
+          sample_type: t.sample_type || '',
+          size: t.size || '',
+          sample_color: t.sample_color || '',
+          sample_count: t.sample_count || 1,
+          priority: t.priority || '中',
+          status: mapStatus(t.status),
+          fabric_date: t.fabric_date || '',
+          start_date: t.start_date || '',
+          expected_date: t.expected_date || '',
+          finish_date: t.finish_date || '',
+          note: '',
+          sort_order: t.id,
+        });
+      }
+
+      // 2) 同款重复单合并：style_id 相同的多张单，保留最小 id 为主单，其余单的子数据归并后删除
+      const groups = db.prepare(`
+        SELECT style_id, GROUP_CONCAT(id) AS ids FROM tasks
+        WHERE style_id IS NOT NULL
+        GROUP BY style_id HAVING COUNT(*) > 1
+      `).all();
+      const reassign = (table, fromId, toId) => {
+        db.prepare(`UPDATE ${table} SET task_id = ? WHERE task_id = ?`).run(toId, fromId);
+      };
+      for (const g of groups) {
+        const ids = g.ids.split(',').map(Number).sort((a, b) => a - b);
+        const mainId = ids[0];
+        for (const dupId of ids.slice(1)) {
+          // 先归并所有子数据到主单（必须在删单前，避免 ON DELETE CASCADE 级联删除）
+          reassign('sample_runs', dupId, mainId);
+          reassign('drawings', dupId, mainId);
+          reassign('bom_items', dupId, mainId);
+          reassign('process_items', dupId, mainId);
+          reassign('operation_logs', dupId, mainId);
+          // 主单 status 取更"靠前"的进度（doing 优先于 todo，done 最后）
+          const main = db.prepare('SELECT status FROM tasks WHERE id = ?').get(mainId);
+          const dup = db.prepare('SELECT status FROM tasks WHERE id = ?').get(dupId);
+          const rank = { todo: 0, in_progress: 1, doing: 1, done: 2 };
+          if ((rank[dup.status] ?? 0) > (rank[main.status] ?? 0)) {
+            db.prepare('UPDATE tasks SET status = ? WHERE id = ?').run(dup.status, mainId);
+          }
+          db.prepare('DELETE FROM tasks WHERE id = ?').run(dupId);
+          console.log(`[DB v10] merged task ${dupId} -> main task ${mainId} (style_id=${g.style_id})`);
+        }
+        // 主单内批次重排 sort_order
+        const runs = db.prepare('SELECT id FROM sample_runs WHERE task_id = ? ORDER BY sort_order ASC, id ASC').all(mainId);
+        runs.forEach((r, i) => db.prepare('UPDATE sample_runs SET sort_order = ? WHERE id = ?').run(i, r.id));
+      }
+    }
   }
 ];
 

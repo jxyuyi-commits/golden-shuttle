@@ -74,7 +74,21 @@ function attachRuns(rows) {
   return rows.map(t => {
     const runs = byTask[t.id] || [];
     const derived = deriveStyleStatus(runs);
-    return { ...t, runs, derived_status: derived, derived_status_label: DERIVED_STATUS_LABEL[derived] };
+    // 兼容投影：tasks 旧批次字段（sample_type/sample_color/size/sample_count/fabric_date）
+    // 已由迁移 v12 移除，权威数据在 sample_runs；此处从首个批次（sort_order 最小）推导，
+    // 保持前端卡片/导出/查重列表等消费点无需改动。前端可后续迁移为直接读取 runs。
+    const top = runs[0];
+    return {
+      ...t,
+      runs,
+      derived_status: derived,
+      derived_status_label: DERIVED_STATUS_LABEL[derived],
+      sample_type: top?.sample_type || '',
+      sample_color: top?.sample_color || '',
+      size: top?.size || '',
+      sample_count: top?.sample_count ?? 1,
+      fabric_date: top?.fabric_date || '',
+    };
   });
 }
 
@@ -107,10 +121,28 @@ function get(id) {
  */
 function versions(styleId) {
   const rows = getDb().prepare(`
-    SELECT id, order_no, sample_type, sample_color, size_data, created_at
+    SELECT id, order_no, size_data, created_at
     FROM tasks WHERE style_id = ? ORDER BY created_at DESC
   `).all(styleId);
-  return rows.map(r => ({ ...r, size_data: safeParse(r.size_data, []) }));
+  if (!rows.length) return rows;
+  const ids = rows.map(r => r.id);
+  const placeholders = ids.map(() => '?').join(',');
+  const runs = getDb().prepare(
+    `SELECT task_id, sample_type, sample_color FROM sample_runs
+     WHERE task_id IN (${placeholders}) ORDER BY sort_order ASC, id ASC`
+  ).all(...ids);
+  const byTask = {};
+  for (const r of runs) (byTask[r.task_id] ||= []).push(r);
+  return rows.map(r => {
+    const top = (byTask[r.id] || [])[0];
+    return {
+      ...r,
+      // 版次/样衣色已迁至 sample_runs，此处取首个批次投影保持对比 UI 可用
+      sample_type: top?.sample_type || '',
+      sample_color: top?.sample_color || '',
+      size_data: safeParse(r.size_data, []),
+    };
+  });
 }
 
 /**
@@ -147,24 +179,19 @@ function create(b) {
 
     const taskInfo = db.prepare(`
       INSERT INTO tasks (
-        style_id, order_no, priority, sample_type, sample_color, size, sample_count,
-        fabric_date, start_date, expected_date, finish_date, audit_status, audit_comment,
+        style_id, order_no, priority,
+        start_date, expected_date, finish_date, audit_status, audit_comment,
         status, progress_nodes, size_data, fabric_req, trim_req, process_req, note
       )
       VALUES (
-        @style_id, @order_no, @priority, @sample_type, @sample_color, @size, @sample_count,
-        @fabric_date, @start_date, @expected_date, @finish_date, @audit_status, @audit_comment,
+        @style_id, @order_no, @priority,
+        @start_date, @expected_date, @finish_date, @audit_status, @audit_comment,
         @status, @progress_nodes, @size_data, @fabric_req, @trim_req, @process_req, @note
       )
     `).run({
       style_id,
       order_no: b.order_no || '',
       priority: b.priority || '中',
-      sample_type: b.sample_type || '',
-      sample_color: b.sample_color || '',
-      size: b.size || '',
-      sample_count: parseInt(b.sample_count) || 1,
-      fabric_date: b.fabric_date || '',
       start_date: b.start_date || '',
       expected_date: b.expected_date || '',
       finish_date: b.finish_date || '',
@@ -230,8 +257,8 @@ function update(id, b) {
   }
 
   const TASK_KEYS = [
-    'order_no', 'priority', 'sample_type', 'sample_color', 'size', 'sample_count',
-    'fabric_date', 'start_date', 'expected_date', 'finish_date', 'audit_status',
+    'order_no', 'priority',
+    'start_date', 'expected_date', 'finish_date', 'audit_status',
     'audit_comment', 'status', 'progress_nodes', 'image_url',
     'fabric_req', 'trim_req', 'process_req', 'note', 'size_data'
   ];
@@ -255,7 +282,6 @@ function update(id, b) {
   const diffOf = (key) => ('key' in { key }) && (key in b) && String(b[key] ?? '') !== String(oldTask[key] ?? '');
   const logs = [];
   if (diffOf('status')) logs.push(['status', `状态：${fmtStatus(oldTask.status)} → ${fmtStatus(b.status)}`]);
-  if (diffOf('sample_type')) logs.push(['sample_type', `版次：${oldTask.sample_type || '未设'} → ${b.sample_type || '未设'}`]);
   if (diffOf('priority')) logs.push(['priority', `优先级：${oldTask.priority || '中'} → ${b.priority || '中'}`]);
   if (diffOf('audit_status')) logs.push(['audit', `审核：${oldTask.audit_status || '待审核'} → ${b.audit_status || '待审核'}`]);
   if (diffOf('expected_date')) logs.push(['expected_date', `期望交期：${oldTask.expected_date || '未设'} → ${b.expected_date || '未设'}`]);

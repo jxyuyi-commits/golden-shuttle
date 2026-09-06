@@ -6,17 +6,13 @@ const DB_PATH = path.join(__dirname, '../server/database.sqlite');
 const db = new Database(DB_PATH);
 
 console.log('正在清空旧数据以避免重复...');
-try {
-  db.exec(`ALTER TABLE tasks ADD COLUMN size TEXT DEFAULT '';`);
-} catch (err) {
-  // column might already exist
-}
 
 db.exec(`
+  DELETE FROM sample_runs;
   DELETE FROM tasks;
   DELETE FROM styles;
   DELETE FROM measurement_templates;
-  DELETE FROM sqlite_sequence WHERE name IN ('tasks', 'styles', 'measurement_templates');
+  DELETE FROM sqlite_sequence WHERE name IN ('tasks', 'styles', 'measurement_templates', 'sample_runs');
 `);
 
 const stylesData = [
@@ -33,16 +29,42 @@ const insertStyle = db.prepare(`
 
 const insertTask = db.prepare(`
   INSERT INTO tasks (
-    style_id, order_no, priority, sample_type, sample_color, size, sample_count,
-    fabric_date, start_date, expected_date, finish_date, audit_status, audit_comment,
+    style_id, order_no, priority,
+    start_date, expected_date, finish_date, audit_status, audit_comment,
     status, progress_nodes, fabric_req, trim_req, process_req, note
   )
   VALUES (
-    @style_id, @order_no, @priority, @sample_type, @sample_color, @size, @sample_count,
-    @fabric_date, @start_date, @expected_date, @finish_date, @audit_status, @audit_comment,
+    @style_id, @order_no, @priority,
+    @start_date, @expected_date, @finish_date, @audit_status, @audit_comment,
     @status, @progress_nodes, @fabric_req, @trim_req, @process_req, @note
   )
 `);
+
+// 新模型：每张单自动建首个版次批次（批次字段权威存于 sample_runs，tasks 不再保留）
+const insertRun = db.prepare(`
+  INSERT INTO sample_runs
+    (task_id, sample_type, size, sample_color, sample_count, priority, status,
+     fabric_date, start_date, expected_date, finish_date, sort_order)
+  VALUES (@task_id, @sample_type, @size, @sample_color, @sample_count, @priority, @status,
+          @fabric_date, @start_date, @expected_date, @finish_date, @sort_order)
+`);
+
+function makeRun(taskId, b, sortOrder) {
+  insertRun.run({
+    task_id: taskId,
+    sample_type: b.sample_type || '',
+    size: b.size || '',
+    sample_color: b.sample_color || '',
+    sample_count: b.sample_count || 1,
+    priority: b.priority || '中',
+    status: b.status === 'done' ? 'done' : (b.status === 'doing' || b.status === 'in_progress' ? 'pattern_making' : 'waiting_material'),
+    fabric_date: b.fabric_date || '',
+    start_date: b.start_date || '',
+    expected_date: b.expected_date || '',
+    finish_date: b.finish_date || '',
+    sort_order: sortOrder,
+  });
+}
 
 db.transaction(() => {
   console.log('正在注入款式数据...');
@@ -54,15 +76,10 @@ db.transaction(() => {
     console.log(`正在注入打样单数据 (款号: ${style.style_no})...`);
 
     // 初版
-    insertTask.run({
+    const taskId1 = insertTask.run({
       style_id: styleId,
       order_no: `PO-${style.style_no}-01`,
       priority: index === 0 ? '高' : '中', // 第一个款设为高优先级
-      sample_type: '初版',
-      sample_color: '深灰',
-      size: 'M',
-      sample_count: 1,
-      fabric_date: '2026-03-01',
       start_date: '2026-03-02',
       expected_date: '2026-03-10',
       finish_date: '',
@@ -81,18 +98,18 @@ db.transaction(() => {
       process_req: '袖口需要防风罗纹',
       note: '请务必注意充绒量的均匀度'
     });
+    makeRun(taskId1.lastInsertRowid, {
+      sample_type: '初版', sample_color: '深灰', size: 'M', sample_count: 1,
+      fabric_date: '2026-03-01', start_date: '2026-03-02', expected_date: '2026-03-10',
+      priority: index === 0 ? '高' : '中', status: index === 0 ? 'in_progress' : (index === 1 ? 'done' : 'todo')
+    }, 0);
 
     // 部分款式追加复版
     if (index === 0 || index === 2) {
-      insertTask.run({
+      const taskId2 = insertTask.run({
         style_id: styleId,
         order_no: `PO-${style.style_no}-02`,
         priority: '低',
-        sample_type: '复版',
-        sample_color: '军绿',
-        size: 'L',
-        sample_count: 2,
-        fabric_date: '',
         start_date: '',
         expected_date: '2026-03-25',
         finish_date: '',
@@ -111,6 +128,11 @@ db.transaction(() => {
         process_req: '根据初版意见修改领口尺寸',
         note: '等初版完成后再启动'
       });
+      makeRun(taskId2.lastInsertRowid, {
+        sample_type: '复版', sample_color: '军绿', size: 'L', sample_count: 2,
+        fabric_date: '', start_date: '', expected_date: '2026-03-25',
+        priority: '低', status: 'todo'
+      }, 0);
     }
   });
 })();

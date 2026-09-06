@@ -57,14 +57,15 @@ id, style_no(UNIQUE), title, brand, designer, year, season, month, category, pdf
 
 ### tasks（款单，新模型一款一单）
 ```
-id, style_id(FK→styles), order_no, priority, sample_type, sample_color, size,
-sample_count, fabric_date, start_date, expected_date, finish_date,
+id, style_id(FK→styles), order_no, priority,
+start_date, expected_date, finish_date,
 audit_status, audit_comment, status(todo/doing/done), progress_nodes(JSON),
 image_url, fabric_req, trim_req, process_req, note, size_data(JSON),
 created_at, updated_at
 ```
-- **新模型（v10 起）一款一 task（款单）**，版次维度下沉到 sample_runs；sample_type/size 等批次字段仅为兼容保留，权威数据在 sample_runs
-- status 为**款单看板状态**：todo(待处理) / doing(打版中) / done(已完结)；后续款级状态将自动从最先进批次聚合
+- **新模型（v10 起）一款一 task（款单）**，版次维度下沉到 sample_runs；tasks 旧批次字段（sample_type/sample_color/size/sample_count/fabric_date）已在迁移 **v12 删除**，权威数据只在 sample_runs
+- **兼容投影**：`GET /api/tasks` 返回体仍带 sample_type/sample_color/size/sample_count/fabric_date（从首个批次 sort_order 最小者推导，`attachRuns()`），保证卡片/导出/查重列表等前端消费点无需改动；前端后续可迁移为直接读取 runs
+- status 为**款单看板状态**：todo(待处理) / doing(打版中) / done(已完结)，批次增删改后自动从最先进批次聚合同步
 - progress_nodes：款级状态机时间线（用户可自由增删改，与看板 status 解耦）
 - `GET /api/tasks`、`/api/tasks/:id` 返回体附带 `runs` 数组（一次查询按 task_id 分组，无 N+1）
 
@@ -128,6 +129,7 @@ PATCH /api/tasks/:id 的 STYLE_KEYS 白名单：style_no, title, brand, designer
 | v9 | 操作日志 operation_logs 表 |
 | v10 | **版次批次 sample_runs 表 + 存量同款重复单合并（8单→6单）** |
 | v11 | sample_runs 加 linked_drawing_ids（批次绑定的图纸资料版本，JSON 数组） |
+| v12 | 清理 tasks 旧批次字段（sample_type/sample_color/size/sample_count/fabric_date，权威数据已在 sample_runs；API 层改为从首个批次兼容投影） |
 
 迁移通过 `_migrations` 表记录已执行版本，每个版本只执行一次；v10 执行前数据库自动备份为 `server/database.backup_before_v10.sqlite`。
 
@@ -203,9 +205,7 @@ npm run dist         # electron-builder 打包（需配置）
 ## 9. 已知技术债
 
 - [ ] shell node 与 better-sqlite3 ABI 不匹配（127 vs 132），需 rebuild 或统一 node 版本；当前一律走 HTTP 验证数据
-- [ ] tasks 表上的 sample_type/size/sample_color/sample_count/fabric_date 等批次字段为兼容保留，权威数据已在 sample_runs；后续可清理
-- [ ] 款级 status（todo/doing/done）当前仍手动维护，derived_status 已从批次自动聚合但未同步回 task.status
-- [ ] ITERATION_STATE.md 未随最近 commit 补记
+- [ ] 前端对 task.sample_type 等兼容投影字段的消费点可迁移为直接读取 runs（多批次款目前只投影首个批次，卡片/导出展示多批次摘要为后续 UI 增强）
 - [ ] puppeteer-core 以 --no-save 安装在 node_modules，未入 package.json（新环境需重装）
 - [ ] Excel 导入功能待定（用户明确后续再加入）
 - [ ] 本地 22+ 笔 commit 未推送（需用户开代理）

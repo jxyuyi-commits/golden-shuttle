@@ -32,12 +32,20 @@ import SettingsView from './components/settings/SettingsView';
 import DesignerDashboard from './components/dashboard/DesignerDashboard';
 
 const App = () => {
+  // 默认视图仅记忆 kanban / dashboard 两个顶层视图；detail/settings 依赖上下文数据，
+  // 若被持久化，刷新后（editingTask 为空）会导致白屏
   const [view, setViewState] = useState(() => {
-    try { return localStorage.getItem('pm_default_view') || 'kanban'; } catch { return 'kanban'; }
-  }); // kanban | detail | settings | dashboard（默认视图按用户上次选择记忆）
+    try {
+      const saved = localStorage.getItem('pm_default_view');
+      return (saved === 'kanban' || saved === 'dashboard') ? saved : 'kanban';
+    } catch { return 'kanban'; }
+  }); // kanban | detail | settings | dashboard
   const setView = (v) => {
     setViewState(v);
-    try { localStorage.setItem('pm_default_view', v); } catch {}
+    try {
+      if (v === 'kanban' || v === 'dashboard') localStorage.setItem('pm_default_view', v);
+      else localStorage.removeItem('pm_default_view');
+    } catch {}
   };
   const [detailTab, setDetailTab] = useState('base'); // base | size
   const [editingTask, setEditingTask] = useState(null);

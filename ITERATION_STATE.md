@@ -1,7 +1,7 @@
 # PatternMaster Pro 迭代状态追踪
 
 > 本文件是迭代过程的"外部记忆"，上下文压缩后必须先读本文件再继续。
-> 最后更新：2026-09-06（双视角重构阶段 1-7 全部上线：看板归一/建单查重/版次批次/存量合并/设计师仪表盘/视图切换/资料版本绑定 + 款级状态自动同步）
+> 最后更新：2026-09-07（迁移 v12 清理 tasks 旧批次字段 + 详情/设置页刷新白屏修复 + seed 脚本适配新模型）
 
 ---
 
@@ -54,14 +54,27 @@ styles(style_no UNIQUE, pdf_url 款级共享)
 
 - 6 个 task（一单一款无重复）、6 个 styles、8 个批次
 - task1 AW26-JK001（胚样打版中 + 头版样待配料）、task4 SS26-TS003（2 批次）、其余各 1 批次
-- 数据库迁移最新 **v11**（v10 批次表+存量合并，v11 linked_drawing_ids）
+- 数据库迁移最新 **v12**（v10 批次表+存量合并，v11 linked_drawing_ids，v12 清理 tasks 旧批次字段）
 - 迁移前备份：`server/database.backup_before_v10.sqlite`（.gitignore 忽略，未入库）
+
+### tasks 旧批次字段清理 + 刷新白屏修复（2026-09-07，迁移 v12）
+
+- **背景**：双视角重构后 tasks 上的 sample_type/sample_color/size/sample_count/fabric_date 为兼容保留（v10 已把值迁入 sample_runs），造成双写路径；文档遗留待办「后续可清理」
+- **数据安全核对**：迁移前经 HTTP 逐 task 比对旧字段 vs 首个批次（sort_order 最小）全部一致（6/6 OK），删除零数据损失；执行前备份 `server/database.backup_before_v12.sqlite`
+- **迁移 v12**：删除 tasks 5 个旧批次列；v1 建表同步移除（新库直建无旧列）
+- **后端**：tasks.cjs create() 任务 INSERT 移除旧列（批次 INSERT 保留）；update() TASK_KEYS 移除旧键（PATCH 旧键静默忽略，不再产生日志噪音）；删除 sample_type 变更日志埋点（批次级日志已覆盖）；versions() 从 sample_runs 投影 sample_type/sample_color；attachRuns() 新增兼容投影（sample_type/sample_color/size/sample_count/fabric_date 从首个批次推导），前端卡片/导出/查重列表零改动
+- **seed.cjs**：适配新模型——移除旧列 INSERT 与 ALTER 残留，每张单自动建首个批次（makeRun），与新模型一致（该脚本在本环境因 ABI 无法执行，仅语法校验）
+- **顺带修复真实 bug（前端白屏）**：`pm_default_view` 原会把 detail/settings 也写入 localStorage，刷新后 view='detail' 而 editingTask 为空 → 渲染空 div 白屏（无任何报错，Puppeteer 复现：详情页 → goto → 白屏）。修复：setView 仅持久化 kanban/dashboard 两个顶层视图，初始化读取时对非法值兜底回 kanban。已实测污染值（saved='detail'）加载正常回看板
+- **验证**（全部实测通过）：
+  - HTTP：GET /api/tasks（6 单、runs 附带、派生字段正确）；versions API 正常；PATCH 旧键忽略（taskUpdated=False/logged=0）；建单→批次（类型/尺码/颜色/件数/日期全落位）→批次状态变更→款单状态自动同步→删除→孤儿款式清理，全链路通过
+  - 浏览器 E2E（Puppeteer + 系统 Chrome，全新配置目录）：看板 7 项/列表（26AWW526 行 V2—M 2 正确）/仪表盘/详情批次/新建弹窗全 PASS，零 console 错误；空白复现脚本修复前 goto 后 textLen=0 → 修复后 1073
+  - 生产构建 `npm run build` 通过（8.5s）
 
 ### 遗留待办
 
 - 本地 22+ 笔 commit 未推送（需用户开代理）
 - Excel 导入功能待定（用户明确后续再加入）
-- tasks 表旧批次字段（sample_type/size 等）为兼容保留，权威数据已在 sample_runs，后续可清理
+- 前端 task.sample_type 等兼容投影字段的消费点可迁移为直接读取 runs（多批次款目前只投影首个批次；卡片/导出展示多批次摘要为后续 UI 增强）
 - 4174 端口为生产构建预览（`_preview.cjs` 托管 dist + 代理 API），内置浏览器缓存问题用换端口解决
 
 ---
@@ -80,11 +93,11 @@ styles(style_no UNIQUE, pdf_url 款级共享)
 - **Node 版本**：真机系统 Node v24.13.0（ABI 137）；AI 工具通道里的 node 是托管版 v22.22.2（ABI 127）
 - **better-sqlite3**：当前编为 ABI 132（Electron），dev 后端由 Electron Node 运行，无需再 rebuild:node
 - **开发端口**：后端 3001（0.0.0.0），前端 Vite 5173
-- **数据库路径**：`server/database.sqlite`（6 tasks / 6 styles，迁移已到 v11）
+- **数据库路径**：`server/database.sqlite`（6 tasks / 6 styles，迁移已到 v12）
   - task1 AW26-JK001 极地抗寒羽绒服：2 批次（胚样打版中 + 头版样待配料），图纸库 2 条设计稿
   - task4 SS26-TS003 高支纯棉重磅T恤：2 批次；其余款各 1 批次
 - **启动命令**：`npm run dev:all`（= `node scripts/dev.cjs`，同时启动后端+前端）
-- **启动校验**：后端日志出现 `[DB] All migrations up to date (latest: v11)` 即为正常
+- **启动校验**：后端日志出现 `[DB] All migrations up to date (latest: v12)` 即为正常
 - **生产预览**：`node _preview.cjs`（托管 dist 到 4174 端口 + 代理 API 到 3001）——内置浏览器缓存问题用换端口解决
 - **Git 现状**：仓库 2026-09-01 重新初始化，当前 `main` 分支仅 1 个提交 `5989809 初始提交`
   （远端 github.com/jxyuyi-commits/golden-shuttle），本文件引用的历史提交号已不可查
@@ -432,9 +445,9 @@ styles(style_no UNIQUE, pdf_url 款级共享)
   - 浏览器实测：26AWW526 导出 4 sheet 完整，分类合并生效，BOM 合计 389.25，尺寸 12 部位，工艺 13 条，文件 14KB
   - 注意：exportTechPack 现为 async 函数，DetailView onExport 已 await，ExportButton handleConfirm 已 async
 - [x] 工艺单（Tech Pack）PDF 导出（pdfmake，Excel 版已完成）→ 提交 6f89b9f
-- [ ] Excel 导入/导出
-- [ ] 操作日志（侧边栏已占位"开发中"）
-- [ ] 逾期提醒
+- [ ] Excel 导入（用户明确后续再加入，暂缓）
+- [x] 操作日志（2026-09-06 上线：operation_logs 表 v9 + 弹窗视图，侧边栏入口可点）
+- [x] 看板逾期提醒（2026-09-06 上线：逾期/今日/3天内/正常/无交期 5 档 + 卡片角标）
 - [ ] 品牌/分类/设计师 ID 引用重构（README_DEV V6.0专项，字段直存→外键+级联更新）
 
 ## 五、关键技术决策与约束

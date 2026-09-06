@@ -74,11 +74,6 @@ const migrations = [
           style_id INTEGER NOT NULL,
           order_no TEXT DEFAULT '',
           priority TEXT DEFAULT '中',
-          sample_type TEXT DEFAULT '',
-          sample_color TEXT DEFAULT '',
-          size TEXT DEFAULT '',
-          sample_count INTEGER DEFAULT 1,
-          fabric_date TEXT DEFAULT '',
           start_date TEXT DEFAULT '',
           expected_date TEXT DEFAULT '',
           finish_date TEXT DEFAULT '',
@@ -382,6 +377,14 @@ const migrations = [
       if (!cols.includes('linked_drawing_ids')) {
         db.exec("ALTER TABLE sample_runs ADD COLUMN linked_drawing_ids TEXT DEFAULT '[]'");
       }
+    }
+  },
+  {
+    version: 12,
+    description: '清理 tasks 旧批次字段（sample_type/sample_color/size/sample_count/fabric_date，权威数据已在 sample_runs，v10 迁移已落位）',
+    up: () => {
+      const LEGACY_COLS = ['sample_type', 'sample_color', 'size', 'sample_count', 'fabric_date'];
+      for (const col of LEGACY_COLS) dropColumnIfExists('tasks', col);
     }
   }
 ];

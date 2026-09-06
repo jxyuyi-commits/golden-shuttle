@@ -15,7 +15,7 @@
 - 款单（tasks）：6 张（一款一单，已无重复）
 - 版次批次（sample_runs）：8 条（AW26-JK001 2 条、SS26-TS003 2 条，其余各 1 条）
 - 款式（styles）：6 个
-- 数据库迁移版本：v10
+- 数据库迁移版本：v12（v10 批次表+存量合并，v11 linked_drawing_ids，v12 清理 tasks 旧批次字段，权威数据全部落位 sample_runs）
 
 ### 已完成功能清单
 | 模块 | 功能 |
@@ -213,7 +213,8 @@ progress_nodes 改为用户可自由增删改的节点列表，每个节点有 l
 
 ## 9. 待决问题
 
-- [ ] 款级 status（todo/doing/done）是否从 derived_status 自动同步（当前手动维护）
+- [x] 款级 status（todo/doing/done）从批次自动聚合同步（2026-09-06 上线，批次增删改后自动推导）
+- [x] tasks 旧批次字段清理（2026-09-07 迁移 v12 删除，API 层从首个批次兼容投影）
 - [ ] Excel 导入功能（用户明确后续再加入，暂不实施）
 - [ ] 本地 22+ 笔 commit 推送（需用户开代理）
-- [ ] ITERATION_STATE.md 补记最近开发进度
+- [ ] ITERATION_STATE.md 补记最近开发进度（2026-09-07 已补记，随最近 commit）

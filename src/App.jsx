@@ -30,7 +30,6 @@ import CategoryManager from './components/settings/CategoryManager';
 import SettingListEditor from './components/settings/SettingListEditor';
 import SettingsView from './components/settings/SettingsView';
 import DesignerDashboard from './components/dashboard/DesignerDashboard';
-import StyleInfoDrawer from './components/style/StyleInfoDrawer';
 
 const App = () => {
   // 默认视图仅记忆 kanban / dashboard 两个顶层视图；detail/settings 依赖上下文数据，
@@ -50,7 +49,7 @@ const App = () => {
   };
   const [detailTab, setDetailTab] = useState('base'); // base | size
   const [editingTask, setEditingTask] = useState(null);
-  const [styleDrawerTask, setStyleDrawerTask] = useState(null); // REQ-004 款式信息抽屉
+  const [isStyleEditing, setIsStyleEditing] = useState(false);
   const [filters, setFilters] = useState({ keyword: '', category: '', sample_type: '', designer: '', priority: '' });
   const [showSidebar, setShowSidebar] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
@@ -124,12 +123,10 @@ const App = () => {
     }
     if (!Array.isArray(parsed.size_data)) parsed.size_data = [];
     setEditingTask(parsed);
+    setIsStyleEditing(false);
     setDetailTab('base');
     setView('detail');
   };
-
-  // 打开款式信息抽屉（款级权威信息，独立载体）
-  const openStyleInfo = (task) => setStyleDrawerTask(task);
 
   // 更新字段：status 与时间线解耦（status 由用户独立控制看板列，时间线只忠实记录过程）
   const setField = (key, value) => setEditingTask(prev => ({ ...prev, [key]: value }));
@@ -282,7 +279,6 @@ const App = () => {
           onOpenSidebar={() => setShowSidebar(true)}
           onNewTask={() => setShowNewModal(true)}
           onTaskClick={handleEnterDetail}
-          onOpenStyleInfo={openStyleInfo}
           onGoDashboard={() => setView('dashboard')}
         />
       )}
@@ -293,13 +289,14 @@ const App = () => {
           task={editingTask}
           settings={settings}
           detailTab={detailTab}
+          isStyleEditing={isStyleEditing}
           saveStatus={saveStatus}
           onBack={() => setView('kanban')}
           onOpenSidebar={() => setShowSidebar(true)}
-          onOpenStyleInfo={openStyleInfo}
           onDelete={handleDelete}
           onSave={handleSave}
           onSetDetailTab={setDetailTab}
+          onSetIsStyleEditing={setIsStyleEditing}
           onSetField={setField}
           onSetNodeField={setNodeField}
           onPdfUpload={handlePdfUpload}
@@ -379,22 +376,6 @@ const App = () => {
             onClose={() => setShowNewModal(false)}
             onSuccess={() => { setShowNewModal(false); loadTasks(); }}
             onOpenExisting={(task) => { setShowNewModal(false); handleEnterDetail(task); }}
-          />
-        )
-      }
-
-      {/* 款式信息抽屉（款级权威信息，REQ-004） */}
-      {
-        styleDrawerTask && (
-          <StyleInfoDrawer
-            task={styleDrawerTask}
-            settings={settings}
-            onClose={() => setStyleDrawerTask(null)}
-            onSaved={() => {
-              loadTasks();
-              // 若在详情页打开，同步刷新当前款单的款级字段
-              if (editingTask?.style_id === styleDrawerTask.style_id) handleStatusSync();
-            }}
           />
         )
       }

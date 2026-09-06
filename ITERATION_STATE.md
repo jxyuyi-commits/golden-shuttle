@@ -91,6 +91,13 @@ styles(style_no UNIQUE, pdf_url 款级共享)
 - **踩坑**：PowerShell 5 的 Invoke-RestMethod 发中文 body 默认非 UTF-8（'待审核'→'??' 被枚举校验回退'未提交'），测试必须 `[Text.Encoding]::UTF8.GetBytes(ConvertTo-Json)` + `charset=utf-8`——是测试方法问题，真实前端 fetch 无此问题；Puppeteer `elementHandle.click()` 在 headless 下不触发 React 合成事件，需 `dispatchEvent(new MouseEvent('click',{bubbles:true}))`（REQ-003 E2E 是 page.click 选择器路径可用，本次按钮在 React 层回调）
 - **REQ-004 完成后遗留**：tasks.order_no/audit_status/audit_comment 列保留兼容（v14 已清空数据），后续版本可 DROP；seed.cjs 仍写 tasks.order_no（旧 SQL，种子数据无批次单号，仅开发脚本，不影响真实数据）
 
+### REQ-004 方案修订（2026-09-07，用户验收反馈）
+
+- **抽屉方案作废**：用户验收指出「把最重要的信息藏起来的展示方式反人类、不合理」——款式信息是重点数据，不得收进抽屉。修订：**移除 StyleInfoDrawer 组件与全部入口**（看板卡片 ⓘ 按钮、详情页顶部「款式信息」按钮）；详情页恢复并强化「款式信息」区块（玫红标题条「款级共享·同款各版次同步生效」+ 铅笔编辑开关 + 8 字段直接展示、值可见），编辑保存走原有 handleSave → updateTask STYLE_KEYS 链路
+- **审版意见改多行**：批次表单审版意见由单行 input 改 `textarea rows=3`（可多行、垂直拉伸）；数据字段不变（audit_comment）
+- 保留：`PUT /api/styles/:id` + IPC `styles:update` + styles 服务 update（款级编辑基础能力，无副作用，后续尺寸表等可复用）
+- **验证**：修订后浏览器 E2E 10/10 PASS（无抽屉入口、款式信息 8 字段直接展示且有值、顶部无款式信息按钮、批次单号/审核/审版意见 textarea、零 console 错误）；生产构建通过（11.0s）；commit 随本段提交
+
 ### 遗留待办
 
 - 本地 22+ 笔 commit 未推送（需用户开代理）

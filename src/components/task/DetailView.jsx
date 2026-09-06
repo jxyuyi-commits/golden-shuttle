@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Layout, Trash2, Check, Save, Upload, Plus, FolderOpen, Info } from 'lucide-react';
+import { ArrowLeft, Layout, Trash2, Check, Save, Edit2, Upload, Plus, FolderOpen } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import PdfPickerModal from '../common/PdfPickerModal';
 import SizeTable from '../size-table/SizeTable';
+import SmartSelect from '../common/SmartSelect';
 import ExportButton from '../common/ExportButton';
 import BomEditor from '../bom/BomEditor';
 import ProcessEditor from '../process/ProcessEditor';
@@ -12,18 +13,23 @@ import { exportTechPack, getTechPackFileName } from '../../utils/exportTechPack'
 import { exportTechPackPdf, getTechPackPdfFileName } from '../../utils/exportTechPackPdf';
 import { fetchBomItems, fetchProcessItems } from '../../api';
 
+const years = ['2023', '2024', '2025', '2026', '2027'];
+const seasons = ['春', '夏', '秋', '冬'];
+const months = Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
+
 /** 打样需求单详情视图：基本信息/尺寸指标 + 设计稿 + 进度节点 */
 const DetailView = ({
   task,
   settings,
   detailTab,
+  isStyleEditing,
   saveStatus,
   onBack,
   onOpenSidebar,
-  onOpenStyleInfo,
   onDelete,
   onSave,
   onSetDetailTab,
+  onSetIsStyleEditing,
   onSetField,
   onSetNodeField,
   onPdfUpload,
@@ -63,14 +69,6 @@ const DetailView = ({
           </div>
         </div>
         <div className="header-ops-v4">
-          <button
-            className="btn-ghost-sm"
-            onClick={onOpenStyleInfo}
-            style={{ color: '#a5b4fc', border: '1px solid rgba(165,180,252,0.2)', padding: '6px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
-            title="款式信息（款级共享，同款各版次同步）"
-          >
-            <Info size={14} /> 款式信息
-          </button>
           <ExportButton
             label="导出工艺单"
             title="导出工艺单"
@@ -143,7 +141,58 @@ const DetailView = ({
         )}
 
         <div className="form-panel glass" style={{ display: detailTab === 'base' ? '' : 'none' }}>
-          <div className="section-title" style={{ borderLeftColor: '#38bdf8' }}>
+          <div className="section-title" style={{ borderLeftColor: '#f43f5e', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div>款式信息 <span>(款级共享 · 同款各版次同步生效，编辑保存即全局生效)</span></div>
+            <button type="button" className="btn-icon" onClick={() => onSetIsStyleEditing(!isStyleEditing)} style={{ background: isStyleEditing ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.05)', borderRadius: 4, padding: 4 }}>
+              <Edit2 size={16} color={isStyleEditing ? '#38bdf8' : '#94a3b8'} />
+            </button>
+          </div>
+          <div className="field-grid" style={{ pointerEvents: isStyleEditing ? 'auto' : 'none', opacity: isStyleEditing ? 1 : 0.65, transition: '0.2s' }}>
+            <div className="field">
+              <label>款式编号</label>
+              <input value={task.style_no || ''} disabled style={{ opacity: 0.6 }} />
+            </div>
+            <div className="field">
+              <label>款式名称</label>
+              <input value={task.title || ''} onChange={e => onSetField('title', e.target.value)} />
+            </div>
+            <div className="field">
+              <label>款式类别</label>
+              <SmartSelect value={task.category} onChange={v => onSetField('category', v)} options={settings.categories} />
+            </div>
+            <div className="field">
+              <label>品牌</label>
+              <SmartSelect value={task.brand} onChange={v => onSetField('brand', v)} options={settings.brands} />
+            </div>
+            <div className="field">
+              <label>设计师</label>
+              <SmartSelect value={task.designer} onChange={v => onSetField('designer', v)} options={settings.designers} />
+            </div>
+            <div className="field"></div>
+            <div className="field">
+              <label>年度</label>
+              <select value={task.year || ''} onChange={e => onSetField('year', e.target.value)}>
+                <option value="">请选择</option>
+                {years.map(y => <option key={y}>{y}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>季节</label>
+              <select value={task.season || ''} onChange={e => onSetField('season', e.target.value)}>
+                <option value="">请选择</option>
+                {seasons.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>波段</label>
+              <select value={task.month || ''} onChange={e => onSetField('month', e.target.value)}>
+                <option value="">请选择</option>
+                {months.map(m => <option key={m}>{m}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="section-title" style={{ marginTop: 40, borderLeftColor: '#38bdf8' }}>
             款单信息
             <span style={{ fontWeight: 400, fontSize: 12, color: '#64748b' }}>
               （单号/审核按版次独立，见下方批次；看板状态为款级）

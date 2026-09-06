@@ -237,11 +237,13 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
             </div>
             <div className="field">
               <label>审版意见</label>
-              <input
+              <textarea
+                rows={3}
                 value={r.audit_comment || ''}
-                placeholder="本版次审版意见 / 修改点（各版次独立）"
+                placeholder="本版次审版意见 / 修改点（各版次独立，可多行）"
                 onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, audit_comment: e.target.value } : x))}
                 onBlur={e => patch(r.id, { audit_comment: e.target.value })}
+                style={{ width: '100%', resize: 'vertical', minHeight: 56 }}
               />
             </div>
           </div>

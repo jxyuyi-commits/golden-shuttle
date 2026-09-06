@@ -11,8 +11,8 @@ const SettingsView = ({ settings, saveSetting, loadSettings, onBack, onOpenSideb
   return (
     <div className="custom-scrollbar" style={{ background: '#020617', height: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
       <header className="top-bar glass">
-        <div className="logo sidebar-hotzone" onClick={onOpenSidebar} onMouseEnter={onOpenSidebar}>
-          <Layout size={28} color="#38bdf8" /><span>PatternMaster Pro</span>
+        <div className="logo" onClick={onOpenSidebar}>
+          <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="#38bdf8" /></span><span>PatternMaster Pro</span>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
           <button className="btn-ghost" onClick={onBack}>返回主页</button>

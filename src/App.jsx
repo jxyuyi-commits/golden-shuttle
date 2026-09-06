@@ -330,11 +330,9 @@ const App = () => {
         />
       )}
 
-      {/* ═══ 全局侧边栏菜单 ════════════════════════════════════════ */}
-      {
-        showSidebar && (
-          <div className="overlay" onClick={() => setShowSidebar(false)}>
-            <div className="sidebar glass" onClick={e => e.stopPropagation()}>
+      {/* ═══ 全局侧边栏菜单（常驻渲染，侧推滑入动画）════════════════════════ */}
+      <div className={`overlay ${showSidebar ? 'overlay-show' : ''}`} onClick={() => setShowSidebar(false)}>
+        <div className={`sidebar glass ${showSidebar ? 'sidebar-open' : ''}`} onClick={e => e.stopPropagation()}>
               <div className="sidebar-head">
                 <span>功能菜单</span>
                 <button className="btn-icon" onClick={() => setShowSidebar(false)}><X size={20} /></button>
@@ -359,8 +357,6 @@ const App = () => {
               </div>
             </div>
           </div>
-        )
-      }
 
       {/* ═══ 各种弹窗组件 ═════════════════════════════════════════ */}
       {

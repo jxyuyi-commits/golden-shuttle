@@ -28,8 +28,8 @@
       .top-bar .bc-title {line-height: 1.2; }
       .top-bar .header-ops-v4 {display: flex; align-items: center; gap: 12px; margin-left: auto; }
       .logo {display: flex; align-items: center; gap: 14px; cursor: pointer; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; background: linear-gradient(135deg, #fff 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-fill-color: transparent; }
-      /* REQ-006①（修订）：侧边栏热区=主按钮外扩 14px 邻域，鼠标靠近即展开（勿改回全屏左缘热区） */
-      .sidebar-hotzone {padding: 7px 14px !important; margin: -7px -14px !important; border-radius: 10px; }
+      /* REQ-006①（修订2）：侧边栏热区=主按钮图标外扩 8px（不含文字），鼠标靠近即展开（勿改回全屏左缘热区） */
+      .sidebar-hotzone {display: inline-flex; padding: 4px 8px !important; margin: -4px -8px !important; border-radius: 8px; }
 
       /* 号型规格与分类增强样式 */
       .mini-table {width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -295,8 +295,10 @@
       .settings-content {display: none; } /* 弃用旧容器 */
 
       /* 侧边栏 & 弹窗 */
-      .overlay {position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 9999; display: flex; }
-      .sidebar {width: 300px; border-radius: 0 16px 16px 0; padding: 32px 24px; display: flex; flex-direction: column; }
+      .overlay {position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 9999; display: flex; opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+      .overlay-show {opacity: 1; pointer-events: auto; }
+      .sidebar {width: 300px; border-radius: 0 16px 16px 0; padding: 32px 24px; display: flex; flex-direction: column; transform: translateX(-100%); transition: transform .45s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+      .sidebar-open {transform: translateX(0); }
       .sidebar-head {display: flex; justify-content: space-between; align-items: center; font-size: 17px; font-weight: 800; margin-bottom: 24px; }
       .menu-item {display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; color: #94a3b8; font-weight: 600; cursor: pointer; margin-bottom: 4px; }
       .menu-item:hover {background: rgba(56,189,248,.1); color: #38bdf8; }

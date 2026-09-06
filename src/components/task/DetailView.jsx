@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Layout, Trash2, History, Edit2, Upload, Plus, FolderOpen } from 'lucide-react';
+import { Layout, Trash2, History, Edit2, Upload, Plus, FolderOpen } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import PdfPickerModal from '../common/PdfPickerModal';
 import ConfirmModal from '../common/ConfirmModal';
@@ -78,12 +78,17 @@ const DetailView = ({
     <div>
       <header className="top-bar glass">
         <div className="detail-breadcrumb">
-          <button className="btn-icon" onClick={onBack}><ArrowLeft size={20} /></button>
-          <div className="logo sidebar-hotzone" onClick={onOpenSidebar} onMouseEnter={onOpenSidebar} style={{ marginLeft: -10, marginRight: 20 }}>
+          <div className="logo sidebar-hotzone" onClick={onOpenSidebar} onMouseEnter={onOpenSidebar} style={{ marginRight: 20 }}>
             <Layout size={28} color="#38bdf8" />
           </div>
           <div>
-            <div className="bc-sub">主页 / 打样需求单 / 编辑</div>
+            <div className="bc-sub">
+              <span className="bc-link" onClick={onBack}>主页</span>
+              <span className="bc-sep"> / </span>
+              <span className="bc-link" onClick={onBack}>打样需求单</span>
+              <span className="bc-sep"> / </span>
+              <span className="bc-current">编辑</span>
+            </div>
             <div className="bc-title">修改打样需求单 — {task.style_no || task.title}</div>
           </div>
         </div>

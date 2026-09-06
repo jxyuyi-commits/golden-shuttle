@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Plus, Layout, BarChart3, PieChart, CheckCircle2, Clock, AlertCircle, XCircle } from 'lucide-react';
+import { Plus, Layout, BarChart3, PieChart, CheckCircle2, Clock, AlertCircle, XCircle } from 'lucide-react';
 
 // 款级聚合状态元数据（与后端 tasks.cjs DERIVED_STATUS_LABEL 一致）
 const STATUS_META = {
@@ -83,17 +83,18 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onBack, onOpenSidebar
 
   return (
     <div className="dashboard-view">
-      {/* 顶部栏 */}
+      {/* 顶部栏（REQ-012：顶级页无返回箭头，菜单按钮收敛为仅图标热区） */}
       <header className="top-bar glass">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button className="btn-icon" onClick={onBack} title="返回看板"><ArrowLeft size={20} /></button>
           <div>
             <div style={{ fontSize: 11, color: '#94a3b8' }}>设计师视角 · 款级宏观</div>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>开发总览仪表盘</h2>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button className="btn-ghost sidebar-hotzone" onClick={onOpenSidebar} onMouseEnter={onOpenSidebar}><Layout size={16} /> 菜单</button>
+          <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}>
+            <button className="btn-icon" onClick={onOpenSidebar} title="菜单"><Layout size={18} /></button>
+          </span>
           <button className="btn-blue" onClick={onNewTask}><Plus size={16} /> 新建打样单</button>
         </div>
       </header>

@@ -180,6 +180,11 @@
 
       .detail-breadcrumb {display: flex; align-items: center; gap: 20px; }
       .bc-title {font-size: 20px; font-weight: 900; }
+      .bc-sub {font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 4px; }
+      .bc-link {cursor: pointer; color: #94a3b8; transition: color 0.15s; }
+      .bc-link:hover {color: #38bdf8; text-decoration: underline; }
+      .bc-sep {color: #475569; }
+      .bc-current {color: #64748b; }
       .field-grid {display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
       .field label {display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; }
       .field input, .field select, .field textarea {

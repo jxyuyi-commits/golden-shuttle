@@ -28,16 +28,20 @@ golden-shuttle/
 │   ├── api/                 # API 封装（index.js + client.js 双通道）
 │   ├── hooks/               # useTasks 等
 │   ├── components/
-│   │   ├── task/            # KanbanView / DetailView / TaskCard / NewTaskModal
-│   │   └── common/          # PdfThumb / PdfPickerModal / SmartSelect ...
-│   ├── utils/               # exportTasks / exporter / exportTechPack ...
-│   └── styles/              # app.css
+│   │   ├── task/            # KanbanView / DetailView / NewTaskModal / SampleRunList
+│   │   ├── drawing/         # DrawingLibrary（图纸资料管理）
+│   │   ├── bom/             # BomEditor
+│   │   ├── process/         # ProcessEditor
+│   │   ├── size-table/      # SizeTable
+│   │   └── common/          # PdfThumb / PdfPickerModal / SmartSelect / ExportButton ...
+│   ├── utils/               # exportTasks / exporter / exportTechPack / exportTechPackPdf ...
+│   └── styles/              # app.css + index.css
 ├── server/
-│   ├── index.cjs            # Express 入口 + [REQ] 请求日志中间件
-│   ├── db.cjs               # 建表 + 迁移
-│   ├── routes/              # tasks / drawings / bom / process / upload
-│   ├── services/            # tasks / drawings / styles / bom / process
-│   └── uploads/             # 上传文件存储
+│   ├── index.cjs            # Express 入口 + CORS 白名单 + [REQ] 请求日志中间件
+│   ├── db.cjs               # 建表 + 版本化迁移（v1-v10）
+│   ├── routes/              # tasks / sampleRuns / drawings / bom / process / styles / files / thumbs ...
+│   ├── services/            # tasks / sampleRuns / drawings / styles / bom / process / settings ...
+│   └── uploads/             # 上传文件存储（pdf/png/dxf/emf/prj 等专业格式）
 ├── scripts/
 │   └── dev.cjs              # 并发启动后端(3001)+前端(5173)
 └── docs/                    # 本文档 + BUSINESS_LOGIC.md
@@ -109,7 +113,24 @@ filename, url, file_hash, note, version, group_id, sort_order, created_at
 
 PATCH /api/tasks/:id 的 STYLE_KEYS 白名单：style_no, title, brand, designer, year, season, month, category, pdf_url——只传 pdf_url 安全（合并式，不覆盖其他字段）。
 
-## 5. 前端架构要点
+## 5. 数据库迁移历史（server/db.cjs，版本化幂等执行）
+
+| 版本 | 说明 |
+|---|---|
+| v1 | 初始建表（styles/tasks 等） |
+| v2 | 补充列（历史遗留迁移） |
+| v3 | 添加查询索引 |
+| v4 | 清理死列：tasks.standard_size, styles.size_group_id |
+| v5 | 新增 BOM 物料清单 + 工艺指示两张表 |
+| v6 | 新增图纸资料 drawings 表（技术图纸/纸样/放码图等） |
+| v7 | 图纸分类细化：技术图纸→参考图、放码图→唛架图 |
+| v8 | 图纸版本管控：kind/file_hash/version/group_id + 历史数据归组 |
+| v9 | 操作日志 operation_logs 表 |
+| v10 | **版次批次 sample_runs 表 + 存量同款重复单合并（8单→6单）** |
+
+迁移通过 `_migrations` 表记录已执行版本，每个版本只执行一次；v10 执行前数据库自动备份为 `server/database.backup_before_v10.sqlite`。
+
+## 6. 前端架构要点
 
 ### 双通道 API（src/api/client.js）
 - window.api 存在（Electron preload IPC）→ 走 IPC
@@ -137,7 +158,7 @@ persistPdfUrl(url) {
 - 从图纸资料库选设计稿：按 group_id 聚合取最新版 → 网格卡片
 - 点卡片=选中高亮 → 底部「确认更换」→ onSelect(url) → 关闭
 
-## 6. 环境与自测通道
+## 7. 环境与自测通道
 
 ### 启动
 ```bash
@@ -171,17 +192,19 @@ const browser = await puppeteer.launch({
 - Vite dev server 已配 Cache-Control: no-store（src 热更新）
 - git add 必须指定文件，禁止 `git add -A`（会误捡 _chrome_t* / _*.cjs / _test_upload.pdf 等测试残留）
 
-## 7. 构建与打包
+## 8. 构建与打包
 
 ```bash
 npm run build        # Vite 构建前端到 dist/
 npm run dist         # electron-builder 打包（需配置）
 ```
 
-## 8. 已知技术债
+## 9. 已知技术债
 
-- [ ] shell node 与 better-sqlite3 ABI 不匹配（需 rebuild 或统一 node 版本）
-- [ ] 存量重复单（AW26-JK001 task1+task2、SS26-TS003 task4+task5）待合并
-- [ ] 建单不查重款号（阶段 2 待实施）
-- [ ] 版次批次未结构化（阶段 4 待实施）
+- [ ] shell node 与 better-sqlite3 ABI 不匹配（127 vs 132），需 rebuild 或统一 node 版本；当前一律走 HTTP 验证数据
+- [ ] tasks 表上的 sample_type/size/sample_color/sample_count/fabric_date 等批次字段为兼容保留，权威数据已在 sample_runs；后续可清理
+- [ ] 款级 status（todo/doing/done）当前仍手动维护，阶段 5 将改为从最先进批次自动聚合
 - [ ] ITERATION_STATE.md 未随最近 commit 补记
+- [ ] puppeteer-core 以 --no-save 安装在 node_modules，未入 package.json（新环境需重装）
+- [ ] Excel 导入功能待定（用户明确后续再加入）
+- [ ] 本地 22+ 笔 commit 未推送（需用户开代理）

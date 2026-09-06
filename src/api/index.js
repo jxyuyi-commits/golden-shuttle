@@ -15,6 +15,11 @@ export const updateTaskStatus = (id, status) =>
 export const fetchTaskVersions = (styleId) =>
   apiGet(`/api/tasks/versions/${styleId}`);
 
+/* ── 历史版本 REQ-011（任务级快照：列表/详情/回滚） ── */
+export const fetchVersionHistory = (taskId) => apiGet(`/api/tasks/${taskId}/versions`);
+export const fetchVersionDetail = (taskId, versionId) => apiGet(`/api/tasks/${taskId}/versions/${versionId}`);
+export const rollbackVersion = (taskId, versionId) => apiPost(`/api/tasks/${taskId}/versions/${versionId}/rollback`);
+
 /* ── 版次批次 Sample Runs（一款单下多个打样批次） ── */
 export const fetchRuns = (taskId) => apiGet(`/api/tasks/${taskId}/runs`);
 export const createRun = (taskId, data) => apiPost(`/api/tasks/${taskId}/runs`, data);

@@ -441,6 +441,24 @@ const migrations = [
       // 3) 页面级不再挂单一固定单号/审核：tasks 层清空（列保留兼容，后续版本清理）
       db.exec("UPDATE tasks SET order_no = '', audit_status = '', audit_comment = ''");
     }
+  },
+  {
+    version: 15,
+    description: 'REQ-011 历史版本快照：task_versions 表（每次自动保存记录，5 分钟编辑会话合并）',
+    up: () => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS task_versions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          task_id INTEGER NOT NULL,
+          version_no INTEGER NOT NULL,
+          snapshot TEXT NOT NULL,
+          summary TEXT DEFAULT '',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_task_versions_task ON task_versions(task_id);
+      `);
+    }
   }
 ];
 

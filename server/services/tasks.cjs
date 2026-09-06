@@ -1,6 +1,7 @@
 // 打样单(Tasks) 业务服务层：纯函数，HTTP路由与IPC handler共用
 const { getDb } = require('../db.cjs');
 const { syncTaskStatus } = require('./sampleRuns.cjs');
+const versionSvc = require('./versions.cjs'); // REQ-011 历史版本快照
 
 // ── 操作日志 ──────────────────────────────────────────
 const STATUS_LABELS = { todo: '待处理', doing: '打版中', in_progress: '打版中', done: '已完结', completed: '已完结' };
@@ -304,6 +305,11 @@ function update(id, b) {
     logs.push(['node', '工作动态更新']);
   }
   for (const [action, detail] of logs) logAction(id, action, detail);
+
+  // REQ-011：自动保存落库后记录/合并历史版本快照（尺寸表/BOM 为重点，5 分钟编辑会话合并）
+  if (styleUpdated || taskUpdated) {
+    try { versionSvc.capture(id); } catch (e) { console.error('[versions] capture failed:', e.message); }
+  }
 
   return { success: true, styleUpdated, taskUpdated, logged: logs.length };
 }

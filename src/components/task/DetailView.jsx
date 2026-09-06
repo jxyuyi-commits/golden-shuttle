@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, Layout, Trash2, Edit2, Upload, Plus, FolderOpen } from 'lucide-react';
+import { ArrowLeft, Layout, Trash2, History, Edit2, Upload, Plus, FolderOpen } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import PdfPickerModal from '../common/PdfPickerModal';
 import ConfirmModal from '../common/ConfirmModal';
+import VersionHistoryModal from '../common/VersionHistoryModal';
 import SizeTable from '../size-table/SizeTable';
 import SmartSelect from '../common/SmartSelect';
 import ExportButton from '../common/ExportButton';
@@ -43,6 +44,8 @@ const DetailView = ({
   const [showPdfPicker, setShowPdfPicker] = useState(false);
   const [confirmNode, setConfirmNode] = useState(null); // REQ-006② 待删除工作动态条目 index
   const [confirmPdfRemove, setConfirmPdfRemove] = useState(false); // REQ-006② 移除设计稿确认
+  const [showVersions, setShowVersions] = useState(false); // REQ-011 历史版本弹窗
+  const [bomTick, setBomTick] = useState(0); // REQ-011 回滚后强制 BomEditor 重拉
   const pdfInputRef = useRef(null);
 
   // 自动保存（REQ-006③ 修订）：工作动态条目输入防抖 400ms 提交，镜像最新 progress_nodes
@@ -115,6 +118,14 @@ const DetailView = ({
           />
           <button
             className="btn-ghost-sm"
+            onClick={() => setShowVersions(true)}
+            title="历史版本：查看快照/对比/回滚"
+            style={{ color: '#94a3b8', border: '1px solid rgba(148,163,184,0.2)', padding: '6px 12px', borderRadius: 8 }}
+          >
+            <History size={14} /> 历史版本
+          </button>
+          <button
+            className="btn-ghost-sm"
             onClick={onDelete}
             style={{ color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.1)', padding: '6px 12px', borderRadius: 8 }}
           >
@@ -133,7 +144,7 @@ const DetailView = ({
 
       <div className="detail-content custom-scrollbar">
         {detailTab === 'drawing' && <DrawingLibrary taskId={task.id} />}
-        {detailTab === 'bom' && <BomEditor taskId={task.id} />}
+        {detailTab === 'bom' && <BomEditor taskId={task.id} key={`bom-${task.id}-${bomTick}`} />}
         {detailTab === 'process' && <ProcessEditor taskId={task.id} />}
         {detailTab === 'size' && (
           <div className="glass" style={{ gridColumn: '1/-1', padding: 32 }}>
@@ -371,6 +382,15 @@ const DetailView = ({
           currentUrl={task.pdf_url}
           onSelect={url => { onPdfSelect(url); setShowPdfPicker(false); }}
           onClose={() => setShowPdfPicker(false)}
+        />
+      )}
+
+      {/* REQ-011 历史版本 */}
+      {showVersions && (
+        <VersionHistoryModal
+          task={task}
+          onClose={() => setShowVersions(false)}
+          onRolledBack={() => { setBomTick(t => t + 1); onStatusSync && onStatusSync(); }}
         />
       )}
 

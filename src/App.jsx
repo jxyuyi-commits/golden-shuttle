@@ -159,8 +159,17 @@ const App = () => {
   };
 
   // PDF 上传并更新 pdf_url；同步进入图纸资料库（设计稿分类，工作成果可追溯版本）
+  const pdfSyncTimer = useRef(null);
+  const persistPdfUrl = (url) => {
+    if (!editingTask?.id) return;
+    setField('pdf_url', url);
+    updateTask(editingTask.id, { pdf_url: url })
+      .then(loadTasks)
+      .catch(err => console.error('保存设计稿引用失败:', err));
+  };
   const handlePdfUpload = async (file) => {
     if (!file) return;
+    if (pdfSyncTimer.current) { clearTimeout(pdfSyncTimer.current); pdfSyncTimer.current = null; }
     setPdfSyncState(null);
     try {
       const { url } = await uploadDesignFile(file);
@@ -169,6 +178,8 @@ const App = () => {
       try {
         await createDrawing({ task_id: editingTask.id, url, category: '设计稿', filename: file.name });
         setPdfSyncState('ok');
+        persistPdfUrl(url);
+        pdfSyncTimer.current = setTimeout(() => setPdfSyncState(null), 3000);
       } catch (e) {
         console.error('设计稿同步图纸资料失败:', e);
         setPdfSyncState({ error: e.message });
@@ -177,6 +188,18 @@ const App = () => {
       setPdfSyncState(null);
       alert('上传失败: ' + err.message);
     }
+  };
+
+  // 从图纸资料库选择设计稿（导入引用 + 立即持久化）
+  const handlePdfSelect = (url) => {
+    setPdfSyncState(null);
+    persistPdfUrl(url);
+  };
+
+  // 移除设计稿（仅移除详情引用，图纸库文件保留）
+  const handlePdfRemove = () => {
+    setPdfSyncState(null);
+    persistPdfUrl('');
   };
 
   const years = ['2023', '2024', '2025', '2026', '2027'];
@@ -244,6 +267,8 @@ const App = () => {
           onSetField={setField}
           onSetNodeField={setNodeField}
           onPdfUpload={handlePdfUpload}
+          onPdfSelect={handlePdfSelect}
+          onPdfRemove={handlePdfRemove}
           pdfSyncState={pdfSyncState}
         />
       )}

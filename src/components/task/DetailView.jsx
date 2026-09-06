@@ -32,6 +32,8 @@ const DetailView = ({
   onSetField,
   onSetNodeField,
   onPdfUpload,
+  onPdfSelect,
+  onPdfRemove,
   pdfSyncState,
 }) => {
   const [dragPdf, setDragPdf] = useState(false);
@@ -305,7 +307,7 @@ const DetailView = ({
                     title="移除设计稿"
                     onClick={e => {
                       e.stopPropagation();
-                      if (window.confirm('确定移除该设计稿吗？\n（图纸资料库中的文件不会被删除）')) onSetField('pdf_url', '');
+                      if (window.confirm('确定移除该设计稿吗？\n（图纸资料库中的文件不会被删除）')) onPdfRemove();
                     }}
                   >
                     <Trash2 size={14} />
@@ -391,7 +393,7 @@ const DetailView = ({
         <PdfPickerModal
           taskId={task.id}
           currentUrl={task.pdf_url}
-          onSelect={url => { onSetField('pdf_url', url); setShowPdfPicker(false); }}
+          onSelect={url => { onPdfSelect(url); setShowPdfPicker(false); }}
           onClose={() => setShowPdfPicker(false)}
         />
       )}

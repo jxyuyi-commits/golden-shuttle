@@ -1,7 +1,7 @@
-﻿# PatternMaster Pro 迭代状态追踪
+# PatternMaster Pro 迭代状态追踪
 
 > 本文件是迭代过程的"外部记忆"，上下文压缩后必须先读本文件再继续。
-> 最后更新：2026-09-07（REQ-002 图纸缩略图完整展示 + REQ-003 仪表盘清单展示优化完成：品类筛选/版师样衣工列/最先进批次主进度/待确认卡，迁移 v13）
+> 最后更新：2026-09-07（REQ-004 款/版次信息归属重构完成：款式信息抽屉独立载体+单号下沉版次 V 编号+审核按版次独立，迁移 v14）
 
 ---
 
@@ -54,7 +54,7 @@ styles(style_no UNIQUE, pdf_url 款级共享)
 
 - 6 个 task（一单一款无重复）、6 个 styles、8 个批次
 - task1 AW26-JK001（胚样打版中 + 头版样待配料）、task4 SS26-TS003（2 批次）、其余各 1 批次
-- 数据库迁移最新 **v13**（v10 批次表+存量合并，v11 linked_drawing_ids，v12 清理 tasks 旧批次字段，v13 批次负责人拆分版师/样衣工）
+- 数据库迁移最新 **v14**（v10 批次表+存量合并，v11 linked_drawing_ids，v12 清理 tasks 旧批次字段，v13 批次负责人拆分版师/样衣工，v14 单号/审核下沉版次）
 - 迁移前备份：`server/database.backup_before_v10.sqlite`（.gitignore 忽略，未入库）
 
 ### tasks 旧批次字段清理 + 刷新白屏修复（2026-09-07，迁移 v12）
@@ -81,6 +81,16 @@ styles(style_no UNIQUE, pdf_url 款级共享)
 - **注意**：期间用户实际使用推进了批次状态（26AWW526 V2→待确认、SS26-TS003 胚样→样衣中），仪表盘数字随之真实变化——验证了卡片数字非写死
 - **REQ-004（款/版次信息归属重构）仍待开发**：数据模型+页面大改，涉及单号下沉版次、审核按版次独立、历史数据迁移；需先定设计决策（见 docs/待开发文档.md 备注），未在本轮实施
 
+### REQ-004 款/版次信息归属重构（2026-09-07，迁移 v14）
+
+- **设计决策（用户拍板）**：①V 编号=款内批次顺序（V0 起，**一位不补零**）；②款式信息用**右侧抽屉**方案（先做出来看，不合适再改）；③款单看板状态**保留款级**（todo/doing/done 是整款推进层级，由最先进批次聚合，不下沉；批次本身已有 5 档细粒度状态）
+- **REQ-004① 款式信息抽屉**：新组件 `src/components/style/StyleInfoDrawer.jsx`（createPortal 右侧抽屉，宽 440px）：款号徽标 + 名称/类别/品牌/设计师/年度/季节/波段 + 设计稿只读展示；保存走新增 `PUT /api/styles/:id`（styles 服务 update，白名单 title/category/brand/designer/year/season/month/pdf_url，IPC `styles:update` 同步注册）→ loadTasks + 刷新当前详情。入口：看板卡片款号旁 Info 按钮（`.bento-style-info-btn`）+ 详情页顶部「款式信息」按钮。**详情页「款式基础信息」区块已移除**（不再依附打样单页面）
+- **REQ-004② 单号下沉版次**：迁移 v14 sample_runs 加 `order_no`，按款内 sort_order 生成 `PO-{款号}-V{n}`（n 从 0 起，删除批次不重排，max+1 分配新批次）；详情页款单信息区「打样单号」输入移除，批次卡片顶部只读显示各自单号（`.run-order-no`）；tasks.order_no 清空废弃；`attachRuns()` 从最先进批次投影 order_no/audit_status/audit_comment（看板卡片「版单/审核」行、列表列、导出自动正确）；versions() 用首个批次单号标识版本
+- **REQ-004③ 审核按版次独立**：sample_runs 加 `audit_status`（未提交/待审核/已通过/已驳回，默认未提交）+ `audit_comment`；批次表单加审核状态下拉（着色）+审版意见输入；详情页款级审核/审版意见 UI 移除；v14 迁移把旧款级审核迁至**最先进批次**（审最新样衣语义，26AWW526 原"待审核"不迁→未提交）；批次审核变更写操作日志
+- **验证**（全部实测通过）：迁移后 HTTP 全链路（单号 V0/V1 正确、审核继承、PATCH 审核生效、styles PUT 生效、投影正确）；浏览器 E2E **19 项全 PASS**（抽屉开/关/字段/保存按钮、详情页无款式基础信息区块/无打样单号输入框/无款级审核、批次单号标签/审核字段、看板卡片版单+审核行投影、零 console 错误）；生产构建通过（14.7s）
+- **踩坑**：PowerShell 5 的 Invoke-RestMethod 发中文 body 默认非 UTF-8（'待审核'→'??' 被枚举校验回退'未提交'），测试必须 `[Text.Encoding]::UTF8.GetBytes(ConvertTo-Json)` + `charset=utf-8`——是测试方法问题，真实前端 fetch 无此问题；Puppeteer `elementHandle.click()` 在 headless 下不触发 React 合成事件，需 `dispatchEvent(new MouseEvent('click',{bubbles:true}))`（REQ-003 E2E 是 page.click 选择器路径可用，本次按钮在 React 层回调）
+- **REQ-004 完成后遗留**：tasks.order_no/audit_status/audit_comment 列保留兼容（v14 已清空数据），后续版本可 DROP；seed.cjs 仍写 tasks.order_no（旧 SQL，种子数据无批次单号，仅开发脚本，不影响真实数据）
+
 ### 遗留待办
 
 - 本地 22+ 笔 commit 未推送（需用户开代理）
@@ -104,11 +114,11 @@ styles(style_no UNIQUE, pdf_url 款级共享)
 - **Node 版本**：真机系统 Node v24.13.0（ABI 137）；AI 工具通道里的 node 是托管版 v22.22.2（ABI 127）
 - **better-sqlite3**：当前编为 ABI 132（Electron），dev 后端由 Electron Node 运行，无需再 rebuild:node
 - **开发端口**：后端 3001（0.0.0.0），前端 Vite 5173
-- **数据库路径**：`server/database.sqlite`（6 tasks / 6 styles，迁移已到 v13）
+- **数据库路径**：`server/database.sqlite`（6 tasks / 6 styles，迁移已到 v14）
   - task1 AW26-JK001 极地抗寒羽绒服：2 批次（胚样打版中 + 头版样待配料），图纸库 2 条设计稿
   - task4 SS26-TS003 高支纯棉重磅T恤：2 批次；其余款各 1 批次
 - **启动命令**：`npm run dev:all`（= `node scripts/dev.cjs`，同时启动后端+前端）
-- **启动校验**：后端日志出现 `[DB] All migrations up to date (latest: v13)` 即为正常
+- **启动校验**：后端日志出现 `[DB] All migrations up to date (latest: v14)` 即为正常
 - **生产预览**：`node _preview.cjs`（托管 dist 到 4174 端口 + 代理 API 到 3001）——内置浏览器缓存问题用换端口解决
 - **Git 现状**：仓库 2026-09-01 重新初始化，当前 `main` 分支仅 1 个提交 `5989809 初始提交`
   （远端 github.com/jxyuyi-commits/golden-shuttle），本文件引用的历史提交号已不可查

@@ -42,6 +42,7 @@ function ipcRequest(path, method, body) {
   if (method === 'GET' && (m = path.match(/^\/api\/styles\?style_no=(.+)$/))) {
     return api.styles.findByNo(decodeURIComponent(m[1]));
   }
+  if (method === 'PUT' && (m = path.match(/^\/api\/styles\/(\d+)$/))) return api.styles.update(m[1], body);
 
   // Settings
   if (method === 'GET' && path === '/api/settings') return api.settings.getAll();

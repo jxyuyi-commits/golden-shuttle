@@ -57,14 +57,15 @@ id, style_no(UNIQUE), title, brand, designer, year, season, month, category, pdf
 
 ### tasks（款单，新模型一款一单）
 ```
-id, style_id(FK→styles), order_no, priority,
+id, style_id(FK→styles), order_no(废弃), priority,
 start_date, expected_date, finish_date,
-audit_status, audit_comment, status(todo/doing/done), progress_nodes(JSON),
+audit_status(废弃), audit_comment(废弃), status(todo/doing/done), progress_nodes(JSON),
 image_url, fabric_req, trim_req, process_req, note, size_data(JSON),
 created_at, updated_at
 ```
 - **新模型（v10 起）一款一 task（款单）**，版次维度下沉到 sample_runs；tasks 旧批次字段（sample_type/sample_color/size/sample_count/fabric_date）已在迁移 **v12 删除**，权威数据只在 sample_runs
 - **兼容投影**：`GET /api/tasks` 返回体仍带 sample_type/sample_color/size/sample_count/fabric_date（从首个批次 sort_order 最小者推导，`attachRuns()`），保证卡片/导出/查重列表等前端消费点无需改动；前端后续可迁移为直接读取 runs
+- **单号/审核已下沉版次（v14，REQ-004）**：tasks.order_no/audit_status/audit_comment 已清空废弃（列保留兼容待后续清理）；`attachRuns()` 从**最先进批次**投影 order_no/audit_status/audit_comment，看板卡片「版单/审核」行、列表列、导出展示的是当前进行中批次的信息
 - status 为**款单看板状态**：todo(待处理) / doing(打版中) / done(已完结)，批次增删改后自动从最先进批次聚合同步
 - progress_nodes：款级状态机时间线（用户可自由增删改，与看板 status 解耦）
 - `GET /api/tasks`、`/api/tasks/:id` 返回体附带 `runs` 数组（一次查询按 task_id 分组，无 N+1）
@@ -73,12 +74,15 @@ created_at, updated_at
 ```
 id, task_id(FK→tasks, ON DELETE CASCADE), sample_type(版次), size, sample_color,
 sample_count, priority, status, blocker, pattern_maker(版师), sample_maker(样衣工),
+order_no(打样单号), audit_status(审核状态), audit_comment(审版意见),
 fabric_date, start_date, expected_date, finish_date, note, sort_order, created_at, updated_at
 ```
 - 一款单 1──N 批次：胚样/头版样/复版/生产样可并行
 - status 枚举：waiting_material(待配料)/pattern_making(打版中)/sample_making(样衣中)/pending_confirm(待确认)/done(已完成)
 - blocker 枚举：none/short_material(欠面辅料)/wait_designer(待设计师确认)/wait_tech(待工艺单)/other(其他)，独立字段不走备注
 - 负责人（v13 起）：pattern_maker 版师 / sample_maker 样衣工 两个字段；原单一 assignee 已在 v13 并入 pattern_maker 后删除（REQ-003②）
+- **打样单号（v14，REQ-004②）**：order_no = `PO-{款号}-V{n}`，n 为该款内批次顺序（V0 起一位），创建批次时自动生成（取该款现有最大 V 编号 +1）；删除批次不重排，单号保持稳定
+- **审核按版次独立（v14，REQ-004③）**：audit_status 枚举 未提交/待审核/已通过/已驳回（默认未提交），audit_comment 各版次独立记录；v14 迁移时旧款级审核迁至**最先进批次**（审最新样衣语义）；操作日志记录批次审核变更
 - 建单（tasks.create）事务内自动建首个批次；批次增删改写 operation_logs
 
 ### drawings（图纸资料，按 task_id 隔离，款单内共享）
@@ -98,6 +102,7 @@ filename, url, file_hash, note, version, group_id, sort_order, created_at
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | GET | /api/tasks | 全部款单（含 styles join + runs 批次数组） |
+| PUT | /api/styles/:id | 更新款式基础信息（款级权威，REQ-004①，白名单：title/category/brand/designer/year/season/month/pdf_url） |
 | GET | /api/tasks/:id | 单款单详情（含 runs） |
 | POST | /api/tasks | 新建款单（自动 upsert styles + 建首个批次） |
 | PATCH | /api/tasks/:id | 更新款单（STYLE_KEYS 白名单合并） |
@@ -132,6 +137,7 @@ PATCH /api/tasks/:id 的 STYLE_KEYS 白名单：style_no, title, brand, designer
 | v11 | sample_runs 加 linked_drawing_ids（批次绑定的图纸资料版本，JSON 数组） |
 | v12 | 清理 tasks 旧批次字段（sample_type/sample_color/size/sample_count/fabric_date，权威数据已在 sample_runs；API 层改为从首个批次兼容投影） |
 | v13 | 批次负责人拆分版师/样衣工（sample_runs 加 pattern_maker/sample_maker；旧 assignee 值并入版师后删除，REQ-003②） |
+| v14 | REQ-004 单号/审核下沉版次：sample_runs 加 order_no（自动生成 PO-款号-Vn，V0 起一位）、audit_status、audit_comment；旧款级审核迁至最先进批次；tasks 级 order_no/audit 清空（列保留兼容） |
 
 迁移通过 `_migrations` 表记录已执行版本，每个版本只执行一次；v10 执行前数据库自动备份为 `server/database.backup_before_v10.sqlite`。
 

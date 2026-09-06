@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import {
   Layout, Plus, FileText, Database, CheckCircle2, Circle,
-  GripVertical, ChevronUp, ChevronDown, AlertCircle, BarChart3
+  GripVertical, ChevronUp, ChevronDown, AlertCircle, BarChart3, Info
 } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import ExportButton from '../common/ExportButton';
@@ -79,6 +79,7 @@ const KanbanView = ({
   onOpenSidebar,
   onNewTask,
   onTaskClick,
+  onOpenStyleInfo,
   onGoDashboard,
 }) => {
   // 版次筛选选项 = 版次库预设 ∪ 各批次实际使用值（含自定义值如 V2，保证能筛出）
@@ -376,6 +377,14 @@ const KanbanView = ({
                         <div className="bento-right-col">
                           <div className="bento-box bento-tr">
                             <span className="bento-style-no">{task.style_no || '—'}</span>
+                            <button
+                              type="button"
+                              className="bento-style-info-btn"
+                              title="款式信息（款级共享，同款各版次同步）"
+                              onClick={e => { e.stopPropagation(); onOpenStyleInfo?.(task); }}
+                            >
+                              <Info size={13} />
+                            </button>
                           </div>
                           <div className="bento-info-row">
                             <div className="bento-box bento-info">

@@ -45,6 +45,7 @@ function registerIpcHandlers() {
   // Styles
   ipcMain.handle('styles:list', () => styleService.listAll());
   ipcMain.handle('styles:findByNo', (_e, styleNo) => styleService.findByNo(styleNo));
+  ipcMain.handle('styles:update', (_e, id, data) => styleService.update(id, data));
 
   // Settings
   ipcMain.handle('settings:getAll', () => settingsService.getAll());

@@ -401,6 +401,46 @@ const migrations = [
         dropColumnIfExists('sample_runs', 'assignee');
       }
     }
+  },
+  {
+    version: 14,
+    description: 'REQ-004 单号/审核下沉版次：sample_runs 加 order_no（自动生成 PO-款号-Vn，V0 起一位）、audit_status、audit_comment；tasks 级 order_no/audit 清空（列保留兼容），权威数据在批次',
+    up: () => {
+      const cols = db.prepare("PRAGMA table_info(sample_runs)").all().map(c => c.name);
+      if (!cols.includes('order_no')) db.exec("ALTER TABLE sample_runs ADD COLUMN order_no TEXT DEFAULT ''");
+      if (!cols.includes('audit_status')) db.exec("ALTER TABLE sample_runs ADD COLUMN audit_status TEXT DEFAULT '未提交'");
+      if (!cols.includes('audit_comment')) db.exec("ALTER TABLE sample_runs ADD COLUMN audit_comment TEXT DEFAULT ''");
+
+      // 1) 批次单号：款内按 sort_order 顺序生成 PO-{款号}-V{序号}（V0 起，一位不补零）
+      const taskRows = db.prepare(`
+        SELECT t.id, s.style_no FROM tasks t LEFT JOIN styles s ON t.style_id = s.id ORDER BY t.id ASC
+      `).all();
+      const updOrderNo = db.prepare('UPDATE sample_runs SET order_no = ? WHERE id = ?');
+      for (const t of taskRows) {
+        const runs = db.prepare(
+          'SELECT id, status FROM sample_runs WHERE task_id = ? ORDER BY sort_order ASC, id ASC'
+        ).all(t.id);
+        runs.forEach((r, i) => updOrderNo.run(`PO-${t.style_no || 'STYLE'}-V${i}`, r.id));
+      }
+
+      // 2) 款级审核 → 最先进批次（审核对象是最新样衣；批次默认未提交，只迁有实质内容的）
+      const RANK = { waiting_material: 1, pattern_making: 2, sample_making: 3, pending_confirm: 4, done: 5 };
+      const allTasks = db.prepare('SELECT id, audit_status, audit_comment FROM tasks').all();
+      const updAudit = db.prepare('UPDATE sample_runs SET audit_status = ?, audit_comment = ? WHERE id = ?');
+      for (const t of allTasks) {
+        const runs = db.prepare(
+          'SELECT id, status FROM sample_runs WHERE task_id = ? ORDER BY sort_order ASC, id ASC'
+        ).all(t.id);
+        if (!runs.length) continue;
+        let top = runs[0];
+        for (const r of runs) if ((RANK[r.status] || 0) > (RANK[top.status] || 0)) top = r;
+        const status = (t.audit_status && t.audit_status !== '待审核') ? t.audit_status : '未提交';
+        updAudit.run(status, t.audit_comment || '', top.id);
+      }
+
+      // 3) 页面级不再挂单一固定单号/审核：tasks 层清空（列保留兼容，后续版本清理）
+      db.exec("UPDATE tasks SET order_no = '', audit_status = '', audit_comment = ''");
+    }
   }
 ];
 

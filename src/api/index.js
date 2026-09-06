@@ -34,6 +34,8 @@ export const fetchLogs = (params = {}) => {
 export const fetchStyles = () => apiGet('/api/styles');
 export const fetchStyleByNo = (styleNo) =>
   apiGet(`/api/styles?style_no=${encodeURIComponent(styleNo)}`);
+// REQ-004 ①：更新款式基础信息（款级权威，同款所有打样单同步）
+export const updateStyle = (id, data) => apiPut(`/api/styles/${id}`, data);
 
 /* ── 系统设置 Settings ── */
 export const fetchSettings = () => apiGet('/api/settings');

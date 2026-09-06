@@ -20,6 +20,8 @@ const BLOCKERS = [
   { key: 'other', label: '其他' },
 ];
 const PRIORITIES = ['低', '中', '高', '紧急'];
+const AUDIT_STATUSES = ['未提交', '待审核', '已通过', '已驳回'];
+const auditColor = (s) => (s === '已通过' ? '#4ade80' : s === '已驳回' ? '#f87171' : s === '待审核' ? '#fbbf24' : '#94a3b8');
 const statusLabel = (k) => RUN_STATUS.find(s => s.key === k)?.label || k;
 const statusColor = (k) => RUN_STATUS.find(s => s.key === k)?.color || '#94a3b8';
 
@@ -128,6 +130,11 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
       )}
       {runs.map((r, idx) => (
         <div key={r.id} className="run-card" data-blocked={r.blocker && r.blocker !== 'none' ? '1' : '0'}>
+          {r.order_no && (
+            <div className="run-order-no" title="本版次打样单号（款内 V 编号，删除批次不重排）">
+              打样单号：<em>{r.order_no}</em>
+            </div>
+          )}
           <div className="run-card-head">
             <div className="run-card-title">
               <span className="run-idx">#{idx + 1}</span>
@@ -218,6 +225,25 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
             <div className="field"><label>任务开始</label><input type="date" value={r.start_date || ''} onChange={e => patch(r.id, { start_date: e.target.value })} /></div>
             <div className="field"><label>预计完工</label><input type="date" value={r.expected_date || ''} onChange={e => patch(r.id, { expected_date: e.target.value })} /></div>
             <div className="field"><label>实际完工</label><input type="date" value={r.finish_date || ''} onChange={e => patch(r.id, { finish_date: e.target.value })} /></div>
+            <div className="field">
+              <label>审核状态</label>
+              <select
+                value={r.audit_status || '未提交'}
+                onChange={e => patch(r.id, { audit_status: e.target.value })}
+                style={{ color: auditColor(r.audit_status || '未提交') }}
+              >
+                {AUDIT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>审版意见</label>
+              <input
+                value={r.audit_comment || ''}
+                placeholder="本版次审版意见 / 修改点（各版次独立）"
+                onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, audit_comment: e.target.value } : x))}
+                onBlur={e => patch(r.id, { audit_comment: e.target.value })}
+              />
+            </div>
           </div>
           <div className="field" style={{ marginTop: 8 }}>
             <label>批次备注</label>

@@ -64,6 +64,16 @@ function deriveStyleStatus(runs) {
   return best;
 }
 
+/** 取最先进批次对象（与 deriveStyleStatus 同口径）；无批次返回 null */
+function findTopRun(runs) {
+  if (!runs || !runs.length) return null;
+  let top = runs[0];
+  for (const r of runs) {
+    if ((RUN_STATUS_RANK[r.status] ?? 0) > (RUN_STATUS_RANK[top.status] ?? 0)) top = r;
+  }
+  return top;
+}
+
 /** 给任务行附带其全部版次批次（sample_runs），一次查询按 task_id 分组避免 N+1；
  *  同时计算 derived_status（款级聚合状态，设计师视角） */
 function attachRuns(rows) {
@@ -78,6 +88,9 @@ function attachRuns(rows) {
     // 已由迁移 v12 移除，权威数据在 sample_runs；此处从首个批次（sort_order 最小）推导，
     // 保持前端卡片/导出/查重列表等消费点无需改动。前端可后续迁移为直接读取 runs。
     const top = runs[0];
+    // REQ-004：单号/审核已下沉版次（v14），task 级字段清空；此处从最先进批次投影，
+    // 保持看板卡片「版单/审核」行、列表列、导出等消费点展示"当前进行中批次"的信息。
+    const topRun = findTopRun(runs);
     return {
       ...t,
       runs,
@@ -88,6 +101,9 @@ function attachRuns(rows) {
       size: top?.size || '',
       sample_count: top?.sample_count ?? 1,
       fabric_date: top?.fabric_date || '',
+      order_no: topRun?.order_no || '',
+      audit_status: topRun?.audit_status || '',
+      audit_comment: topRun?.audit_comment || '',
     };
   });
 }
@@ -128,7 +144,7 @@ function versions(styleId) {
   const ids = rows.map(r => r.id);
   const placeholders = ids.map(() => '?').join(',');
   const runs = getDb().prepare(
-    `SELECT task_id, sample_type, sample_color FROM sample_runs
+    `SELECT task_id, sample_type, sample_color, order_no FROM sample_runs
      WHERE task_id IN (${placeholders}) ORDER BY sort_order ASC, id ASC`
   ).all(...ids);
   const byTask = {};
@@ -137,9 +153,11 @@ function versions(styleId) {
     const top = (byTask[r.id] || [])[0];
     return {
       ...r,
-      // 版次/样衣色已迁至 sample_runs，此处取首个批次投影保持对比 UI 可用
+      // 版次/样衣色已迁至 sample_runs，此处取首个批次投影保持对比 UI 可用；
+      // 单号已下沉版次（v14），版本对比用首个批次（V0）单号标识该版本
       sample_type: top?.sample_type || '',
       sample_color: top?.sample_color || '',
+      order_no: top?.order_no || '',
       size_data: safeParse(r.size_data, []),
     };
   });
@@ -179,24 +197,21 @@ function create(b) {
 
     const taskInfo = db.prepare(`
       INSERT INTO tasks (
-        style_id, order_no, priority,
-        start_date, expected_date, finish_date, audit_status, audit_comment,
+        style_id, priority,
+        start_date, expected_date, finish_date,
         status, progress_nodes, size_data, fabric_req, trim_req, process_req, note
       )
       VALUES (
-        @style_id, @order_no, @priority,
-        @start_date, @expected_date, @finish_date, @audit_status, @audit_comment,
+        @style_id, @priority,
+        @start_date, @expected_date, @finish_date,
         @status, @progress_nodes, @size_data, @fabric_req, @trim_req, @process_req, @note
       )
     `).run({
       style_id,
-      order_no: b.order_no || '',
       priority: b.priority || '中',
       start_date: b.start_date || '',
       expected_date: b.expected_date || '',
       finish_date: b.finish_date || '',
-      audit_status: b.audit_status || '待审核',
-      audit_comment: b.audit_comment || '',
       status: b.status || 'todo',
       progress_nodes: JSON.stringify(INITIAL_NODES),
       size_data: b.size_data || '[]',
@@ -227,7 +242,7 @@ function create(b) {
   });
 
   const newId = insertTransaction(b);
-  logAction(newId, 'create', `创建打样单 ${b.style_no ? `款号 ${b.style_no}` : ''}${b.order_no ? `，版单 ${b.order_no}` : ''}`.trim());
+  logAction(newId, 'create', `创建打样单 ${b.style_no ? `款号 ${b.style_no}` : ''}`.trim());
   return newId;
 }
 
@@ -257,9 +272,9 @@ function update(id, b) {
   }
 
   const TASK_KEYS = [
-    'order_no', 'priority',
-    'start_date', 'expected_date', 'finish_date', 'audit_status',
-    'audit_comment', 'status', 'progress_nodes', 'image_url',
+    'priority',
+    'start_date', 'expected_date', 'finish_date',
+    'status', 'progress_nodes', 'image_url',
     'fabric_req', 'trim_req', 'process_req', 'note', 'size_data'
   ];
   const taskUpdates = {};
@@ -283,7 +298,6 @@ function update(id, b) {
   const logs = [];
   if (diffOf('status')) logs.push(['status', `状态：${fmtStatus(oldTask.status)} → ${fmtStatus(b.status)}`]);
   if (diffOf('priority')) logs.push(['priority', `优先级：${oldTask.priority || '中'} → ${b.priority || '中'}`]);
-  if (diffOf('audit_status')) logs.push(['audit', `审核：${oldTask.audit_status || '待审核'} → ${b.audit_status || '待审核'}`]);
   if (diffOf('expected_date')) logs.push(['expected_date', `期望交期：${oldTask.expected_date || '未设'} → ${b.expected_date || '未设'}`]);
   if ('progress_nodes' in b && JSON.stringify(b.progress_nodes) !== JSON.stringify(oldTask.progress_nodes)) {
     logs.push(['node', '工作动态更新']);

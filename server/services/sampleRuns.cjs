@@ -7,6 +7,7 @@ const FIELDS = [
   'status', 'blocker', 'pattern_maker', 'sample_maker',
   'fabric_date', 'start_date', 'expected_date', 'finish_date',
   'note', 'sort_order', 'linked_drawing_ids',
+  'order_no', 'audit_status', 'audit_comment',
 ];
 
 /** 批次状态枚举（板师手动推进） */
@@ -16,6 +17,14 @@ const STATUS_LABELS = {
   sample_making: '样衣中',
   pending_confirm: '待确认',
   done: '已完成',
+};
+
+/** 审核状态枚举（审版按批次独立，REQ-004） */
+const AUDIT_LABELS = {
+  '未提交': '未提交',
+  '待审核': '待审核',
+  '已通过': '已通过',
+  '已驳回': '已驳回',
 };
 
 /** 阻塞原因枚举（独立字段，不用备注） */
@@ -87,7 +96,22 @@ function sanitize(d) {
   }
   if (out.status && !STATUS_LABELS[out.status]) out.status = 'waiting_material';
   if (out.blocker && !BLOCKER_LABELS[out.blocker]) out.blocker = 'none';
+  if (out.audit_status && !AUDIT_LABELS[out.audit_status]) out.audit_status = '未提交';
   return out;
+}
+
+/** 自动生成批次打样单号：PO-{款号}-V{n}，n = 该款现有最大 V 编号 + 1（V0 起一位；删除批次不重排，编号保持稳定） */
+function generateOrderNo(taskId) {
+  const db = getDb();
+  const task = db.prepare('SELECT style_id FROM tasks WHERE id = ?').get(taskId);
+  const style = task ? db.prepare('SELECT style_no FROM styles WHERE id = ?').get(task.style_id) : null;
+  const rows = db.prepare("SELECT order_no FROM sample_runs WHERE task_id = ? AND order_no != ''").all(taskId);
+  let max = -1;
+  for (const r of rows) {
+    const m = String(r.order_no).match(/-V(\d+)$/);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  }
+  return `PO-${style?.style_no || 'STYLE'}-V${max + 1}`;
 }
 
 /** 某款单下的全部批次（按排序、id 升序） */
@@ -110,6 +134,8 @@ function create(taskId, d) {
   if (!data.blocker) data.blocker = 'none';
   if (!data.priority) data.priority = '中';
   if (!data.sample_count) data.sample_count = 1;
+  if (!data.order_no) data.order_no = generateOrderNo(taskId);
+  if (!data.audit_status) data.audit_status = '未提交';
 
   const cols = Object.keys(data);
   const info = db.prepare(
@@ -143,6 +169,10 @@ function update(id, d) {
     logAction(before.task_id, '批次阻塞标记',
       `${after.sample_type || '批次#' + id}：${BLOCKER_LABELS[data.blocker]}`);
   }
+  if (data.audit_status && data.audit_status !== before.audit_status) {
+    logAction(before.task_id, '批次审核',
+      `${after.sample_type || '批次#' + id}（${after.order_no || '无单号'}）：${before.audit_status || '未提交'} → ${data.audit_status}${data.audit_comment ? '｜' + data.audit_comment : ''}`);
+  }
   if (data.status && data.status !== before.status) syncTaskStatus(before.task_id);
   return after;
 }
@@ -164,6 +194,6 @@ function remove(id) {
 }
 
 module.exports = {
-  STATUS_LABELS, BLOCKER_LABELS,
+  STATUS_LABELS, BLOCKER_LABELS, AUDIT_LABELS,
   listByTask, create, update, remove, syncTaskStatus,
 };

@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('api', {
   styles: {
     list: () => ipcRenderer.invoke('styles:list'),
     findByNo: (styleNo) => ipcRenderer.invoke('styles:findByNo', styleNo),
+    update: (id, data) => ipcRenderer.invoke('styles:update', id, data),
   },
   settings: {
     getAll: () => ipcRenderer.invoke('settings:getAll'),

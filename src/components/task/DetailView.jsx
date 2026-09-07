@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Layout, Trash2, History, Edit2, Upload, Plus, FolderOpen, Copy } from 'lucide-react';
+import { Layout, Trash2, History, Edit2, Edit3, Upload, Plus, FolderOpen, Copy } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import PdfPickerModal from '../common/PdfPickerModal';
 import ConfirmModal from '../common/ConfirmModal';
@@ -53,27 +53,46 @@ const DetailView = ({
   const [runs, setRuns] = useState([]);
   const [sizeRunId, setSizeRunId] = useState(null);
   const [confirmCopyPrev, setConfirmCopyPrev] = useState(false);
+  const [copyBlockedMsg, setCopyBlockedMsg] = useState(null); // REQ-005 修订：来源尺寸表为空时阻止复制并提示
 
-  useEffect(() => {
-    if (task?.id) {
-      fetchRuns(task.id)
-        .then(list => {
-          const arr = list || [];
-          setRuns(arr);
-          setSizeRunId(prev => (prev && arr.some(r => r.id == prev)) ? prev : (arr[0]?.id ?? null));
-        })
-        .catch(() => {});
-    }
-  }, [task?.id]);
+  const reloadRuns = () => {
+    if (!task?.id) return;
+    fetchRuns(task.id)
+      .then(list => {
+        const arr = list || [];
+        setRuns(arr);
+        setSizeRunId(prev => (prev && arr.some(r => r.id == prev)) ? prev : (arr[0]?.id ?? null));
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => { reloadRuns(); }, [task?.id]);
+
+  // REQ-005 修订：进入尺寸页时拉取最新批次，基本信息页新增的版次即时可见
+  const handleSetTab = (t) => {
+    if (t === 'size') reloadRuns();
+    onSetDetailTab(t);
+  };
 
   const selectedRun = runs.find(r => r.id == sizeRunId) || runs[0] || null;
+  // 复制来源 = 除当前批次外最后一个批次（顺序即创建顺序）
+  const copyPrev = runs.filter(r => r.id !== selectedRun?.id).slice(-1)[0];
+  const copySrcRows = Array.isArray(copyPrev?.size_data) ? copyPrev.size_data : [];
+
+  // REQ-005 修订：点击复制先校验来源非空——空数据直接阻止，避免把空表覆盖到当前版次
+  const handleCopyClick = () => {
+    if (copySrcRows.length === 0) {
+      setCopyBlockedMsg(copyPrev?.order_no || '上一版次');
+      return;
+    }
+    setConfirmCopyPrev(true);
+  };
+
   const copyFromPrevRun = async () => {
-    if (!selectedRun || !confirmCopyPrev) return;
-    const prev = runs.filter(r => r.id !== selectedRun.id).slice(-1)[0];
-    if (!prev) return;
+    if (!selectedRun || !confirmCopyPrev || !copyPrev) return;
     try {
-      await updateRun(selectedRun.id, { size_data: prev.size_data || [] });
-      setRuns(prevRuns => prevRuns.map(r => r.id === selectedRun.id ? { ...r, size_data: prev.size_data || [] } : r));
+      await updateRun(selectedRun.id, { size_data: copySrcRows });
+      setRuns(prevRuns => prevRuns.map(r => r.id === selectedRun.id ? { ...r, size_data: copySrcRows } : r));
       onStatusSync && onStatusSync();
     } catch { /* 静默 */ }
     setConfirmCopyPrev(false);
@@ -171,11 +190,11 @@ const DetailView = ({
       </header>
 
       <div className="tab-bar glass">
-        <div className={`tab ${detailTab === 'base' ? 'active' : ''}`} onClick={() => onSetDetailTab('base')}>基本信息</div>
-        <div className={`tab ${detailTab === 'drawing' ? 'active' : ''}`} onClick={() => onSetDetailTab('drawing')}>图纸资料</div>
-        <div className={`tab ${detailTab === 'size' ? 'active' : ''}`} onClick={() => onSetDetailTab('size')}>尺寸指标</div>
-        <div className={`tab ${detailTab === 'bom' ? 'active' : ''}`} onClick={() => onSetDetailTab('bom')}>物料清单</div>
-        <div className={`tab ${detailTab === 'process' ? 'active' : ''}`} onClick={() => onSetDetailTab('process')}>工艺指示</div>
+        <div className={`tab ${detailTab === 'base' ? 'active' : ''}`} onClick={() => handleSetTab('base')}>基本信息</div>
+        <div className={`tab ${detailTab === 'drawing' ? 'active' : ''}`} onClick={() => handleSetTab('drawing')}>图纸资料</div>
+        <div className={`tab ${detailTab === 'size' ? 'active' : ''}`} onClick={() => handleSetTab('size')}>尺寸指标</div>
+        <div className={`tab ${detailTab === 'bom' ? 'active' : ''}`} onClick={() => handleSetTab('bom')}>物料清单</div>
+        <div className={`tab ${detailTab === 'process' ? 'active' : ''}`} onClick={() => handleSetTab('process')}>工艺指示</div>
       </div>
 
       <div className="detail-content custom-scrollbar">
@@ -186,7 +205,7 @@ const DetailView = ({
           <div className="glass" style={{ gridColumn: '1/-1', padding: 32 }}>
             {/* REQ-005① 尺寸表归属版次：每批次独立尺寸表，可选择批次编辑 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13, color: 'var(--text-2)' }}>尺寸表（按版次独立）：</span>
+              <span style={{ fontSize: 13, color: 'var(--text-2)' }}>切换版次尺寸表：</span>
               <select
                 className="glass-select"
                 style={{ padding: '6px 12px', borderRadius: 6, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontSize: 13 }}
@@ -201,18 +220,23 @@ const DetailView = ({
                 <button
                   className="btn-ghost-sm"
                   style={{ color: 'var(--accent)', border: '1px solid var(--accent-soft-2)', padding: '6px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
-                  onClick={() => setConfirmCopyPrev(true)}
+                  onClick={handleCopyClick}
                   title="将上一版次（其它批次）的尺寸表整体复制到当前批次"
                 >
                   <Copy size={14} /> 从上一版次复制
                 </button>
               )}
-              {selectedRun && (
-                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
-                  当前编辑：{selectedRun.order_no || '未编号'}（{selectedRun.size || '无码'}）· 自动保存到该批次
-                </span>
-              )}
             </div>
+            {/* REQ-005 修订：当前编辑版次醒目标识，防止误改其它版次尺寸表 */}
+            {selectedRun && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', marginBottom: 16, borderRadius: 8, background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)' }}>
+                <Edit3 size={15} color="var(--accent)" />
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>当前编辑版次：</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)' }}>{selectedRun.order_no || '未编号'}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-2)' }}>（{selectedRun.sample_type || '未知版次'} · {selectedRun.size || '无码'}）</span>
+                <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 'auto' }}>修改自动保存到该版次，导出/跨版次对比均以当前版次为准</span>
+              </div>
+            )}
             <SizeTable
               data={selectedRun?.size_data || []}
               onChange={val => {
@@ -285,7 +309,7 @@ const DetailView = ({
           <div className="section-title" style={{ marginTop: 32, borderLeftColor: '#fbbf24' }}>
             打样批次 <span>(同款各版次并行，板师工作单元；各自独立打样单号与审核)</span>
           </div>
-          <SampleRunList taskId={task.id} settings={settings} category={task.category} onStatusSync={onStatusSync} />
+          <SampleRunList taskId={task.id} settings={settings} category={task.category} onStatusSync={onStatusSync} onRunsChanged={reloadRuns} />
 
           <div className="section-title" style={{ marginTop: 32 }}>打样说明与工艺反馈</div>
           <div className="textarea-group">
@@ -488,9 +512,21 @@ const DetailView = ({
       {confirmCopyPrev && (
         <ConfirmModal
           title="从上一版次复制尺寸表"
-          message={`确定将「${(() => { const prev = runs.filter(r => r.id !== selectedRun?.id).slice(-1)[0]; return prev ? `${prev.order_no || '未编号'} · ${prev.sample_type || ''}` : '上一批次'; })()}」的尺寸表整体复制到当前批次「${selectedRun?.order_no || ''}」？\n当前批次已有尺寸数据将被覆盖。`}
+          message={`确定将「${copyPrev ? `${copyPrev.order_no || '未编号'} · ${copyPrev.sample_type || ''}` : '上一批次'}」的尺寸表（${copySrcRows.length} 行）整体复制到当前版次「${selectedRun?.order_no || ''}」？\n当前版次已有尺寸数据将被覆盖。`}
           onConfirm={copyFromPrevRun}
           onCancel={() => setConfirmCopyPrev(false)}
+        />
+      )}
+
+      {/* REQ-005 修订：来源尺寸表为空时阻止复制 */}
+      {copyBlockedMsg && (
+        <ConfirmModal
+          title="无法复制：来源版次尺寸表为空"
+          message={`上一版次「${copyBlockedMsg}」暂无尺寸数据（0 行），无内容可复制。\n可先在「切换版次尺寸表」中选择该版次并录入尺寸后，再执行复制。`}
+          danger={false}
+          confirmText="知道了"
+          onConfirm={() => setCopyBlockedMsg(null)}
+          onCancel={() => setCopyBlockedMsg(null)}
         />
       )}
     </div>

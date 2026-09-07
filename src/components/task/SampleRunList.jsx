@@ -35,7 +35,7 @@ const statusColor = (k) => RUN_STATUS.find(s => s.key === k)?.color || 'var(--te
  * @param {string} category 当前款单品类（用于联动尺码选项）
  * @param {function} onStatusSync 批次状态变化后回调（款级状态已自动同步，通知父组件刷新）
  */
-const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
+const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged }) => {
   const [runs, setRuns] = useState([]);
   const [drawings, setDrawings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,6 +89,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
     const { id } = await createRun(taskId, { sample_type: sampleType, status: 'waiting_material', init_size_data: true });
     await load();
     onStatusSync?.();
+    onRunsChanged?.(); // REQ-005 修订：通知父级刷新批次，尺寸页新增版次即时可见
     return id;
   };
 
@@ -120,7 +121,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
     if (!confirmRun) return;
     const r = confirmRun;
     setConfirmRun(null);
-    deleteRun(r.id).then(() => { load(); onStatusSync?.(); }).catch(() => { load(); });
+    deleteRun(r.id).then(() => { load(); onStatusSync?.(); onRunsChanged?.(); }).catch(() => { load(); });
   };
 
   if (loading) {

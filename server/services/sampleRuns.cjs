@@ -7,7 +7,7 @@ const FIELDS = [
   'status', 'blocker', 'pattern_maker', 'sample_maker',
   'fabric_date', 'start_date', 'expected_date', 'finish_date',
   'note', 'sort_order', 'linked_drawing_ids',
-  'order_no', 'audit_status', 'audit_comment',
+  'order_no', 'audit_status', 'audit_comment', 'size_data',
 ];
 
 /** 批次状态枚举（板师手动推进） */
@@ -90,6 +90,9 @@ function sanitize(d) {
       out[k] = Number.isFinite(n) && n > 0 ? n : 1;
     } else if (k === 'sort_order') {
       out[k] = parseInt(d[k], 10) || 0;
+    } else if (k === 'size_data') {
+      // REQ-005 尺寸表归属版次：数组直接 JSON 落库
+      out[k] = Array.isArray(d[k]) ? JSON.stringify(d[k]) : String(d[k] ?? '[]');
     } else {
       out[k] = (d[k] ?? '').toString();
     }
@@ -98,6 +101,28 @@ function sanitize(d) {
   if (out.blocker && !BLOCKER_LABELS[out.blocker]) out.blocker = 'none';
   if (out.audit_status && !AUDIT_LABELS[out.audit_status]) out.audit_status = '未提交';
   return out;
+}
+
+/** 解析尺寸表 JSON（空/非法返回 []） */
+function parseSizeData(v) {
+  try { const arr = JSON.parse(v || '[]'); return Array.isArray(arr) ? arr : []; } catch { return []; }
+}
+
+/** REQ-005① 从品类尺寸部位预设生成初始尺寸表（新批次默认数据源） */
+function presetSizeData(category) {
+  const rows = getDb().prepare(
+    'SELECT code, name, method, tolerance, grading_rule, is_required FROM measurement_templates WHERE category = ? ORDER BY sort_order ASC, id ASC'
+  ).all(category || '');
+  return rows.map(r => ({
+    code: r.code || '',
+    name: r.name || '',
+    method: r.method || '',
+    tolerance: r.tolerance || '',
+    grading_rule: r.grading_rule || '',
+    is_required: !!r.is_required,
+    base: '',
+    size_values: {},
+  }));
 }
 
 /** 自动生成批次打样单号：PO-{款号}-V{n}，n = 该款现有最大 V 编号 + 1（V0 起一位；删除批次不重排，编号保持稳定） */
@@ -114,14 +139,14 @@ function generateOrderNo(taskId) {
   return `PO-${style?.style_no || 'STYLE'}-V${max + 1}`;
 }
 
-/** 某款单下的全部批次（按排序、id 升序） */
+/** 某款单下的全部批次（按排序、id 升序；size_data 解析为数组，REQ-005） */
 function listByTask(taskId) {
   return getDb().prepare(
     'SELECT * FROM sample_runs WHERE task_id = ? ORDER BY sort_order ASC, id ASC'
-  ).all(taskId);
+  ).all(taskId).map(r => ({ ...r, size_data: parseSizeData(r.size_data) }));
 }
 
-/** 新增批次：自动排到末尾 */
+/** 新增批次：自动排到末尾；支持 init_size_data（按品类预设生成初始尺寸表）/ size_data（显式传入，如从上一版次复制） */
 function create(taskId, d) {
   const db = getDb();
   const data = sanitize(d);
@@ -136,6 +161,14 @@ function create(taskId, d) {
   if (!data.sample_count) data.sample_count = 1;
   if (!data.order_no) data.order_no = generateOrderNo(taskId);
   if (!data.audit_status) data.audit_status = '未提交';
+  // REQ-005①：未显式传 size_data 时，按款品类从预设生成初始尺寸表
+  if (!data.size_data && d.init_size_data) {
+    const task = db.prepare('SELECT style_id FROM tasks WHERE id = ?').get(taskId);
+    const style = task ? db.prepare('SELECT category FROM styles WHERE id = ?').get(task.style_id) : null;
+    data.size_data = JSON.stringify(presetSizeData(style?.category || ''));
+  } else if (data.size_data === undefined) {
+    data.size_data = '[]';
+  }
 
   const cols = Object.keys(data);
   const info = db.prepare(

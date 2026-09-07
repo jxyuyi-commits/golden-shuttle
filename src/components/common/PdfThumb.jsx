@@ -113,7 +113,7 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
             src={thumbUrl}
             alt={`${ext.toUpperCase()} 预览（单击放大，双击本地打开）`}
             onError={() => setThumbFailed(true)}
-            style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, background: '#fff', cursor: pdfUrl ? 'pointer' : 'default' }}
+            style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, background: 'var(--text)', cursor: pdfUrl ? 'pointer' : 'default' }}
             {...interactiveProps}
           />
         )
@@ -139,10 +139,10 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
         >
           <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', maxWidth: '100%', maxHeight: '100%' }} onClick={e => e.stopPropagation()}>
             {isGeneric ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '48px 56px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, background: 'var(--bg-elev)', border: '1px solid var(--border-strong)', borderRadius: 14, padding: '48px 56px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
                 <FileText size={56} color="#a78bfa" />
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#c4b5fd' }}>{ext.toUpperCase()}</div>
-                <div style={{ fontSize: 13, color: '#64748b' }}>该格式无在线预览，双击卡片可调用本地软件打开</div>
+                <div style={{ fontSize: 13, color: 'var(--text-3)' }}>该格式无在线预览，双击卡片可调用本地软件打开</div>
               </div>
             ) : ext === 'dxf' && svgText ? (
               <div
@@ -159,7 +159,7 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
             )}
             <button
               className="btn-icon"
-              style={{ position: 'absolute', top: 0, right: 0, background: 'rgba(0,0,0,0.5)', color: '#fff', borderRadius: '50%', padding: '8px', transform: 'translate(50%, -50%)', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: 0, right: 0, background: 'rgba(0,0,0,0.5)', color: 'var(--text)', borderRadius: '50%', padding: '8px', transform: 'translate(50%, -50%)', cursor: 'pointer' }}
               onClick={(e) => { e.stopPropagation(); setEnlarged(false); }}
             >
               <X size={24} />

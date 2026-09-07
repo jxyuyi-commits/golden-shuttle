@@ -124,7 +124,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
                   </td>
                   <td><div className="tpl-method-cell" title={t.method}>{t.method || <span className="text-dim">未填写</span>}</div></td>
                   <td><span className="tpl-tag-blue">{t.tolerance || '-'}</span></td>
-                  <td><span className="tpl-tag-blue" style={{ background: 'rgba(56,189,248,0.05)', borderColor: 'rgba(56,189,248,0.1)' }}>{t.grading_rule || '-'}</span></td>
+                  <td><span className="tpl-tag-blue" style={{ background: 'rgba(56,189,248,0.05)', borderColor: 'var(--accent-soft)' }}>{t.grading_rule || '-'}</span></td>
                   <td>
                     <div className="row-ops-v4">
                       <button className="icon-btn" onClick={() => setEditing({ ...t })} title="编辑"><Edit2 size={14} /></button>

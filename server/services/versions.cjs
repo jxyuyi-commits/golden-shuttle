@@ -45,6 +45,8 @@ function buildSnapshot(taskId) {
       sample_color: r.sample_color, sample_count: r.sample_count, status: r.status,
       pattern_maker: r.pattern_maker, sample_maker: r.sample_maker,
       audit_status: r.audit_status, audit_comment: r.audit_comment,
+      // REQ-005 尺寸表归属版次：批次独立尺寸表随快照记录，回滚时写回批次
+      size_data: parse(r.size_data, []),
     })),
     saved_at: new Date().toISOString(),
   };
@@ -61,16 +63,19 @@ const FIELD_LABELS = {
 function diffSummary(prev, next) {
   if (!prev) return '首次快照';
   const changed = [];
-  const sections = [
-    ['款式信息', ['style_no', 'title', 'category', 'brand', 'designer', 'year', 'season', 'month', 'pdf_url']],
-    ['任务字段', ['priority', 'start_date', 'expected_date', 'finish_date', 'progress_nodes', 'fabric_req', 'trim_req', 'process_req', 'note']],
-    ['尺寸表', ['size_data']],
-    ['物料清单', ['bom']],
-  ];
-  for (const [label, keys] of sections) {
+  const sec = (label, keys) => {
     const hit = keys.filter(k => JSON.stringify(prev.task?.[k] ?? prev[k]) !== JSON.stringify(next.task?.[k] ?? next[k]));
     if (hit.length) changed.push(`${label}(${hit.map(k => FIELD_LABELS[k] || k).join('/')})`);
-  }
+  };
+  sec('款式信息', ['style_no', 'title', 'category', 'brand', 'designer', 'year', 'season', 'month', 'pdf_url']);
+  sec('任务字段', ['priority', 'start_date', 'expected_date', 'finish_date', 'progress_nodes', 'fabric_req', 'trim_req', 'process_req', 'note']);
+  // REQ-005 尺寸表归属版次：优先比较批次级 size_data（新快照），旧快照（task 级）回退比较
+  const sdOf = (s) => {
+    const runSd = JSON.stringify((s.runs || []).map(r => r.size_data).filter(v => v !== undefined));
+    return runSd !== '[]' ? runSd : JSON.stringify(s.size_data);
+  };
+  if (sdOf(prev) !== sdOf(next)) changed.push('尺寸表(尺寸表)');
+  sec('物料清单', ['bom']);
   return changed.length ? changed.join('；') : '细节微调';
 }
 
@@ -138,18 +143,30 @@ function rollback(taskId, versionId) {
     db.prepare(`UPDATE styles SET style_no=@style_no, title=@title, brand=@brand, designer=@designer,
       year=@year, season=@season, month=@month, category=@category, pdf_url=@pdf_url, updated_at=CURRENT_TIMESTAMP WHERE id=@id`)
       .run({ ...s, id: task.style_id });
-    // 2) 任务字段（尺寸表/工作动态/说明）
-    db.prepare(`UPDATE tasks SET size_data=@size_data, progress_nodes=@progress_nodes,
+    // 2) 任务字段（工作动态/说明；尺寸表已下沉批次 REQ-005，见 2.5）
+    db.prepare(`UPDATE tasks SET progress_nodes=@progress_nodes,
       note=@note, fabric_req=@fabric_req, trim_req=@trim_req, process_req=@process_req,
       priority=@priority, start_date=@start_date, expected_date=@expected_date, finish_date=@finish_date,
       updated_at=CURRENT_TIMESTAMP WHERE id=@id`)
       .run({
         id: taskId,
-        size_data: JSON.stringify(snap.size_data || []),
         progress_nodes: JSON.stringify(snap.task?.progress_nodes || []),
         note: s.note || '', fabric_req: s.fabric_req || '', trim_req: s.trim_req || '', process_req: s.process_req || '',
         priority: s.priority || '中', start_date: s.start_date || '', expected_date: s.expected_date || '', finish_date: s.finish_date || '',
       });
+    // 2.5) 批次尺寸表回滚（REQ-005 归属版次：按 run.id 写回快照中的批次尺寸表）
+    const snapRuns = snap.runs || [];
+    const hasRunSd = snapRuns.some(r => r.size_data !== undefined);
+    if (hasRunSd) {
+      const updSd = db.prepare('UPDATE sample_runs SET size_data = ? WHERE id = ?');
+      for (const r of snapRuns) {
+        if (r.id && r.size_data !== undefined) updSd.run(JSON.stringify(r.size_data || []), r.id);
+      }
+    } else {
+      // 兼容旧快照（尺寸表在 task 级）：回退写回该款首个批次
+      const first = db.prepare('SELECT id FROM sample_runs WHERE task_id = ? ORDER BY sort_order ASC, id ASC LIMIT 1').get(taskId);
+      if (first) db.prepare('UPDATE sample_runs SET size_data = ? WHERE id = ?').run(JSON.stringify(snap.size_data || []), first.id);
+    }
     // 3) BOM 重建（删除现有行，按快照重插）
     db.prepare('DELETE FROM bom_items WHERE task_id = ?').run(taskId);
     const insBom = db.prepare(`INSERT INTO bom_items (task_id, category, name, spec, color, unit, usage, supplier, price, note)

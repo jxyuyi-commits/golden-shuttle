@@ -84,7 +84,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
           <label>款号 (回车或失焦自动带出款式信息)</label>
           <input value={fd.style_no} onChange={e => { setFd({ ...fd, style_no: e.target.value }); setExistingTasks([]); setForceCreate(false); setIsStyleFound(false); }} onBlur={handleStyleBlur} placeholder="例：RWCX-2025-001" />
         </div>
-        {loading && <div style={{ fontSize: 12, color: '#38bdf8', marginBottom: 12 }}>正在查询款式资料...</div>}
+        {loading && <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 12 }}>正在查询款式资料...</div>}
         {isStyleFound && <div style={{ fontSize: 12, color: '#4ade80', marginBottom: 12, padding: '4px 8px', background: 'rgba(74,222,128,0.1)', borderRadius: 4 }}>✓ 找到已有款式，已自动填入基础信息</div>}
         {existingTasks.length > 0 && (
           <div style={{ marginBottom: 12, padding: 12, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: 8 }}>
@@ -93,7 +93,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
               {existingTasks.map(t => (
-                <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: 12, color: '#cbd5e1' }}>
+                <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: 12, color: 'var(--text-2)' }}>
                   <span>版次：{t.sample_type || '未填'} · 状态：{STATUS_CN[t.status] || t.status || '—'} · {t.size || '—'}码</span>
                   <button
                     type="button"
@@ -146,8 +146,8 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
           </div>
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', margin: '16px 0', paddingTop: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', marginBottom: 12 }}>本次打样批次配置</div>
+        <div style={{ borderTop: '1px solid var(--border)', margin: '16px 0', paddingTop: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-2)', marginBottom: 12 }}>本次打样批次配置</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div className="field">
               <label>打样版次</label>

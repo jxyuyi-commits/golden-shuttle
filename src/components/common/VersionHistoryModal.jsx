@@ -101,11 +101,11 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
           {selected ? (
             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <button className="btn-icon" onClick={() => setSelected(null)} title="返回列表"><ArrowLeft size={18} /></button>
-              <History size={16} color="#38bdf8" /> 历史版本 V{selected.version_no}
+              <History size={16} color="var(--accent)" /> 历史版本 V{selected.version_no}
             </span>
           ) : (
             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <History size={16} color="#38bdf8" /> 历史版本 <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>{task.style_no} {task.title}</span>
+              <History size={16} color="var(--accent)" /> 历史版本 <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>{task.style_no} {task.title}</span>
             </span>
           )}
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
@@ -114,9 +114,9 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
         {!selected && (
           <div className="version-body">
             {loading ? (
-              <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>加载中…</div>
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>加载中…</div>
             ) : versions.length === 0 ? (
-              <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
                 暂无历史版本。<br />每次自动保存后生成版本，同一编辑会话（5 分钟内）自动合并为一条。
               </div>
             ) : (
@@ -140,7 +140,7 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
         {selected && (
           <div className="version-body">
             <div className="version-detail-head">
-              <span style={{ color: '#94a3b8', fontSize: 12 }}>记录于 {fmtTime(selected.created_at)} · {selected.summary}</span>
+              <span style={{ color: 'var(--text-2)', fontSize: 12 }}>记录于 {fmtTime(selected.created_at)} · {selected.summary}</span>
               <button className="btn-danger" onClick={() => setConfirmRollback(true)} disabled={busy}>
                 <RotateCcw size={14} /> 回滚到此版本
               </button>
@@ -148,7 +148,7 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
 
             <div className="version-detail custom-scrollbar">
               {/* 款式/任务字段差异 */}
-              <div className="section-title" style={{ borderLeftColor: '#38bdf8' }}>款式与任务字段</div>
+              <div className="section-title" style={{ borderLeftColor: 'var(--accent)' }}>款式与任务字段</div>
               {(() => {
                 const diffs = diffStyleFields(selected.snapshot?.task, curTask);
                 if (!diffs.length) return <div className="version-none">与当前一致</div>;

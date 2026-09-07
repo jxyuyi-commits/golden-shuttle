@@ -35,19 +35,19 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
   return (
     <div className="overlay" onClick={onClose}>
       <div className="glass" style={{ width: 520, maxWidth: '92vw', maxHeight: '78vh', display: 'flex', flexDirection: 'column', borderRadius: 16, overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <FolderOpen size={16} color="#38bdf8" />
+            <FolderOpen size={16} color="var(--accent)" />
             <span style={{ fontSize: 15, fontWeight: 800 }}>从图纸资料选择设计稿</span>
-            <span style={{ fontSize: 11, color: '#64748b' }}>共 {items.length} 份</span>
+            <span style={{ fontSize: 11, color: 'var(--text-3)' }}>共 {items.length} 份</span>
           </div>
           <button className="btn-icon" onClick={onClose}><X size={18} /></button>
         </div>
         <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
-          {loading && <div style={{ padding: 28, textAlign: 'center', color: '#64748b', fontSize: 13 }}>加载中…</div>}
+          {loading && <div style={{ padding: 28, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>}
           {error && <div style={{ padding: 28, textAlign: 'center', color: '#f87171', fontSize: 13 }}>加载失败：{error}</div>}
           {!loading && !error && items.length === 0 && (
-            <div style={{ padding: 36, textAlign: 'center', color: '#64748b', fontSize: 13, lineHeight: 1.8 }}>
+            <div style={{ padding: 36, textAlign: 'center', color: 'var(--text-3)', fontSize: 13, lineHeight: 1.8 }}>
               暂无「设计稿」分类的图纸资料。
               <br />可到下方「图纸资料」tab 上传设计稿，或直接拖拽文件到设计稿区域。
             </div>
@@ -63,34 +63,34 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
                   title={d.filename || '设计稿'}
                   style={{
                     cursor: 'pointer', borderRadius: 10, overflow: 'hidden', position: 'relative',
-                    border: '1px solid rgba(255,255,255,0.1)', transition: 'border-color .15s, box-shadow .15s',
-                    background: '#0f172a',
+                    border: '1px solid var(--border-strong)', transition: 'border-color .15s, box-shadow .15s',
+                    background: 'var(--bg-elev)',
                     ...(isSelected
-                      ? { borderColor: '#38bdf8', boxShadow: '0 0 0 2px rgba(56,189,248,0.55)' }
+                      ? { borderColor: 'var(--accent)', boxShadow: '0 0 0 2px rgba(56,189,248,0.55)' }
                       : isCurrent ? { borderColor: 'rgba(56,189,248,0.55)' } : {}),
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = isSelected || isCurrent ? '#38bdf8' : 'rgba(56,189,248,0.5)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = isSelected ? '#38bdf8' : isCurrent ? 'rgba(56,189,248,0.55)' : 'rgba(255,255,255,0.1)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = isSelected || isCurrent ? 'var(--accent)' : 'rgba(56,189,248,0.5)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = isSelected ? 'var(--accent)' : isCurrent ? 'rgba(56,189,248,0.55)' : 'var(--border-strong)'; }}
                 >
                   <div style={{ height: 130 }}>
                     <PdfThumb pdfUrl={d.url} interactive={false} />
                   </div>
                   {isCurrent && (
-                    <div style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: '50%', background: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Check size={13} color="#020617" />
+                    <div style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Check size={13} color="var(--bg)" />
                     </div>
                   )}
                   {d.version > 1 && (
-                    <div style={{ position: 'absolute', left: 6, bottom: 6, fontSize: 10, color: '#cbd5e1', background: 'rgba(2,6,23,0.75)', borderRadius: 6, padding: '2px 6px' }}>V{d.version}</div>
+                    <div style={{ position: 'absolute', left: 6, bottom: 6, fontSize: 10, color: 'var(--text-2)', background: 'rgba(2,6,23,0.75)', borderRadius: 6, padding: '2px 6px' }}>V{d.version}</div>
                   )}
                 </div>
               );
             })}
           </div>
         </div>
-        <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <div style={{ fontSize: 12, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-            {selected ? (<>已选择：<span style={{ color: '#e2e8f0' }}>{items.find(x => x.url === selected)?.filename || ''}</span></>) : (<>点击卡片选择要更换的设计稿</>)}
+        <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+            {selected ? (<>已选择：<span style={{ color: 'var(--text)' }}>{items.find(x => x.url === selected)?.filename || ''}</span></>) : (<>点击卡片选择要更换的设计稿</>)}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn" style={{ padding: '7px 14px', fontSize: 13 }} onClick={onClose}>取消</button>

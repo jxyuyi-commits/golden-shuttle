@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Layout, Trash2, History, Edit2, Upload, Plus, FolderOpen } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Layout, Trash2, History, Edit2, Upload, Plus, FolderOpen, Copy } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import PdfPickerModal from '../common/PdfPickerModal';
 import ConfirmModal from '../common/ConfirmModal';
@@ -14,7 +14,7 @@ import DrawingLibrary from '../drawing/DrawingLibrary';
 import SampleRunList from './SampleRunList';
 import { exportTechPack, getTechPackFileName } from '../../utils/exportTechPack';
 import { exportTechPackPdf, getTechPackPdfFileName } from '../../utils/exportTechPackPdf';
-import { fetchBomItems, fetchProcessItems } from '../../api';
+import { fetchBomItems, fetchProcessItems, fetchRuns, updateRun } from '../../api';
 import { peopleByRole } from '../../utils/people';
 
 const years = ['2023', '2024', '2025', '2026', '2027'];
@@ -49,6 +49,36 @@ const DetailView = ({
   const [bomTick, setBomTick] = useState(0); // REQ-011 回滚后强制 BomEditor 重拉
   const pdfInputRef = useRef(null);
 
+  // REQ-005 尺寸表归属版次：款内批次 + 尺寸 Tab 当前选中批次
+  const [runs, setRuns] = useState([]);
+  const [sizeRunId, setSizeRunId] = useState(null);
+  const [confirmCopyPrev, setConfirmCopyPrev] = useState(false);
+
+  useEffect(() => {
+    if (task?.id) {
+      fetchRuns(task.id)
+        .then(list => {
+          const arr = list || [];
+          setRuns(arr);
+          setSizeRunId(prev => (prev && arr.some(r => r.id == prev)) ? prev : (arr[0]?.id ?? null));
+        })
+        .catch(() => {});
+    }
+  }, [task?.id]);
+
+  const selectedRun = runs.find(r => r.id == sizeRunId) || runs[0] || null;
+  const copyFromPrevRun = async () => {
+    if (!selectedRun || !confirmCopyPrev) return;
+    const prev = runs.filter(r => r.id !== selectedRun.id).slice(-1)[0];
+    if (!prev) return;
+    try {
+      await updateRun(selectedRun.id, { size_data: prev.size_data || [] });
+      setRuns(prevRuns => prevRuns.map(r => r.id === selectedRun.id ? { ...r, size_data: prev.size_data || [] } : r));
+      onStatusSync && onStatusSync();
+    } catch { /* 静默 */ }
+    setConfirmCopyPrev(false);
+  };
+
   // 自动保存（REQ-006③ 修订）：工作动态条目输入防抖 400ms 提交，镜像最新 progress_nodes
   const progressRef = useRef(task.progress_nodes || []);
   progressRef.current = task.progress_nodes || [];
@@ -80,7 +110,7 @@ const DetailView = ({
       <header className="top-bar glass">
         <div className="detail-breadcrumb">
           <div className="logo sidebar-hotzone" onClick={onOpenSidebar} onMouseEnter={onOpenSidebar} style={{ marginRight: 20 }}>
-            <Layout size={28} color="#38bdf8" />
+            <Layout size={28} color="var(--accent)" />
           </div>
           <div>
             <div className="bc-sub">
@@ -104,9 +134,9 @@ const DetailView = ({
                 fetchBomItems(task.id).catch(() => []),
                 fetchProcessItems(task.id).catch(() => [])
               ]);
-              return exportTechPack(task, bom, proc);
+              return exportTechPack(task, bom, proc, selectedRun); // REQ-005 按当前批次导出尺寸表
             }}
-            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(56,189,248,0.2)', background: 'rgba(56,189,248,0.1)', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--accent-soft-2)', background: 'var(--accent-soft)', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
           />
           <ExportButton
             label="导出PDF"
@@ -118,7 +148,7 @@ const DetailView = ({
                 fetchBomItems(task.id).catch(() => []),
                 fetchProcessItems(task.id).catch(() => [])
               ]);
-              return exportTechPackPdf(task, bom, proc);
+              return exportTechPackPdf(task, bom, proc, selectedRun); // REQ-005 按当前批次导出尺寸表
             }}
             style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(52,211,153,0.25)', background: 'rgba(52,211,153,0.1)', color: '#34d399', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
           />
@@ -126,7 +156,7 @@ const DetailView = ({
             className="btn-ghost-sm"
             onClick={() => setShowVersions(true)}
             title="历史版本：查看快照/对比/回滚"
-            style={{ color: '#94a3b8', border: '1px solid rgba(148,163,184,0.2)', padding: '6px 12px', borderRadius: 8 }}
+            style={{ color: 'var(--text-2)', border: '1px solid rgba(148,163,184,0.2)', padding: '6px 12px', borderRadius: 8 }}
           >
             <History size={14} /> 历史版本
           </button>
@@ -154,16 +184,48 @@ const DetailView = ({
         {detailTab === 'process' && <ProcessEditor taskId={task.id} />}
         {detailTab === 'size' && (
           <div className="glass" style={{ gridColumn: '1/-1', padding: 32 }}>
+            {/* REQ-005① 尺寸表归属版次：每批次独立尺寸表，可选择批次编辑 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 13, color: 'var(--text-2)' }}>尺寸表（按版次独立）：</span>
+              <select
+                className="glass-select"
+                style={{ padding: '6px 12px', borderRadius: 6, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontSize: 13 }}
+                value={selectedRun?.id || ''}
+                onChange={e => setSizeRunId(Number(e.target.value))}
+              >
+                {runs.map(r => (
+                  <option key={r.id} value={r.id}>{r.order_no || '未编号'} · {r.sample_type || '未知版次'}（{r.size || '无码'}）</option>
+                ))}
+              </select>
+              {selectedRun && runs.filter(r => r.id !== selectedRun.id).length > 0 && (
+                <button
+                  className="btn-ghost-sm"
+                  style={{ color: 'var(--accent)', border: '1px solid var(--accent-soft-2)', padding: '6px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+                  onClick={() => setConfirmCopyPrev(true)}
+                  title="将上一版次（其它批次）的尺寸表整体复制到当前批次"
+                >
+                  <Copy size={14} /> 从上一版次复制
+                </button>
+              )}
+              {selectedRun && (
+                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                  当前编辑：{selectedRun.order_no || '未编号'}（{selectedRun.size || '无码'}）· 自动保存到该批次
+                </span>
+              )}
+            </div>
             <SizeTable
-              data={task.size_data || []}
-              onChange={val => { onSetField('size_data', val); onCommitField('size_data', val); }}
+              data={selectedRun?.size_data || []}
+              onChange={val => {
+                if (!selectedRun) return;
+                setRuns(prev => prev.map(r => r.id === selectedRun.id ? { ...r, size_data: val } : r));
+                updateRun(selectedRun.id, { size_data: val }).catch(() => {});
+              }}
               updatedAt={task.updated_at}
-              standardSize={task.size || 'M'}
+              standardSize={selectedRun?.size || 'M'}
               sizeGroup={getSizeGroup()}
               measurementCategories={settings.measurementCategories || []}
-              styleId={task.style_id}
-              currentTaskId={task.id}
               category={task.category}
+              compareRuns={runs.filter(r => r.id !== selectedRun?.id)}
             />
           </div>
         )}
@@ -171,8 +233,8 @@ const DetailView = ({
         <div className="form-panel glass" style={{ display: detailTab === 'base' ? '' : 'none' }}>
           <div className="section-title" style={{ borderLeftColor: '#f43f5e', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div>款式信息 <span>(款级共享 · 同款各版次同步生效，编辑保存即全局生效)</span></div>
-            <button type="button" className="btn-icon" onClick={() => onSetIsStyleEditing(!isStyleEditing)} style={{ background: isStyleEditing ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.05)', borderRadius: 4, padding: 4 }}>
-              <Edit2 size={16} color={isStyleEditing ? '#38bdf8' : '#94a3b8'} />
+            <button type="button" className="btn-icon" onClick={() => onSetIsStyleEditing(!isStyleEditing)} style={{ background: isStyleEditing ? 'var(--accent-soft-2)' : 'var(--border-weak)', borderRadius: 4, padding: 4 }}>
+              <Edit2 size={16} color={isStyleEditing ? 'var(--accent)' : 'var(--text-2)'} />
             </button>
           </div>
           <div className="field-grid" style={{ pointerEvents: isStyleEditing ? 'auto' : 'none', opacity: isStyleEditing ? 1 : 0.65, transition: '0.2s' }}>
@@ -303,8 +365,8 @@ const DetailView = ({
               )}
 
               {dragPdf && (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.78)', borderRadius: 12, zIndex: 5, pointerEvents: 'none' }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#7dd3fc', background: 'rgba(2,6,23,0.85)', padding: '12px 24px', borderRadius: 10, border: '1px dashed rgba(56,189,248,0.6)' }}>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--overlay-strong)', borderRadius: 12, zIndex: 5, pointerEvents: 'none' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#7dd3fc', background: 'var(--overlay-strong)', padding: '12px 24px', borderRadius: 10, border: '1px dashed rgba(56,189,248,0.6)' }}>
                     松开鼠标{task.pdf_url ? '更换' : '上传'}设计稿
                   </div>
                 </div>
@@ -322,7 +384,7 @@ const DetailView = ({
                 <Plus size={14} /> 添加事件
               </button>
             </div>
-            <div style={{ fontSize: 12, color: '#475569', marginBottom: 8 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-4)', marginBottom: 8 }}>
               按项目推进逐条记录，可自由增删改；看板状态单独控制，互不影响
             </div>
             {(task.progress_nodes || []).map((node, i) => (
@@ -374,7 +436,7 @@ const DetailView = ({
               </div>
             ))}
             {(task.progress_nodes || []).length === 0 && (
-              <div style={{ padding: '18px 0', textAlign: 'center', color: '#475569', fontSize: 12 }}>
+              <div style={{ padding: '18px 0', textAlign: 'center', color: 'var(--text-4)', fontSize: 12 }}>
                 暂无工作动态，点击「添加事件」开始记录项目推进
               </div>
             )}
@@ -395,7 +457,7 @@ const DetailView = ({
         <VersionHistoryModal
           task={task}
           onClose={() => setShowVersions(false)}
-          onRolledBack={() => { setBomTick(t => t + 1); onStatusSync && onStatusSync(); }}
+          onRolledBack={() => { setBomTick(t => t + 1); onStatusSync && onStatusSync(); fetchRuns(task.id).then(list => setRuns(list || [])).catch(() => {}); }}
         />
       )}
 
@@ -419,6 +481,16 @@ const DetailView = ({
             setConfirmNode(null);
           }}
           onCancel={() => setConfirmNode(null)}
+        />
+      )}
+
+      {/* REQ-005① 从上一版次复制尺寸表确认 */}
+      {confirmCopyPrev && (
+        <ConfirmModal
+          title="从上一版次复制尺寸表"
+          message={`确定将「${(() => { const prev = runs.filter(r => r.id !== selectedRun?.id).slice(-1)[0]; return prev ? `${prev.order_no || '未编号'} · ${prev.sample_type || ''}` : '上一批次'; })()}」的尺寸表整体复制到当前批次「${selectedRun?.order_no || ''}」？\n当前批次已有尺寸数据将被覆盖。`}
+          onConfirm={copyFromPrevRun}
+          onCancel={() => setConfirmCopyPrev(false)}
         />
       )}
     </div>

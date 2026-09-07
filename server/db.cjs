@@ -459,6 +459,27 @@ const migrations = [
         CREATE INDEX IF NOT EXISTS idx_task_versions_task ON task_versions(task_id);
       `);
     }
+  },
+  {
+    version: 16,
+    description: 'REQ-005 尺寸表归属版次：sample_runs 加 size_data 列，tasks.size_data 迁移到各款首个批次后清空（列保留兼容）',
+    up: () => {
+      const cols = db.prepare("PRAGMA table_info(sample_runs)").all().map(c => c.name);
+      if (!cols.includes('size_data')) {
+        db.exec("ALTER TABLE sample_runs ADD COLUMN size_data TEXT DEFAULT '[]'");
+      }
+      // 旧数据承接：每款 tasks.size_data 迁到该款首个批次（sort_order 最小，与 size/sample_count 投影口径一致）
+      const tasks = db.prepare('SELECT id, size_data FROM tasks').all();
+      const updRun = db.prepare('UPDATE sample_runs SET size_data = ? WHERE id = ?');
+      for (const t of tasks) {
+        const sd = t.size_data;
+        if (!sd || sd === '[]') continue;
+        const first = db.prepare('SELECT id FROM sample_runs WHERE task_id = ? ORDER BY sort_order ASC, id ASC LIMIT 1').get(t.id);
+        if (first) updRun.run(sd, first.id);
+      }
+      // 权威数据下沉批次，tasks.size_data 清空（投影由 attachRuns 从批次派生）
+      db.exec("UPDATE tasks SET size_data = '[]'");
+    }
   }
 ];
 

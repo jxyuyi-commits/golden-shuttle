@@ -34,7 +34,7 @@ const SettingListEditor = ({ label, items, onChange }) => {
           editIdx === idx ? (
             <span key={item} className="tag-mini" style={{ padding: '2px 4px' }}>
               <input
-                style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: 11, fontWeight: 700, width: 60, outline: 'none' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--accent)', fontSize: 11, fontWeight: 700, width: 60, outline: 'none' }}
                 value={editVal}
                 onChange={e => setEditVal(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') confirmEdit(); if (e.key === 'Escape') setEditIdx(-1); }}

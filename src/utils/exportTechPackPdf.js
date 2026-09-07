@@ -347,7 +347,16 @@ const sectionTitle = (text) => ({
   margin: [0, 12, 0, 5],
 });
 
-export async function exportTechPackPdf(task, bomItems, processItems) {
+export async function exportTechPackPdf(task, bomItems, processItems, run) {
+  // REQ-005 尺寸表归属版次：run 为当前选中批次，覆盖导出用的尺寸表/尺码/件数（批次级权威）
+  if (run) {
+    task = {
+      ...task,
+      size: run.size || task.size,
+      sample_count: run.sample_count || task.sample_count,
+      size_data: run.size_data || task.size_data,
+    };
+  }
   if (!task) return;
   const pdfMake = await getPdfMake();
   const now = new Date();

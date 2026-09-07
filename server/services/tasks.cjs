@@ -105,6 +105,9 @@ function attachRuns(rows) {
       order_no: topRun?.order_no || '',
       audit_status: topRun?.audit_status || '',
       audit_comment: topRun?.audit_comment || '',
+      // REQ-005 尺寸表归属版次：权威数据在 sample_runs.size_data（迁移 v16），
+      // 此处从首个批次投影保持旧消费点（导出兜底/版本对比等）可用
+      size_data: safeParse(top?.size_data, []),
     };
   });
 }
@@ -159,7 +162,8 @@ function versions(styleId) {
       sample_type: top?.sample_type || '',
       sample_color: top?.sample_color || '',
       order_no: top?.order_no || '',
-      size_data: safeParse(r.size_data, []),
+      // REQ-005 尺寸表归属版次：尺寸表从批次投影（迁移 v16 后 tasks.size_data 已清空）
+      size_data: safeParse(top?.size_data, []),
     };
   });
 }

@@ -10,8 +10,8 @@ const SECTIONS = ['部位工艺', '缝制工艺', '后整理', '特殊工艺', '
 
 const cellStyle = {
   background: 'rgba(2,6,23,0.45)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  padding: '7px 10px', borderRadius: 6, color: '#e2e8f0',
+  border: '1px solid var(--border)',
+  padding: '7px 10px', borderRadius: 6, color: 'var(--text)',
   fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box'
 };
 
@@ -68,7 +68,7 @@ const ProcessEditor = ({ taskId }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div className="section-title" style={{ borderLeftColor: '#f59e0b' }}>
           <div>工艺指示</div>
-          <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项</span>
+          <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项</span>
         </div>
         <button className="btn-blue-sm" onClick={handleAdd} disabled={busy}>
           {busy ? <Loader2 size={14} className="spin" /> : <Plus size={14} />} 添加工艺
@@ -76,9 +76,9 @@ const ProcessEditor = ({ taskId }) => {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>加载中…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>
       ) : rows.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
           暂无工艺指示，点击右上角「添加工艺」开始记录
         </div>
       ) : (
@@ -87,14 +87,14 @@ const ProcessEditor = ({ taskId }) => {
             <thead>
               <tr>
                 {['序号', '分类', '工艺项目', '工艺要求 / 做法', '标准 / 参数', '备注', ''].map((h, i) => (
-                  <th key={i} style={{ padding: '10px 8px', textAlign: 'left', fontSize: 12, color: '#64748b', background: '#0f172a', borderBottom: '2px solid rgba(56,189,248,0.15)', whiteSpace: 'nowrap' }}>{h}</th>
+                  <th key={i} style={{ padding: '10px 8px', textAlign: 'left', fontSize: 12, color: 'var(--text-3)', background: 'var(--bg-elev)', borderBottom: '2px solid rgba(56,189,248,0.15)', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rows.map((row, idx) => (
-                <tr key={row.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                  <td style={{ padding: '8px 8px', color: '#94a3b8', textAlign: 'center' }}>{idx + 1}</td>
+                <tr key={row.id} style={{ borderBottom: '1px solid var(--bg-hover)' }}>
+                  <td style={{ padding: '8px 8px', color: 'var(--text-2)', textAlign: 'center' }}>{idx + 1}</td>
                   <td style={{ padding: 6, width: 110 }}>
                     <select style={cellStyle} value={row.section || '部位工艺'} onChange={e => { setField(row.id, 'section', e.target.value); scheduleCommit(row.id, 'section', e.target.value); }}>
                       {SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}

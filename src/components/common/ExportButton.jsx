@@ -60,19 +60,19 @@ const ExportButton = ({ label, title, confirmText, fileName, onExport, style, di
         <div className="overlay" onClick={() => setShowConfirm(false)} style={{ zIndex: 9999, alignItems: 'center', justifyContent: 'center' }}>
           <div className="modal glass" onClick={e => e.stopPropagation()} style={{ width: 440, padding: 28, gap: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 15, fontWeight: 800, color: '#f1f5f9' }}>
-                <FileSpreadsheet size={18} color="#38bdf8" /> {title}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>
+                <FileSpreadsheet size={18} color="var(--accent)" /> {title}
               </div>
-              <button onClick={() => setShowConfirm(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 4 }} aria-label="关闭">
+              <button onClick={() => setShowConfirm(false)} style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', padding: 4 }} aria-label="关闭">
                 <X size={18} />
               </button>
             </div>
-            <div style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.7 }}>{confirmText}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.7 }}>{confirmText}</div>
             {fileName && (
               <div style={{
                 padding: '10px 14px', background: 'rgba(56,189,248,0.08)',
                 border: '1px solid rgba(56,189,248,0.15)', borderRadius: 8,
-                color: '#38bdf8', fontSize: 12, wordBreak: 'break-all',
+                color: 'var(--accent)', fontSize: 12, wordBreak: 'break-all',
                 display: 'flex', alignItems: 'center', gap: 8
               }}>
                 <FileSpreadsheet size={14} /> {fileName}
@@ -99,7 +99,7 @@ const ExportButton = ({ label, title, confirmText, fileName, onExport, style, di
           padding: '12px 18px', borderRadius: 10, maxWidth: 420,
           background: toast.type === 'success' ? '#0c2b1d' : '#3b0d12',
           border: `1px solid ${toast.type === 'success' ? 'rgba(74,222,128,0.35)' : 'rgba(248,113,113,0.35)'}`,
-          color: '#e2e8f0', fontSize: 13, boxShadow: '0 12px 34px rgba(0,0,0,0.55)',
+          color: 'var(--text)', fontSize: 13, boxShadow: '0 12px 34px rgba(0,0,0,0.55)',
           animation: 'fadeInUp 0.25s ease'
         }}>
           {toast.type === 'success'

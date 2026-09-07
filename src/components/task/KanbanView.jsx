@@ -10,14 +10,14 @@ import { peopleByRole } from '../../utils/people';
 
 const getNodeIcon = (status) => {
   if (status === 'done' || status === 'completed') return <CheckCircle2 size={14} color="#4ade80" />;
-  if (status === 'active') return <AlertCircle size={14} color="#38bdf8" />;
-  return <Circle size={14} color="#475569" />;
+  if (status === 'active') return <AlertCircle size={14} color="var(--accent)" />;
+  return <Circle size={14} color="var(--text-4)" />;
 };
 
 // 版次批次状态元数据（与 SampleRunList / 后端 sampleRuns.cjs 保持一致）
 const RUN_STATUS_META = {
-  waiting_material: { label: '待配料', color: '#94a3b8' },
-  pattern_making: { label: '打版中', color: '#38bdf8' },
+  waiting_material: { label: '待配料', color: 'var(--text-2)' },
+  pattern_making: { label: '打版中', color: 'var(--accent)' },
   sample_making: { label: '样衣中', color: '#fbbf24' },
   pending_confirm: { label: '待确认', color: '#a78bfa' },
   done: { label: '已完成', color: '#4ade80' },
@@ -103,8 +103,8 @@ const KanbanView = ({
   const getActiveCols = () => {
     if (kanbanGroupBy === 'status') {
       return [
-        { id: 'todo', name: '待处理', color: '#94a3b8' },
-        { id: 'doing', name: '打版中', color: '#38bdf8' },
+        { id: 'todo', name: '待处理', color: 'var(--text-2)' },
+        { id: 'doing', name: '打版中', color: 'var(--accent)' },
         { id: 'done', name: '已完结', color: '#4ade80' }
       ];
     }
@@ -116,8 +116,8 @@ const KanbanView = ({
       return [
         { id: '紧急', name: '紧急', color: '#f43f5e' },
         { id: '高', name: '高', color: '#fb923c' },
-        { id: '中', name: '中', color: '#38bdf8' },
-        { id: '低', name: '低', color: '#94a3b8' }
+        { id: '中', name: '中', color: 'var(--accent)' },
+        { id: '低', name: '低', color: 'var(--text-2)' }
       ];
     }
     if (kanbanGroupBy === 'overdue') {
@@ -126,7 +126,7 @@ const KanbanView = ({
         { id: 'today', name: '今日到期', color: '#f59e0b' },
         { id: 'soon', name: '3天内到期', color: '#eab308' },
         { id: 'ok', name: '正常', color: '#4ade80' },
-        { id: 'none', name: '无交期/已完结', color: '#94a3b8' }
+        { id: 'none', name: '无交期/已完结', color: 'var(--text-2)' }
       ];
     }
     return [];
@@ -136,7 +136,7 @@ const KanbanView = ({
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       <header className="top-bar glass">
         <div className="logo" onClick={onOpenSidebar}>
-          <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="#38bdf8" /></span><span>PatternMaster Pro</span>
+          <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="var(--accent)" /></span><span>PatternMaster Pro</span>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button className="btn-blue" onClick={onNewTask}>
@@ -146,17 +146,17 @@ const KanbanView = ({
       </header>
 
       {/* 筛选区 */}
-      <div style={{ background: '#020617', padding: '16px 32px 0', flexShrink: 0, zIndex: 100, position: 'relative' }}>
+      <div style={{ background: 'var(--bg)', padding: '16px 32px 0', flexShrink: 0, zIndex: 100, position: 'relative' }}>
         <div className="glass" style={{ padding: '16px 24px', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0, overflow: 'visible' }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#94a3b8', whiteSpace: 'nowrap' }}>数据检索过滤</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-2)', whiteSpace: 'nowrap' }}>数据检索过滤</div>
           <input
-            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 14px', borderRadius: 8, color: '#fff', fontSize: 13, minWidth: 200, outline: 'none' }}
+            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, minWidth: 200, outline: 'none' }}
             placeholder="输入款号 / 款名搜索"
             value={filters.keyword}
             onChange={e => setFilters({ ...filters, keyword: e.target.value })}
           />
           <select
-            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 14px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}
+            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             value={filters.category}
             onChange={e => setFilters({ ...filters, category: e.target.value })}
           >
@@ -167,7 +167,7 @@ const KanbanView = ({
             })}
           </select>
           <select
-            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 14px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}
+            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             value={filters.sample_type}
             onChange={e => setFilters({ ...filters, sample_type: e.target.value })}
           >
@@ -175,7 +175,7 @@ const KanbanView = ({
             {sampleTypeOptions.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <select
-            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 14px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}
+            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             value={filters.designer}
             onChange={e => setFilters({ ...filters, designer: e.target.value })}
           >
@@ -183,7 +183,7 @@ const KanbanView = ({
             {peopleByRole(settings.people, '设计师').map(d => <option key={d} value={d}>{d}</option>)}
           </select>
           <select
-            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 14px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}
+            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             value={filters.priority}
             onChange={e => setFilters({ ...filters, priority: e.target.value })}
           >
@@ -206,7 +206,7 @@ const KanbanView = ({
                 if (!list.length) throw new Error('当前筛选结果为空，无可导出数据');
                 return exportTasksToExcel(list);
               }}
-              style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, whiteSpace: 'nowrap' }}
+              style={{ padding: '7px 12px', borderRadius: 8, background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, whiteSpace: 'nowrap' }}
             />
 
             <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: 2 }}>
@@ -214,7 +214,7 @@ const KanbanView = ({
                 className={`btn-icon-sm ${displayMode === 'kanban' ? 'active-mode' : ''}`}
                 onClick={() => setDisplayMode('kanban')}
                 title="看板视图"
-                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'kanban' ? '#38bdf8' : 'transparent', color: displayMode === 'kanban' ? '#000' : '#94a3b8', border: 'none', cursor: 'pointer' }}
+                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'kanban' ? 'var(--accent)' : 'transparent', color: displayMode === 'kanban' ? '#000' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
               >
                 <Layout size={16} />
               </button>
@@ -222,7 +222,7 @@ const KanbanView = ({
                 className={`btn-icon-sm ${displayMode === 'list' ? 'active-mode' : ''}`}
                 onClick={() => setDisplayMode('list')}
                 title="列表视图"
-                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'list' ? '#38bdf8' : 'transparent', color: displayMode === 'list' ? '#000' : '#94a3b8', border: 'none', cursor: 'pointer' }}
+                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'list' ? 'var(--accent)' : 'transparent', color: displayMode === 'list' ? '#000' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
               >
                 <FileText size={16} />
               </button>
@@ -230,7 +230,7 @@ const KanbanView = ({
 
             {displayMode === 'kanban' && (
               <select
-                style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', padding: '6px 12px', borderRadius: 8, color: '#38bdf8', fontSize: 13, outline: 'none', fontWeight: 700 }}
+                style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)', padding: '6px 12px', borderRadius: 8, color: 'var(--accent)', fontSize: 13, outline: 'none', fontWeight: 700 }}
                 value={kanbanGroupBy}
                 onChange={e => setKanbanGroupBy(e.target.value)}
               >
@@ -245,7 +245,7 @@ const KanbanView = ({
               <div style={{ display: 'flex', gap: 8 }}>
                 {/* 视图保存下拉 */}
                 <div className="smart-select">
-                  <div className="ss-display" style={{ padding: '7px 12px', fontSize: 12, background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', color: '#38bdf8' }} onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'views' ? null : 'views'); }}>
+                  <div className="ss-display" style={{ padding: '7px 12px', fontSize: 12, background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)', color: 'var(--accent)' }} onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'views' ? null : 'views'); }}>
                     <Database size={13} /> <span>{savedViews.find(v => v.id === activeViewId)?.name || '默认列表'}</span>
                   </div>
                   {activeDropdown === 'views' && (
@@ -276,13 +276,13 @@ const KanbanView = ({
                   {activeDropdown === 'columns' && (
                     <div className="ss-dropdown" style={{
                       position: 'absolute', top: '100%', right: 0, marginTop: 12, width: 240,
-                      background: '#1e293b', border: '1px solid rgba(255,255,255,0.15)',
+                      background: 'var(--bg-elev-2)', border: '1px solid rgba(255,255,255,0.15)',
                       borderRadius: 12, boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
                       padding: 16, zIndex: 10000, maxHeight: 500, overflow: 'auto'
                     }}>
-                      <div style={{ fontSize: 11, fontWeight: 900, color: '#475569', marginBottom: 12, padding: '0 4px', display: 'flex', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-4)', marginBottom: 12, padding: '0 4px', display: 'flex', justifyContent: 'space-between' }}>
                         字段排序与显示
-                        <span style={{ color: '#38bdf8', cursor: 'pointer' }} onClick={() => setActiveDropdown(null)}>关闭</span>
+                        <span style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => setActiveDropdown(null)}>关闭</span>
                       </div>
                       {listColumns.map((col, idx) => (
                         <div
@@ -304,12 +304,12 @@ const KanbanView = ({
                         >
                           <div
                             onClick={() => setListColumns(prev => prev.map(c => c.id === col.id ? { ...c, visible: !c.visible } : c))}
-                            style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', background: col.visible ? 'rgba(56,189,248,0.1)' : 'transparent', color: col.visible ? '#38bdf8' : '#94a3b8', fontSize: 12 }}
+                            style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', background: col.visible ? 'var(--accent-soft)' : 'transparent', color: col.visible ? 'var(--accent)' : 'var(--text-2)', fontSize: 12 }}
                           >
                             {col.visible ? <CheckCircle2 size={13} /> : <Circle size={13} />}
                             {col.label}
                           </div>
-                          <div style={{ padding: 4, cursor: 'grab', color: '#475569' }} title="拖拽排序">
+                          <div style={{ padding: 4, cursor: 'grab', color: 'var(--text-4)' }} title="拖拽排序">
                             <GripVertical size={14} />
                           </div>
                         </div>
@@ -338,10 +338,10 @@ const KanbanView = ({
               <div key={col.id} className="col" style={{ width: 400, flex: '0 0 400px', boxSizing: 'border-box' }}>
                 <div className="col-title" style={{
                   position: 'sticky', top: 0, zIndex: 50,
-                  background: '#020617', width: 400,
+                  background: 'var(--bg)', width: 400,
                   padding: '24px 0 16px', margin: 0,
                   boxSizing: 'border-box',
-                  borderBottom: '1px solid rgba(255,255,255,0.05)'
+                  borderBottom: '1px solid var(--border-weak)'
                 }}>
                   <span className="dot" style={{ background: col.color }} />
                   {col.name}
@@ -463,20 +463,20 @@ const KanbanView = ({
             <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, tableLayout: 'fixed' }} onClick={() => setActiveDropdown(null)}>
               <thead>
                 <tr>
-                  <th style={{ position: 'sticky', top: 0, left: 0, zIndex: 13, background: '#0f172a', padding: '14px 10px', textAlign: 'center', fontSize: 13, color: '#64748b', width: 60, whiteSpace: 'nowrap', borderBottom: '2px solid rgba(56,189,248,0.15)' }}>
+                  <th style={{ position: 'sticky', top: 0, left: 0, zIndex: 13, background: 'var(--bg-elev)', padding: '14px 10px', textAlign: 'center', fontSize: 13, color: 'var(--text-3)', width: 60, whiteSpace: 'nowrap', borderBottom: '2px solid rgba(56,189,248,0.15)' }}>
                     序号
                   </th>
                   {stickyCols.map(col => (
                     <th
                       key={col.id}
                       style={{
-                        padding: '14px 20px', textAlign: 'left', fontSize: 13, color: '#64748b', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap !important',
+                        padding: '14px 20px', textAlign: 'left', fontSize: 13, color: 'var(--text-3)', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap !important',
                         width: col.width,
                         position: 'sticky',
                         top: 0,
                         left: col.isSticky ? col.left : 'auto',
                         zIndex: col.isSticky ? 12 : 10,
-                        background: '#0f172a',
+                        background: 'var(--bg-elev)',
                         borderBottom: '2px solid rgba(56,189,248,0.15)'
                       }}
                       onClick={() => {
@@ -502,23 +502,23 @@ const KanbanView = ({
                     return 0;
                   })
                   .map((task, idx) => (
-                    <tr key={task.id} className="list-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: '0.2s' }}>
-                      <td style={{ position: 'sticky', left: 0, zIndex: 11, background: '#0f172a', borderRight: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', fontSize: 13, color: '#94a3b8', padding: '10px' }}>
+                    <tr key={task.id} className="list-row" style={{ borderBottom: '1px solid var(--bg-hover)', transition: '0.2s' }}>
+                      <td style={{ position: 'sticky', left: 0, zIndex: 11, background: 'var(--bg-elev)', borderRight: '1px solid var(--border-weak)', textAlign: 'center', fontSize: 13, color: 'var(--text-2)', padding: '10px' }}>
                         {idx + 1}
                       </td>
                       {stickyCols.map(col => (
                         <td key={col.id} style={{
-                          padding: '16px 20px', fontSize: 13, color: '#cbd5e1',
+                          padding: '16px 20px', fontSize: 13, color: 'var(--text-2)',
                           whiteSpace: 'nowrap !important',
                           overflow: 'hidden', textOverflow: 'ellipsis',
                           position: col.isSticky ? 'sticky' : 'static',
                           left: col.isSticky ? col.left : 'auto',
                           zIndex: col.isSticky ? 10 : 1,
-                          background: col.isSticky ? '#0f172a' : 'transparent',
-                          borderRight: col.isSticky ? '1px solid rgba(255,255,255,0.05)' : 'none'
+                          background: col.isSticky ? 'var(--bg-elev)' : 'transparent',
+                          borderRight: col.isSticky ? '1px solid var(--border-weak)' : 'none'
                         }}>
                           {col.id === 'image' ? (
-                            <div style={{ width: 80, height: 110, borderRadius: 6, overflow: 'hidden', background: '#1e293b' }}>
+                            <div style={{ width: 80, height: 110, borderRadius: 6, overflow: 'hidden', background: 'var(--bg-elev-2)' }}>
                               <PdfThumb pdfUrl={task.pdf_url} objectFit="contain" />
                             </div>
                           ) : col.id === 'action' ? (
@@ -529,7 +529,7 @@ const KanbanView = ({
                             </span>
                           ) : col.id === 'status_text' ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span className="dot" style={{ background: task.status === 'done' ? '#4ade80' : task.status === 'doing' ? '#38bdf8' : '#94a3b8' }} />
+                              <span className="dot" style={{ background: task.status === 'done' ? '#4ade80' : task.status === 'doing' ? 'var(--accent)' : 'var(--text-2)' }} />
                               {task.status === 'done' ? '已完结' : task.status === 'doing' ? '打版中' : '待处理'}
                             </div>
                           ) : col.id === 'created_at' || col.id === 'updated_at' || col.id.endsWith('_date') ? (

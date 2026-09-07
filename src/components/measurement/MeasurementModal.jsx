@@ -51,7 +51,7 @@ const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
                 </div>
               ))}
               {templates.length === 0 && (
-                <div style={{ color: '#475569', padding: 32, textAlign: 'center', gridColumn: '1/-1' }}>
+                <div style={{ color: 'var(--text-4)', padding: 32, textAlign: 'center', gridColumn: '1/-1' }}>
                   该分类下暂无预设，请先在「设置」中添加
                 </div>
               )}
@@ -59,7 +59,7 @@ const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
           </div>
         </div>
         <div className="modal-footer">
-          <div style={{ fontSize: 13, color: '#94a3b8' }}>已选 {selectedIds.length} 个</div>
+          <div style={{ fontSize: 13, color: 'var(--text-2)' }}>已选 {selectedIds.length} 个</div>
           <div style={{ display: 'flex', gap: 12 }}>
             <button className="btn-ghost" onClick={onClose}>取消</button>
             <button className="btn-blue" onClick={handleConfirm} disabled={selectedIds.length === 0}>确认选择</button>

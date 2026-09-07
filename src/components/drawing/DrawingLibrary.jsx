@@ -15,7 +15,7 @@ export const DRAWING_CATEGORIES = ['设计稿', '参考图', '成衣图', '纸�
 
 // 各分类徽章配色
 const CATEGORY_COLORS = {
-  '设计稿': '#38bdf8',
+  '设计稿': 'var(--accent)',
   '参考图': '#f472b6',
   '成衣图': '#fb923c',
   '纸样': '#a78bfa',
@@ -35,7 +35,7 @@ const TYPE_COLORS = {
   emf: '#0ea5e9',
   pla: '#a78bfa', prj: '#a78bfa', zprj: '#a78bfa', zpac: '#a78bfa',
 };
-const typeColor = (ext) => TYPE_COLORS[ext] || '#64748b';
+const typeColor = (ext) => TYPE_COLORS[ext] || 'var(--text-3)';
 
 /** 从 URL 提取文件扩展名（小写） */
 function fileExtOf(url, filename) {
@@ -46,8 +46,8 @@ function fileExtOf(url, filename) {
 
 const inputStyle = {
   background: 'rgba(2,6,23,0.45)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  padding: '7px 10px', borderRadius: 6, color: '#e2e8f0',
+  border: '1px solid var(--border)',
+  padding: '7px 10px', borderRadius: 6, color: 'var(--text)',
   fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box'
 };
 
@@ -259,7 +259,7 @@ const DrawingLibrary = ({ taskId }) => {
     >
       {dragOver && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.7)', borderRadius: 20, zIndex: 5, pointerEvents: 'none' }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#c4b5fd', background: 'rgba(2,6,23,0.8)', padding: '18px 34px', borderRadius: 12, border: '1px dashed rgba(167,139,250,0.6)' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: '#c4b5fd', background: 'var(--overlay-strong)', padding: '18px 34px', borderRadius: 12, border: '1px dashed rgba(167,139,250,0.6)' }}>
             松开鼠标上传（支持任意格式，可多选）
           </div>
         </div>
@@ -269,7 +269,7 @@ const DrawingLibrary = ({ taskId }) => {
         <div>
           <div className="section-title" style={{ borderLeftColor: '#a78bfa', marginBottom: 8 }}>
             <div>图纸资料</div>
-            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>集中管理设计稿 / 参考图 / 成衣图 / 纸样 / 唛架图等资料 · 共 {cards.length} 份</span>
+            <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>集中管理设计稿 / 参考图 / 成衣图 / 纸样 / 唛架图等资料 · 共 {cards.length} 份</span>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {['全部', ...DRAWING_CATEGORIES].map(c => (
@@ -279,15 +279,15 @@ const DrawingLibrary = ({ taskId }) => {
                 onClick={() => setFilter(c)}
                 style={{
                   padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
-                  border: filter === c ? '1px solid rgba(167,139,250,0.6)' : '1px solid rgba(255,255,255,0.1)',
-                  background: filter === c ? 'rgba(167,139,250,0.18)' : 'rgba(255,255,255,0.04)',
-                  color: filter === c ? '#c4b5fd' : '#94a3b8', fontWeight: 600,
+                  border: filter === c ? '1px solid rgba(167,139,250,0.6)' : '1px solid var(--border-strong)',
+                  background: filter === c ? 'rgba(167,139,250,0.18)' : 'var(--bg-hover)',
+                  color: filter === c ? '#c4b5fd' : 'var(--text-2)', fontWeight: 600,
                 }}
               >
                 {c}
               </button>
             ))}
-            <span style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4, marginLeft: 4 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 4, marginLeft: 4 }}>
               <ClipboardPaste size={12} /> 拖拽 / Ctrl+V 粘贴 / 任意格式
             </span>
           </div>
@@ -298,9 +298,9 @@ const DrawingLibrary = ({ taskId }) => {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>加载中…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: 60, textAlign: 'center', color: '#64748b', fontSize: 13 }}>
+        <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
           {cards.length === 0
             ? '暂无图纸资料：点击「上传资料」、拖拽文件到本区域，或 Ctrl+V 粘贴（图片/PDF/专业软件文件均可）'
             : `「${filter}」分类暂无资料`}
@@ -318,9 +318,9 @@ const DrawingLibrary = ({ taskId }) => {
                     title="点击修改分类"
                     onChange={e => handleCategoryChange(d, e.target.value)}
                     style={{
-                      background: `${CATEGORY_COLORS[d.category] || '#38bdf8'}22`,
-                      color: CATEGORY_COLORS[d.category] || '#38bdf8',
-                      borderColor: `${CATEGORY_COLORS[d.category] || '#38bdf8'}44`,
+                      background: `${CATEGORY_COLORS[d.category] || 'var(--accent)'}22`,
+                      color: CATEGORY_COLORS[d.category] || 'var(--accent)',
+                      borderColor: `${CATEGORY_COLORS[d.category] || 'var(--accent)'}44`,
                     }}
                   >
                     {DRAWING_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -464,17 +464,17 @@ const DrawingLibrary = ({ taskId }) => {
               </div>
               <button className="btn-icon" onClick={() => setGroupModal(null)}><X size={18} /></button>
             </div>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 14 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 14 }}>
               共 {groupModal.versions.length} 个版本 · 工作成果可追溯，旧版本保留可随时回看
             </div>
             {groupLoading ? (
-              <div style={{ padding: 30, textAlign: 'center', color: '#64748b', fontSize: 13 }}>加载中…</div>
+              <div style={{ padding: 30, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {groupModal.versions.map(v => {
                   const latest = v.version === Math.max(...groupModal.versions.map(x => x.version));
                   return (
-                    <div key={v.id} className="drawing-ver-row" style={{ borderColor: latest ? 'rgba(167,139,250,0.5)' : 'rgba(255,255,255,0.06)' }}>
+                    <div key={v.id} className="drawing-ver-row" style={{ borderColor: latest ? 'rgba(167,139,250,0.5)' : 'var(--bg-hover-2)' }}>
                       <div className="ver-thumb">
                         <PdfThumb pdfUrl={v.url} objectFit="contain" />
                       </div>

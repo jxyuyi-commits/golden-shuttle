@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, CheckCircle2, Calculator, AlertCircle, ChevronUp, ChevronDown, Trash2, Database } from 'lucide-react';
 import { autoSign, formatTime } from '../../utils/format';
-import { fetchMeasurementTemplates, fetchTaskVersions, saveMeasurementTemplate } from '../../api';
+import { fetchMeasurementTemplates, saveMeasurementTemplate } from '../../api';
 import MeasurementModal from '../measurement/MeasurementModal';
 import ConfirmModal from '../common/ConfirmModal';
 
-/** 尺寸指标表格：排序 + 批量操作 + 预设导入 + 拓码 + 成衣实测公差报警 + 版次对比 */
+/** 尺寸指标表格：排序 + 批量操作 + 预设导入 + 拓码 + 成衣实测公差报警 + 跨版次（批次）同码对比
+ *  REQ-005：尺寸表归属版次——data 为当前批次尺寸表；compareRuns 为同款其它批次（同码 M 对 M 对比） */
 const SizeTable = ({
   data = [],
   onChange,
@@ -13,9 +14,8 @@ const SizeTable = ({
   measurementCategories = [],
   standardSize = 'M',
   sizeGroup = null,
-  styleId = null,
-  currentTaskId = null,
-  category = ''
+  category = '',
+  compareRuns = [],
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIndices, setSelectedIndices] = useState([]);
@@ -41,29 +41,14 @@ const SizeTable = ({
     }
   }, [category]);
 
-  // -- 版次对比 --
-  const [versions, setVersions] = useState([]);
-  const [compareTaskId, setCompareTaskId] = useState(null);
-  const [compareData, setCompareData] = useState([]);
+  // -- 跨版次对比（REQ-005④ 批次级，同码 M 对 M） --
+  const [compareRunId, setCompareRunId] = useState(null);
+  const [compareRun, setCompareRun] = useState(null);
 
   useEffect(() => {
-    if (styleId) {
-      fetchTaskVersions(styleId)
-        .then(list => {
-          setVersions(list.filter(v => v.id !== currentTaskId));
-        })
-        .catch(err => console.error('Load versions error:', err));
-    }
-  }, [styleId, currentTaskId]);
-
-  useEffect(() => {
-    if (compareTaskId) {
-      const target = versions.find(v => v.id == compareTaskId);
-      setCompareData(target ? target.size_data : []);
-    } else {
-      setCompareData([]);
-    }
-  }, [compareTaskId, versions]);
+    const target = compareRuns.find(r => r.id == compareRunId);
+    setCompareRun(target || null);
+  }, [compareRunId, compareRuns]);
 
   useEffect(() => {
     if (shake.row !== -1) {
@@ -88,6 +73,23 @@ const SizeTable = ({
     const diff = sizeIndex - stdIdx;
     if (diff === 0) return '';
     return (b + diff * g).toFixed(1);
+  };
+
+  // REQ-005④ 同码换算：取对比批次在该行"当前批次标准码"下的值（对比批次标准码不同时按放码规则换算）
+  const compValOf = (row) => {
+    if (!compareRun) return null;
+    const sVals = typeof row.size_values === 'string' ? JSON.parse(row.size_values || '{}') : (row.size_values || {});
+    const compStdIdx = allSizes.indexOf(compareRun.size || standardSize);
+    const curStdIdx = allSizes.indexOf(standardSize);
+    if (compStdIdx < 0 || curStdIdx < 0) return row.base || '';
+    if (compStdIdx === curStdIdx) return row.base || ''; // 同码：直接比 base
+    // 异码：优先对比批次手动值，否则按放码规则换算
+    const manual = sVals[standardSize];
+    if (manual !== undefined && manual !== '') return manual;
+    const b = parseFloat(row.base);
+    const g = parseFloat(row.grading || 0);
+    if (isNaN(b) || isNaN(g)) return row.base || '';
+    return (b + (curStdIdx - compStdIdx) * g).toFixed(1);
   };
 
   const checkOutLimit = (row, sizeName, actualVal) => {
@@ -179,7 +181,7 @@ const SizeTable = ({
       <div className="size-table-actions">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div className="section-title" style={{ margin: 0, border: 'none', padding: 0 }}>尺寸指标表</div>
-          {updatedAt && <span style={{ fontSize: 12, color: '#475569' }}>{formatTime(updatedAt)}</span>}
+          {updatedAt && <span style={{ fontSize: 12, color: 'var(--text-4)' }}>{formatTime(updatedAt)}</span>}
           <div className="size-rule-badge">
             规则: {sizeGroup ? sizeGroup.name : '通用(S-XXL)'}
           </div>
@@ -230,25 +232,25 @@ const SizeTable = ({
         </div>
       )}
 
-      {versions.length > 0 && (
+      {compareRuns.length > 0 && (
         <div className="compare-bar glass" style={{ margin: '0 24px 16px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, borderRadius: 8, background: 'rgba(129, 140, 248, 0.05)', border: '1px solid rgba(129, 140, 248, 0.1)' }}>
-          <span style={{ fontSize: 13, color: '#818cf8', fontWeight: 600 }}>版次对比：</span>
+          <span style={{ fontSize: 13, color: '#818cf8', fontWeight: 600 }}>跨版次对比：</span>
           <select
             className="glass-select"
-            style={{ padding: '4px 12px', borderRadius: 6, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 13 }}
-            value={compareTaskId || ''}
-            onChange={e => setCompareTaskId(e.target.value)}
+            style={{ padding: '4px 12px', borderRadius: 6, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontSize: 13 }}
+            value={compareRunId || ''}
+            onChange={e => setCompareRunId(e.target.value)}
           >
             <option value="">不对比（隐藏对比列）</option>
-            {versions.map(v => (
-              <option key={v.id} value={v.id}>
-                {v.order_no || '未命名单据'} ({v.sample_type || '未知版次'}) - {new Date(v.created_at).toLocaleDateString()}
+            {compareRuns.map(r => (
+              <option key={r.id} value={r.id}>
+                {r.order_no || '未编号批次'} · {r.sample_type || '未知版次'}（{r.size || '无码'}）
               </option>
             ))}
           </select>
-          {compareTaskId && (
-            <span style={{ fontSize: 12, color: '#94a3b8' }}>
-              💡 将按部位名称自动匹配。紫色值为对比版次数据。
+          {compareRun && (
+            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>
+              💡 同码对比（当前 {standardSize} vs {compareRun.size || standardSize}），按部位名称匹配，紫色值为对比批次数据。
             </span>
           )}
         </div>
@@ -266,8 +268,8 @@ const SizeTable = ({
               <th className="sticky-col sticky-th sticky-col-2" style={{ width: 56 }}>排序</th>
               <th className="sticky-col sticky-th sticky-col-3" style={{ minWidth: 140 }}>部位名称</th>
               <th style={{ minWidth: 200 }}>测量方法</th>
-              <th style={{ width: 110, color: '#38bdf8', textAlign: 'center' }}>标准码 {standardSize}</th>
-              {compareTaskId && (
+              <th style={{ width: 110, color: 'var(--accent)', textAlign: 'center' }}>标准码 {standardSize}</th>
+              {compareRun && (
                 <th style={{ width: 100, color: '#818cf8', textAlign: 'center' }}>比对值</th>
               )}
               {isActualMode && (
@@ -277,7 +279,7 @@ const SizeTable = ({
                 </>
               )}
               {isExpanding && allSizes.filter(s => s !== standardSize).map(s => (
-                <th key={s} style={{ width: 80, color: '#94a3b8' }}>{s}码</th>
+                <th key={s} style={{ width: 80, color: 'var(--text-2)' }}>{s}码</th>
               ))}
               <th style={{ width: 100, textAlign: 'center' }}>放码规则</th>
               <th style={{ width: 85 }}>公差</th>
@@ -313,21 +315,22 @@ const SizeTable = ({
                   <td>
                     <input
                       className={`${pulse.row === i && pulse.field === 'base' ? 'cell-pulse' : ''} ${shake.row === i && shake.field === 'base' ? 'cell-shake' : ''}`}
-                      style={{ color: '#38bdf8', fontWeight: 700 }}
+                      style={{ color: 'var(--accent)', fontWeight: 700 }}
                       value={row.base || ''}
                       onChange={e => updateRow(i, 'base', e.target.value)}
                       placeholder="0.0"
                     />
                   </td>
-                  {compareTaskId && (() => {
-                    const matched = compareData.find(cr => cr.name === row.name);
-                    const compVal = matched ? parseFloat(matched.base) : NaN;
+                  {compareRun && (() => {
+                    const matched = (compareRun.size_data || []).find(cr => cr.name === row.name);
+                    const compVal = matched ? compValOf(matched) : null;
+                    const compNum = compVal === null ? NaN : parseFloat(compVal);
                     const currVal = parseFloat(row.base);
-                    const diff = (!isNaN(compVal) && !isNaN(currVal)) ? (currVal - compVal) : null;
+                    const diff = (!isNaN(compNum) && !isNaN(currVal)) ? (currVal - compNum) : null;
                     return (
                       <td style={{ textAlign: 'center', background: 'rgba(129, 140, 248, 0.03)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <span style={{ color: '#818cf8', fontWeight: 600, fontSize: 13 }}>{matched ? (matched.base || '—') : '—'}</span>
+                          <span style={{ color: '#818cf8', fontWeight: 600, fontSize: 13 }}>{compVal === null ? '—' : (compVal || '—')}</span>
                           {diff !== null && diff !== 0 && (
                             <span style={{ fontSize: 10, color: diff > 0 ? '#ef4444' : '#22c55e' }}>
                               {diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)}
@@ -355,7 +358,7 @@ const SizeTable = ({
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                               {out && <AlertCircle size={14} color="#ef4444" />}
-                              <span style={{ fontSize: 11, color: out ? '#ef4444' : '#94a3b8', fontWeight: out ? 700 : 400 }}>
+                              <span style={{ fontSize: 11, color: out ? '#ef4444' : 'var(--text-2)', fontWeight: out ? 700 : 400 }}>
                                 {diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)}
                               </span>
                             </div>
@@ -371,7 +374,7 @@ const SizeTable = ({
                     const autoVal = calcGraded(row.base, row.grading, realIdx);
                     const instructionVal = manualVal || autoVal || '';
                     const shouldPulse = pulse.row === i && pulse.field === s;
-                    const cellStyle = isManual ? { color: '#f97316', fontWeight: 700, background: 'rgba(249, 115, 22, 0.05)' } : (instructionVal ? {} : { color: '#64748b', fontStyle: 'italic' });
+                    const cellStyle = isManual ? { color: '#f97316', fontWeight: 700, background: 'rgba(249, 115, 22, 0.05)' } : (instructionVal ? {} : { color: 'var(--text-3)', fontStyle: 'italic' });
                     return (
                       <td key={s}>
                         <input className={shouldPulse ? 'cell-pulse' : ''}
@@ -404,7 +407,7 @@ const SizeTable = ({
             })}
             {data.length === 0 && (
               <tr>
-                <td colSpan={isExpanding ? allSizes.length + 6 : 9} style={{ textAlign: 'center', padding: '48px 0', color: '#475569' }}>
+                <td colSpan={isExpanding ? allSizes.length + 6 : 9} style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-4)' }}>
                   暂无数据，点击「从预设加入」批量导入部位
                 </td>
               </tr>
@@ -413,9 +416,9 @@ const SizeTable = ({
         </table>
 
         {/* 快速手动添加行 */}
-        <div style={{ display: 'flex', gap: 8, padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, padding: '12px 14px', borderTop: '1px solid var(--bg-hover-2)', alignItems: 'center' }}>
           <input
-            style={{ flex: 1.2, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 12px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}
+            style={{ flex: 1.2, background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             placeholder="部位名称..."
             value={quickAdd.name}
             onChange={e => setQuickAdd({ ...quickAdd, name: e.target.value })}
@@ -431,19 +434,19 @@ const SizeTable = ({
             }}
           />
           <input
-            style={{ flex: 1.5, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 12px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}
+            style={{ flex: 1.5, background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             placeholder="测量方法..."
             value={quickAdd.method || ''}
             onChange={e => setQuickAdd({ ...quickAdd, method: e.target.value })}
           />
           <input
-            style={{ width: 70, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 12px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}
+            style={{ width: 70, background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             placeholder="档差"
             value={quickAdd.grading}
             onChange={e => setQuickAdd({ ...quickAdd, grading: e.target.value })}
           />
           <input
-            style={{ width: 70, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 12px', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}
+            style={{ width: 70, background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             placeholder="公差"
             value={quickAdd.tolerance}
             onChange={e => setQuickAdd({ ...quickAdd, tolerance: e.target.value })}

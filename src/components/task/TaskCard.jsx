@@ -4,8 +4,8 @@ import PdfThumb from '../common/PdfThumb';
 
 const getNodeIcon = (status) => {
   if (status === 'done' || status === 'completed') return <CheckCircle2 size={14} color="#4ade80" />;
-  if (status === 'active') return <AlertCircle size={14} color="#38bdf8" />;
-  return <Circle size={14} color="#475569" />;
+  if (status === 'active') return <AlertCircle size={14} color="var(--accent)" />;
+  return <Circle size={14} color="var(--text-4)" />;
 };
 
 /** 看板任务卡片：Bento 布局 - 设计稿缩略图 + 款式信息 + 生产属性 + 进度节点 */

@@ -62,6 +62,24 @@ const App = () => {
   const { tasks, loadTasks } = useTasks();
   const { settings, loadSettings, saveSetting } = useSettings();
 
+  // REQ-010 主题系统：auto 跟随系统 / light / dark（手动开关在系统设置页）
+  const [themeMode, setThemeMode] = useState(() => {
+    try { return localStorage.getItem('pm_theme') || 'auto'; } catch { return 'auto'; }
+  });
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: light)');
+    const apply = () => {
+      const actual = themeMode === 'auto' ? (mq.matches ? 'light' : 'dark') : themeMode;
+      document.documentElement.setAttribute('data-theme', actual);
+      try { localStorage.setItem('pm_theme', themeMode); } catch {}
+    };
+    apply();
+    if (themeMode === 'auto') {
+      mq.addEventListener('change', apply);
+      return () => mq.removeEventListener('change', apply);
+    }
+  }, [themeMode]);
+
   // 看板/列表增强状态
   const [kanbanGroupBy, setKanbanGroupBy] = useState('status'); // status | sample_type | priority
   const [displayMode, setDisplayMode] = useState('kanban'); // kanban | list
@@ -238,8 +256,8 @@ const App = () => {
   const seasons = ['春', '夏', '秋', '冬'];
   const months = Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
   const columns = [
-    { id: 'todo', name: '待处理', color: '#94a3b8' },
-    { id: 'doing', name: '打版中', color: '#38bdf8' },
+    { id: 'todo', name: '待处理', color: 'var(--text-2)' },
+    { id: 'doing', name: '打版中', color: 'var(--accent)' },
     { id: 'done', name: '已完结', color: '#4ade80' }
   ];
 
@@ -248,8 +266,8 @@ const App = () => {
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      background: '#020617',
-      color: '#fff',
+      background: 'var(--bg)',
+      color: 'var(--text)',
       overflow: 'hidden',
       minWidth: 1280 // 设置最小宽度，防止窄屏下控件强行压缩变形导致堆叠
     }}>
@@ -313,6 +331,8 @@ const App = () => {
           saveSetting={saveSetting}
           loadSettings={loadSettings}
           onOpenSidebar={() => setShowSidebar(true)}
+          themeMode={themeMode}
+          onThemeModeChange={setThemeMode}
         />
       )}
 
@@ -343,11 +363,11 @@ const App = () => {
               <div className="menu-item" onClick={() => { setView('settings'); setShowSidebar(false); }}>
                 <Settings size={20} /> 系统设置
               </div>
-              <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid var(--bg-hover-2)' }}>
                 <div className="menu-item" onClick={() => { setShowLogs(true); setShowSidebar(false); }}>
                   <Clock size={20} /> 操作日志
                 </div>
-                <div style={{ fontSize: 11, color: '#475569', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-4)', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                   <span>PatternMaster v3.1.0</span>
                   <span>{typeof window !== 'undefined' && !!window.api ? 'IPC 通道' : 'HTTP 通道'}</span>
                 </div>

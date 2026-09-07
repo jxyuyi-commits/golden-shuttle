@@ -40,7 +40,7 @@ const SizeGroupManager = ({ groups, onChange }) => {
     <>
       <div className="glass-inner" style={{ padding: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#94a3b8' }}>号型规格系列设定 (如: 165/84, S/M/L)</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-2)' }}>号型规格系列设定 (如: 165/84, S/M/L)</div>
           <button className="btn-blue-sm" onClick={() => setEditing({ name: '', size_list: '', is_default: 0 })}>+ 新增系列</button>
         </div>
         <div className="size-group-table-wrapper">
@@ -50,7 +50,7 @@ const SizeGroupManager = ({ groups, onChange }) => {
               {groups.map(g => (
                 <tr key={g.id}>
                   <td style={{ fontWeight: 60 }}>{g.name}</td>
-                  <td style={{ fontSize: 12, color: '#64748b' }}>{g.size_list}</td>
+                  <td style={{ fontSize: 12, color: 'var(--text-3)' }}>{g.size_list}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="icon-btn" onClick={() => setEditing(g)} title="编辑"><Edit2 size={14} /></button>

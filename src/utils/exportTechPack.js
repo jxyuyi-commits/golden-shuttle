@@ -395,7 +395,16 @@ export function getTechPackFileName(task) {
   return `工艺单_${styleNo}${orderNo ? '_' + orderNo : ''}_${timestamp()}.xlsx`;
 }
 
-export async function exportTechPack(task, bomItems, processItems) {
+export async function exportTechPack(task, bomItems, processItems, run) {
+  // REQ-005 尺寸表归属版次：run 为当前选中批次，覆盖导出用的尺寸表/尺码/件数（批次级权威）
+  if (run) {
+    task = {
+      ...task,
+      size: run.size || task.size,
+      sample_count: run.sample_count || task.sample_count,
+      size_data: run.size_data || task.size_data,
+    };
+  }
   if (!task) return;
   const workbook = new ExcelJS.Workbook();
   buildInfoSheet(workbook, task);

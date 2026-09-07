@@ -54,7 +54,7 @@ const PeopleEditor = ({ people, onChange }) => {
         <span className="card-mini-title">人员预设</span>
         <span className="card-mini-count">{people.length}</span>
       </div>
-      <div style={{ fontSize: 11, color: '#64748b', margin: '-2px 0 8px' }}>
+      <div style={{ fontSize: 11, color: 'var(--text-3)', margin: '-2px 0 8px' }}>
         姓名 + 角色（设计师 / 版师 / 样衣工…，一人可多角色，角色可自定义）
       </div>
       <div className="people-list custom-scrollbar">

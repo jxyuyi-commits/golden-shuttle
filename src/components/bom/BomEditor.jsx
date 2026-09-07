@@ -11,8 +11,8 @@ const UNITS = ['米', 'kg', '个', '条', '套', '码'];
 
 const cellStyle = {
   background: 'rgba(2,6,23,0.45)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  padding: '7px 10px', borderRadius: 6, color: '#e2e8f0',
+  border: '1px solid var(--border)',
+  padding: '7px 10px', borderRadius: 6, color: 'var(--text)',
   fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box'
 };
 
@@ -69,9 +69,9 @@ const BomEditor = ({ taskId }) => {
   return (
     <div className="glass" style={{ gridColumn: '1/-1', padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div className="section-title" style={{ borderLeftColor: '#38bdf8' }}>
+        <div className="section-title" style={{ borderLeftColor: 'var(--accent)' }}>
           <div>物料清单（BOM）</div>
-          <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项</span>
+          <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项</span>
         </div>
         <button className="btn-blue-sm" onClick={handleAdd} disabled={busy}>
           {busy ? <Loader2 size={14} className="spin" /> : <Plus size={14} />} 添加物料
@@ -79,9 +79,9 @@ const BomEditor = ({ taskId }) => {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>加载中…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>
       ) : rows.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
           暂无物料，点击右上角「添加物料」开始建立清单
         </div>
       ) : (
@@ -90,7 +90,7 @@ const BomEditor = ({ taskId }) => {
             <thead>
               <tr>
                 {['序号', '类别', '名称', '规格/成分', '颜色', '单位', '单耗', '供应商', '单价', '小计', '备注', ''].map((h, i) => (
-                  <th key={i} style={{ padding: '10px 8px', textAlign: 'left', fontSize: 12, color: '#64748b', background: '#0f172a', borderBottom: '2px solid rgba(56,189,248,0.15)', whiteSpace: 'nowrap' }}>{h}</th>
+                  <th key={i} style={{ padding: '10px 8px', textAlign: 'left', fontSize: 12, color: 'var(--text-3)', background: 'var(--bg-elev)', borderBottom: '2px solid rgba(56,189,248,0.15)', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -98,8 +98,8 @@ const BomEditor = ({ taskId }) => {
               {rows.map((row, idx) => {
                 const subtotal = (parseFloat(row.usage) || 0) * (parseFloat(row.price) || 0);
                 return (
-                  <tr key={row.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <td style={{ padding: '8px 8px', color: '#94a3b8', textAlign: 'center' }}>{idx + 1}</td>
+                  <tr key={row.id} style={{ borderBottom: '1px solid var(--bg-hover)' }}>
+                    <td style={{ padding: '8px 8px', color: 'var(--text-2)', textAlign: 'center' }}>{idx + 1}</td>
                     <td style={{ padding: 6, width: 90 }}>
                       <select style={cellStyle} value={row.category || '主料'} onChange={e => { setField(row.id, 'category', e.target.value); scheduleCommit(row.id, 'category', e.target.value); }}>
                         {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -129,7 +129,7 @@ const BomEditor = ({ taskId }) => {
                     <td style={{ padding: 6, width: 90 }}>
                       <input style={cellStyle} type="number" step="0.01" value={row.price ?? ''} placeholder="单价" onChange={e => { setField(row.id, 'price', e.target.value); scheduleCommit(row.id, 'price', e.target.value); }} />
                     </td>
-                    <td style={{ padding: '6px 8px', color: '#38bdf8', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '6px 8px', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap' }}>
                       {subtotal ? `¥${subtotal.toFixed(2)}` : '—'}
                     </td>
                     <td style={{ padding: 6, width: 140 }}>
@@ -146,10 +146,10 @@ const BomEditor = ({ taskId }) => {
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={9} style={{ padding: '12px 8px', textAlign: 'right', color: '#94a3b8', fontSize: 13 }}>
+                <td colSpan={9} style={{ padding: '12px 8px', textAlign: 'right', color: 'var(--text-2)', fontSize: 13 }}>
                   单件物料成本合计
                 </td>
-                <td colSpan={3} style={{ padding: '12px 8px', color: '#38bdf8', fontSize: 15, fontWeight: 800 }}>
+                <td colSpan={3} style={{ padding: '12px 8px', color: 'var(--accent)', fontSize: 15, fontWeight: 800 }}>
                   ¥{totalCost.toFixed(2)}
                 </td>
               </tr>

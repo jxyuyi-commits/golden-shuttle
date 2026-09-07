@@ -3,9 +3,9 @@ import { Plus, Layout, BarChart3, PieChart, CheckCircle2, Clock, AlertCircle, XC
 
 // 款级聚合状态元数据（与后端 tasks.cjs DERIVED_STATUS_LABEL 一致）
 const STATUS_META = {
-  not_started:      { label: '未开始', color: '#64748b' },
-  waiting_material: { label: '待配料', color: '#94a3b8' },
-  pattern_making:   { label: '打版中', color: '#38bdf8' },
+  not_started:      { label: '未开始', color: 'var(--text-3)' },
+  waiting_material: { label: '待配料', color: 'var(--text-2)' },
+  pattern_making:   { label: '打版中', color: 'var(--accent)' },
   sample_making:    { label: '样衣中', color: '#fbbf24' },
   pending_confirm:  { label: '待确认', color: '#a78bfa' },
   done:             { label: '已完成', color: '#4ade80' },
@@ -74,21 +74,21 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onOpenSidebar, onNewT
   const catEntries = Object.entries(stats.byCategory).sort((a, b) => b[1] - a[1]);
 
   const statCards = [
-    { filterKey: 'all', label: '总款数', value: stats.total, icon: <BarChart3 size={22} />, color: '#38bdf8' },
+    { filterKey: 'all', label: '总款数', value: stats.total, icon: <BarChart3 size={22} />, color: 'var(--accent)' },
     { filterKey: 'inProgress', label: '进行中', value: stats.inProgress, icon: <Clock size={22} />, color: '#fbbf24' },
-    { filterKey: 'waiting', label: '待配料/未开始', value: stats.byStatus.waiting_material + stats.byStatus.not_started, icon: <AlertCircle size={22} />, color: '#94a3b8' },
+    { filterKey: 'waiting', label: '待配料/未开始', value: stats.byStatus.waiting_material + stats.byStatus.not_started, icon: <AlertCircle size={22} />, color: 'var(--text-2)' },
     { filterKey: 'pendingConfirm', label: '待确认', value: stats.byStatus.pending_confirm, icon: <XCircle size={22} />, color: '#a78bfa' },
     { filterKey: 'done', label: '已完成(可下大货)', value: stats.doneCount, icon: <CheckCircle2 size={22} />, color: '#4ade80' },
   ];
 
   return (
-    <div className="dashboard-view custom-scrollbar" style={{ height: '100vh', overflowY: 'auto', overflowX: 'hidden', background: '#020617' }}>
+    <div className="dashboard-view custom-scrollbar" style={{ height: '100vh', overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg)' }}>
       {/* 顶部栏（REQ-012 修订：顶级页无返回箭头；菜单按钮与其他页面一致置于左侧 logo 区，仅图标热区） */}
       <header className="top-bar glass">
         <div className="logo" onClick={onOpenSidebar} style={{ gap: 12 }}>
-          <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="#38bdf8" /></span>
+          <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="var(--accent)" /></span>
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
-            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: 0.5, WebkitTextFillColor: '#94a3b8' }}>设计师视角 · 款级宏观</span>
+            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: 0.5, WebkitTextFillColor: 'var(--text-2)' }}>设计师视角 · 款级宏观</span>
             <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -0.5 }}>开发总览仪表盘</span>
           </span>
         </div>
@@ -126,8 +126,8 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onOpenSidebar, onNewT
         <div className="dash-two-col">
           {/* 品类占比（点击筛选清单，REQ-003①） */}
           <div className="dash-panel glass">
-            <div className="dash-panel-title"><PieChart size={16} /> 品类占比 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>（点击筛选清单，可再点恢复）</span></div>
-            {catEntries.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>暂无数据</div>}
+            <div className="dash-panel-title"><PieChart size={16} /> 品类占比 <span style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 400 }}>（点击筛选清单，可再点恢复）</span></div>
+            {catEntries.length === 0 && <div style={{ color: 'var(--text-3)', fontSize: 13 }}>暂无数据</div>}
             {catEntries.map(([cat, cnt]) => {
               const pct = Math.round((cnt / stats.total) * 100);
               const active = categoryFilter === cat;
@@ -143,9 +143,9 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onOpenSidebar, onNewT
                 >
                   <div className="dash-bar-label">{cat}</div>
                   <div className="dash-bar-track">
-                    <div className="dash-bar-fill" style={{ width: `${(cnt / maxCat) * 100}%`, background: active ? '#fbbf24' : '#38bdf8' }} />
+                    <div className="dash-bar-fill" style={{ width: `${(cnt / maxCat) * 100}%`, background: active ? '#fbbf24' : 'var(--accent)' }} />
                   </div>
-                  <div className="dash-bar-val">{cnt} 款 <span style={{ color: '#64748b' }}>({pct}%)</span></div>
+                  <div className="dash-bar-val">{cnt} 款 <span style={{ color: 'var(--text-3)' }}>({pct}%)</span></div>
                 </div>
               );
             })}
@@ -202,7 +202,7 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onOpenSidebar, onNewT
                   const runMeta = topRun ? (STATUS_META[topRun.status] || STATUS_META.not_started) : null;
                   return (
                     <tr key={t.id} className="dash-table-row" onClick={() => onTaskClick(t)}>
-                      <td style={{ fontWeight: 600, color: '#e2e8f0' }}>{t.style_no || '—'}</td>
+                      <td style={{ fontWeight: 600, color: 'var(--text)' }}>{t.style_no || '—'}</td>
                       <td>{t.title || '未命名'}</td>
                       <td>{t.category || '—'}</td>
                       <td>{t.designer || '未分配'}</td>
@@ -212,7 +212,7 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onOpenSidebar, onNewT
                             {topRun.sample_type ? `${topRun.sample_type}·${runMeta.label}` : runMeta.label}
                           </span>
                         ) : (
-                          <span className="dash-status-pill" style={{ background: 'rgba(100,116,139,0.15)', color: '#64748b', borderColor: 'rgba(100,116,139,0.3)' }}>无批次</span>
+                          <span className="dash-status-pill" style={{ background: 'rgba(100,116,139,0.15)', color: 'var(--text-3)', borderColor: 'rgba(100,116,139,0.3)' }}>无批次</span>
                         )}
                       </td>
                       <td>{topRun?.pattern_maker || '未分配'}</td>

@@ -8,8 +8,8 @@ import { peopleByRole } from '../../utils/people';
 
 // 批次状态（板师手动推进）
 export const RUN_STATUS = [
-  { key: 'waiting_material', label: '待配料', color: '#94a3b8' },
-  { key: 'pattern_making', label: '打版中', color: '#38bdf8' },
+  { key: 'waiting_material', label: '待配料', color: 'var(--text-2)' },
+  { key: 'pattern_making', label: '打版中', color: 'var(--accent)' },
   { key: 'sample_making', label: '样衣中', color: '#fbbf24' },
   { key: 'pending_confirm', label: '待确认', color: '#a78bfa' },
   { key: 'done', label: '已完成', color: '#4ade80' },
@@ -24,9 +24,9 @@ const BLOCKERS = [
 ];
 const PRIORITIES = ['低', '中', '高', '紧急'];
 const AUDIT_STATUSES = ['未提交', '待审核', '已通过', '已驳回'];
-const auditColor = (s) => (s === '已通过' ? '#4ade80' : s === '已驳回' ? '#f87171' : s === '待审核' ? '#fbbf24' : '#94a3b8');
+const auditColor = (s) => (s === '已通过' ? '#4ade80' : s === '已驳回' ? '#f87171' : s === '待审核' ? '#fbbf24' : 'var(--text-2)');
 const statusLabel = (k) => RUN_STATUS.find(s => s.key === k)?.label || k;
-const statusColor = (k) => RUN_STATUS.find(s => s.key === k)?.color || '#94a3b8';
+const statusColor = (k) => RUN_STATUS.find(s => s.key === k)?.color || 'var(--text-2)';
 
 /**
  * 版次批次列表：一款单下多个打样批次（板师工作单元），内联增删改、即时保存
@@ -85,7 +85,8 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
 
   const addRun = async () => {
     const sampleType = settings.sampleTypes?.[0] || '胚样';
-    const { id } = await createRun(taskId, { sample_type: sampleType, status: 'waiting_material' });
+    // REQ-005① 新批次默认从品类预设生成初始尺寸表（批次内可独立编辑/从上一版次复制覆盖）
+    const { id } = await createRun(taskId, { sample_type: sampleType, status: 'waiting_material', init_size_data: true });
     await load();
     onStatusSync?.();
     return id;
@@ -123,13 +124,13 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
   };
 
   if (loading) {
-    return <div style={{ padding: 16, color: '#94a3b8', fontSize: 13 }}>批次加载中…</div>;
+    return <div style={{ padding: 16, color: 'var(--text-2)', fontSize: 13 }}>批次加载中…</div>;
   }
 
   return (
     <div className="run-list">
       {runs.length === 0 && (
-        <div style={{ fontSize: 12.5, color: '#94a3b8', padding: '8px 0 4px' }}>
+        <div style={{ fontSize: 12.5, color: 'var(--text-2)', padding: '8px 0 4px' }}>
           暂无打样批次，点击下方按钮新增（一款可并行胚样、头版样等多个批次）
         </div>
       )}
@@ -265,7 +266,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
           {/* 绑定资料版本 */}
           <div className="run-linked-section">
             <div className="run-linked-head">
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#cbd5e1' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text-2)' }}>
                 <Link2 size={13} /> 绑定资料版本
               </span>
               <button
@@ -277,13 +278,13 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
               </button>
             </div>
             <div className="run-linked-tags">
-              {parseLinkedIds(r).length === 0 && <span style={{ color: '#64748b', fontSize: 12 }}>未绑定（本批次使用哪版纸样/唛架）</span>}
+              {parseLinkedIds(r).length === 0 && <span style={{ color: 'var(--text-3)', fontSize: 12 }}>未绑定（本批次使用哪版纸样/唛架）</span>}
               {parseLinkedIds(r).map(id => {
                 const d = drawingById(id);
                 if (!d) return null;
                 return (
                   <span key={id} className="run-linked-tag">
-                    {d.filename || d.title || '未命名'} <span style={{ color: '#38bdf8' }}>V{d.version}</span>
+                    {d.filename || d.title || '未命名'} <span style={{ color: 'var(--accent)' }}>V{d.version}</span>
                     <button type="button" onClick={() => toggleLink(r, id)} title="移除绑定"><X size={11} /></button>
                   </span>
                 );
@@ -291,7 +292,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
             </div>
             {manageId === r.id && (
               <div className="run-linked-picker">
-                {drawingGroups.length === 0 && <div style={{ color: '#64748b', fontSize: 12 }}>该款暂无图纸资料，请先在「图纸资料」页上传</div>}
+                {drawingGroups.length === 0 && <div style={{ color: 'var(--text-3)', fontSize: 12 }}>该款暂无图纸资料，请先在「图纸资料」页上传</div>}
                 {drawingGroups.map(g => (
                   <div key={g.group_id} className="run-linked-group">
                     <div className="run-linked-group-title">{g.file_name}</div>
@@ -304,7 +305,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync }) => {
                             onChange={() => toggleLink(r, v.id)}
                           />
                           <span>V{v.version}</span>
-                          <span style={{ color: '#64748b' }}>({v.category || '未分类'})</span>
+                          <span style={{ color: 'var(--text-3)' }}>({v.category || '未分类'})</span>
                         </label>
                       ))}
                     </div>

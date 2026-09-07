@@ -30,7 +30,6 @@ const SizeTable = ({
   const [confirmBatch, setConfirmBatch] = useState(false); // 批量删除
   const [confirmClear, setConfirmClear] = useState(false); // 清空全部
   const [confirmImportRun, setConfirmImportRun] = useState(null); // REQ-005 修订2：对比版次导入确认
-  const [viewRunDetail, setViewRunDetail] = useState(null); // REQ-005 修订3：查看参考版次完整尺寸表（只读）
 
   // -- 核心部位提醒 --
   const [requiredParts, setRequiredParts] = useState([]);
@@ -253,31 +252,72 @@ const SizeTable = ({
           </select>
           {compareRun && (
             <span style={{ fontSize: 12, color: 'var(--text-2)' }}>
-              💡 同码对比（当前 {standardSize} vs {compareRun.size || standardSize}），按部位名称匹配，紫色值为对比批次数据。导入前可先查看参考版次完整尺寸表。
+              💡 同码对比（当前 {standardSize} vs {compareRun.size || standardSize}），下方为参考版次完整尺寸表（只读），与主表并排核对后再决定导入。
             </span>
           )}
           {compareRun && onImportCompare && (
-            <>
-              <button
-                type="button"
-                className="btn-ghost-sm"
-                style={{ color: '#818cf8', border: '1px solid rgba(129,140,248,0.3)', padding: '4px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, marginLeft: 'auto' }}
-                onClick={() => setViewRunDetail(compareRun)}
-                title="查看参考版次完整尺寸表（含测量方法/全部码值/公差，只读）"
-              >
-                <Eye size={13} /> 查看该版次完整尺寸表
-              </button>
-              <button
-                type="button"
-                className="btn-ghost-sm"
-                style={{ color: 'var(--accent)', border: '1px solid var(--accent-soft-2)', padding: '4px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}
-                onClick={() => setConfirmImportRun(compareRun)}
-                title="将对比版次的尺寸数据整体导入到当前版次（已在对比列查看差异后再决定）"
-              >
-                <Download size={13} /> 导入该版次数据到当前版次
-              </button>
-            </>
+            <button
+              type="button"
+              className="btn-ghost-sm"
+              style={{ color: 'var(--accent)', border: '1px solid var(--accent-soft-2)', padding: '4px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, marginLeft: 'auto' }}
+              onClick={() => setConfirmImportRun(compareRun)}
+              title="将对比版次的尺寸数据整体导入到当前版次（已核对下方完整表与差异后再决定）"
+            >
+              <Download size={13} /> 导入该版次数据到当前版次
+            </button>
           )}
+        </div>
+      )}
+
+      {/* REQ-005 修订4：参考版次完整尺寸表——直接在当前窗口内嵌预览（只读），替代弹窗 */}
+      {compareRun && (
+        <div className="glass" style={{ margin: '0 24px 16px', padding: '14px 16px', borderRadius: 8, border: '1px solid rgba(129,140,248,0.18)', background: 'rgba(129,140,248,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+            <Eye size={14} color="#818cf8" />
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#818cf8' }}>
+              参考版次完整尺寸表：{compareRun.order_no || '未编号'} · {compareRun.sample_type || '未知版次'}（{compareRun.size || '无码'}）
+            </span>
+            <span style={{ fontSize: 11.5, color: 'var(--text-3)' }}>
+              只读 · 共 {Array.isArray(compareRun.size_data) ? compareRun.size_data.length : 0} 行 · 含测量方法与全部码值，导入前在此核对
+            </span>
+          </div>
+          <div className="table-wrapper custom-scrollbar" style={{ overflowX: 'auto', maxHeight: 340, overflowY: 'auto' }}>
+            <table className="data-table" style={{ fontSize: 12 }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: '8px 10px' }}>部位名称</th>
+                  <th style={{ padding: '8px 10px' }}>测量方法</th>
+                  <th style={{ padding: '8px 10px', textAlign: 'center', color: 'var(--accent)' }}>标准码 {compareRun.size || ''}</th>
+                  <th style={{ padding: '8px 10px' }}>各码值</th>
+                  <th style={{ padding: '8px 10px', textAlign: 'center' }}>放码规则</th>
+                  <th style={{ padding: '8px 10px', textAlign: 'center' }}>公差</th>
+                  <th style={{ padding: '8px 10px' }}>备注</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(Array.isArray(compareRun.size_data) ? compareRun.size_data : []).map((row, i) => {
+                  const sv = typeof row.size_values === 'string' ? JSON.parse(row.size_values || '{}') : (row.size_values || {});
+                  const codes = Object.keys(sv).filter(k => k !== compareRun.size);
+                  return (
+                    <tr key={i}>
+                      <td style={{ padding: '6px 10px', fontWeight: 600 }}>{row.name || ''}</td>
+                      <td style={{ padding: '6px 10px', color: 'var(--text-2)' }}>{row.method || ''}</td>
+                      <td style={{ padding: '6px 10px', textAlign: 'center', fontWeight: 700, color: 'var(--accent)' }}>{row.base || ''}</td>
+                      <td style={{ padding: '6px 10px', color: 'var(--text-2)' }}>
+                        {codes.map(k => `${k}:${sv[k]}`).join(' · ')}
+                      </td>
+                      <td style={{ padding: '6px 10px', textAlign: 'center' }}>{row.grading || ''}</td>
+                      <td style={{ padding: '6px 10px', textAlign: 'center' }}>{row.tolerance || ''}</td>
+                      <td style={{ padding: '6px 10px', color: 'var(--text-2)' }}>{row.note || ''}</td>
+                    </tr>
+                  );
+                })}
+                {(!Array.isArray(compareRun.size_data) || compareRun.size_data.length === 0) && (
+                  <tr><td colSpan="7" style={{ padding: 20, textAlign: 'center', color: 'var(--text-3)' }}>该版次暂无尺寸数据</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -557,70 +597,16 @@ const SizeTable = ({
         />
       )}
 
-      {/* REQ-005 修订2：对比版次数据导入确认（已在对比列查看差异，明确来源后导入） */}
+      {/* REQ-005 修订2：对比版次数据导入确认（已在当前窗口并排核对完整表与差异后导入） */}
       {confirmImportRun && (
         <ConfirmModal
           title="导入对比版次数据"
-          message={`将把「${confirmImportRun.order_no || '未编号'} · ${confirmImportRun.sample_type || ''}」的尺寸表（${Array.isArray(confirmImportRun.size_data) ? confirmImportRun.size_data.length : 0} 行）整体导入到当前版次？\n当前版次已有尺寸数据将被覆盖。请确认对比列已核对无误。`}
+          message={`将把「${confirmImportRun.order_no || '未编号'} · ${confirmImportRun.sample_type || ''}」的尺寸表（${Array.isArray(confirmImportRun.size_data) ? confirmImportRun.size_data.length : 0} 行）整体导入到当前版次？\n当前版次已有尺寸数据将被覆盖。请确认上方参考版次完整表与差异列已核对无误。`}
           danger={false}
           confirmText="确认导入"
           onConfirm={() => { onImportCompare && onImportCompare(confirmImportRun); setConfirmImportRun(null); }}
           onCancel={() => setConfirmImportRun(null)}
         />
-      )}
-
-      {/* REQ-005 修订3：参考版次完整尺寸表（只读弹窗，导入前核对） */}
-      {viewRunDetail && (
-        <div className="modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) setViewRunDetail(null); }}>
-          <div className="confirm-modal glass" style={{ width: 780, maxWidth: '94vw' }}>
-            <div className="confirm-title">
-              参考版次完整尺寸表：{viewRunDetail.order_no || '未编号'} · {viewRunDetail.sample_type || '未知版次'}（{viewRunDetail.size || '无码'}）
-            </div>
-            <div className="confirm-msg" style={{ color: 'var(--text-2)' }}>
-              该版次共 {Array.isArray(viewRunDetail.size_data) ? viewRunDetail.size_data.length : 0} 行尺寸数据（只读，含测量方法与全部码值），确认合适后可返回导入。
-            </div>
-            <div style={{ maxHeight: 430, overflowY: 'auto', margin: '8px 0 4px' }}>
-              <table className="data-table" style={{ fontSize: 12 }}>
-                <thead>
-                  <tr>
-                    <th style={{ padding: '8px 10px' }}>部位名称</th>
-                    <th style={{ padding: '8px 10px' }}>测量方法</th>
-                    <th style={{ padding: '8px 10px', textAlign: 'center', color: 'var(--accent)' }}>标准码 {viewRunDetail.size || ''}</th>
-                    <th style={{ padding: '8px 10px' }}>各码值</th>
-                    <th style={{ padding: '8px 10px', textAlign: 'center' }}>放码规则</th>
-                    <th style={{ padding: '8px 10px', textAlign: 'center' }}>公差</th>
-                    <th style={{ padding: '8px 10px' }}>备注</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(Array.isArray(viewRunDetail.size_data) ? viewRunDetail.size_data : []).map((row, i) => {
-                    const sv = typeof row.size_values === 'string' ? JSON.parse(row.size_values || '{}') : (row.size_values || {});
-                    const codes = Object.keys(sv).filter(k => k !== viewRunDetail.size);
-                    return (
-                      <tr key={i}>
-                        <td style={{ padding: '6px 10px', fontWeight: 600 }}>{row.name || ''}</td>
-                        <td style={{ padding: '6px 10px', color: 'var(--text-2)' }}>{row.method || ''}</td>
-                        <td style={{ padding: '6px 10px', textAlign: 'center', fontWeight: 700, color: 'var(--accent)' }}>{row.base || ''}</td>
-                        <td style={{ padding: '6px 10px', color: 'var(--text-2)' }}>
-                          {codes.map(k => `${k}:${sv[k]}`).join(' · ')}
-                        </td>
-                        <td style={{ padding: '6px 10px', textAlign: 'center' }}>{row.grading || ''}</td>
-                        <td style={{ padding: '6px 10px', textAlign: 'center' }}>{row.tolerance || ''}</td>
-                        <td style={{ padding: '6px 10px', color: 'var(--text-2)' }}>{row.note || ''}</td>
-                      </tr>
-                    );
-                  })}
-                  {(!Array.isArray(viewRunDetail.size_data) || viewRunDetail.size_data.length === 0) && (
-                    <tr><td colSpan="7" style={{ padding: 20, textAlign: 'center', color: 'var(--text-3)' }}>该版次暂无尺寸数据</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="confirm-actions">
-              <button className="btn-blue" onClick={() => setViewRunDetail(null)}>关闭</button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

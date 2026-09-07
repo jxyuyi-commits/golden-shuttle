@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Trash2, Loader2, Link2, X } from 'lucide-react';
+import { Plus, Trash2, Loader2, Link2, X, Ruler } from 'lucide-react';
 import SmartSelect from '../common/SmartSelect';
 import ConfirmModal from '../common/ConfirmModal';
 import DatePicker from '../common/DatePicker';
@@ -35,7 +35,7 @@ const statusColor = (k) => RUN_STATUS.find(s => s.key === k)?.color || 'var(--te
  * @param {string} category 当前款单品类（用于联动尺码选项）
  * @param {function} onStatusSync 批次状态变化后回调（款级状态已自动同步，通知父组件刷新）
  */
-const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged }) => {
+const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged, onOpenSizeTable }) => {
   const [runs, setRuns] = useState([]);
   const [drawings, setDrawings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -164,9 +164,20 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
               </select>
               {savingId === r.id && <Loader2 size={13} className="run-spin" />}
             </div>
-            <button type="button" className="icon-btn-danger" title="删除批次" onClick={() => askRemoveRun(r)}>
-              <Trash2 size={14} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                type="button"
+                className="btn-ghost-sm"
+                style={{ color: 'var(--accent)', border: '1px solid var(--accent-soft-2)', padding: '4px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}
+                onClick={() => onOpenSizeTable?.(r)}
+                title={`进入「${r.order_no || '本版次'}」的尺寸表（锁定编辑，与其它版次数据隔离）`}
+              >
+                <Ruler size={13} /> 尺寸表
+              </button>
+              <button type="button" className="icon-btn-danger" title="删除批次" onClick={() => askRemoveRun(r)}>
+                <Trash2 size={14} />
+              </button>
+            </div>
           </div>
 
           <div className="run-grid">

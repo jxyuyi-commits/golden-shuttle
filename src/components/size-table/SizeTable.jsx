@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle2, Calculator, AlertCircle, ChevronUp, ChevronDown, Trash2, Database } from 'lucide-react';
+import { Plus, CheckCircle2, Calculator, AlertCircle, ChevronUp, ChevronDown, Trash2, Database, Download } from 'lucide-react';
 import { autoSign, formatTime } from '../../utils/format';
 import { fetchMeasurementTemplates, saveMeasurementTemplate } from '../../api';
 import MeasurementModal from '../measurement/MeasurementModal';
@@ -16,6 +16,7 @@ const SizeTable = ({
   sizeGroup = null,
   category = '',
   compareRuns = [],
+  onImportCompare = null, // REQ-005 修订2：跨版次对比确认后，把对比版次数据整体导入当前版次
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIndices, setSelectedIndices] = useState([]);
@@ -28,6 +29,7 @@ const SizeTable = ({
   const [confirmIdx, setConfirmIdx] = useState(null); // 单行删除 index
   const [confirmBatch, setConfirmBatch] = useState(false); // 批量删除
   const [confirmClear, setConfirmClear] = useState(false); // 清空全部
+  const [confirmImportRun, setConfirmImportRun] = useState(null); // REQ-005 修订2：对比版次导入确认
 
   // -- 核心部位提醒 --
   const [requiredParts, setRequiredParts] = useState([]);
@@ -250,8 +252,19 @@ const SizeTable = ({
           </select>
           {compareRun && (
             <span style={{ fontSize: 12, color: 'var(--text-2)' }}>
-              💡 同码对比（当前 {standardSize} vs {compareRun.size || standardSize}），按部位名称匹配，紫色值为对比批次数据。
+              💡 同码对比（当前 {standardSize} vs {compareRun.size || standardSize}），按部位名称匹配，紫色值为对比批次数据。对比确认合适后可整体导入。
             </span>
+          )}
+          {compareRun && onImportCompare && (
+            <button
+              type="button"
+              className="btn-ghost-sm"
+              style={{ color: 'var(--accent)', border: '1px solid var(--accent-soft-2)', padding: '4px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, marginLeft: 'auto' }}
+              onClick={() => setConfirmImportRun(compareRun)}
+              title="将对比版次的尺寸数据整体导入到当前版次（已在对比列查看差异后再决定）"
+            >
+              <Download size={13} /> 导入该版次数据到当前版次
+            </button>
           )}
         </div>
       )}
@@ -529,6 +542,18 @@ const SizeTable = ({
           message="确定清空所有行吗？\n清空后当前尺寸表数据不可恢复。"
           onConfirm={doClear}
           onCancel={() => setConfirmClear(false)}
+        />
+      )}
+
+      {/* REQ-005 修订2：对比版次数据导入确认（已在对比列查看差异，明确来源后导入） */}
+      {confirmImportRun && (
+        <ConfirmModal
+          title="导入对比版次数据"
+          message={`将把「${confirmImportRun.order_no || '未编号'} · ${confirmImportRun.sample_type || ''}」的尺寸表（${Array.isArray(confirmImportRun.size_data) ? confirmImportRun.size_data.length : 0} 行）整体导入到当前版次？\n当前版次已有尺寸数据将被覆盖。请确认对比列已核对无误。`}
+          danger={false}
+          confirmText="确认导入"
+          onConfirm={() => { onImportCompare && onImportCompare(confirmImportRun); setConfirmImportRun(null); }}
+          onCancel={() => setConfirmImportRun(null)}
         />
       )}
     </div>

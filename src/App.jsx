@@ -279,7 +279,6 @@ const App = () => {
           onOpenSidebar={() => setShowSidebar(true)}
           onNewTask={() => setShowNewModal(true)}
           onTaskClick={handleEnterDetail}
-          onGoDashboard={() => setView('dashboard')}
         />
       )}
 
@@ -313,7 +312,6 @@ const App = () => {
           settings={settings}
           saveSetting={saveSetting}
           loadSettings={loadSettings}
-          onBack={() => setView('kanban')}
           onOpenSidebar={() => setShowSidebar(true)}
         />
       )}
@@ -324,7 +322,6 @@ const App = () => {
           tasks={tasks}
           settings={settings}
           onTaskClick={handleEnterDetail}
-          onBack={() => setView('kanban')}
           onOpenSidebar={() => setShowSidebar(true)}
           onNewTask={() => setShowNewModal(true)}
         />

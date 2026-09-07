@@ -7,15 +7,12 @@ import CategoryManager from './CategoryManager';
 import MeasurementTemplateManager from '../measurement/MeasurementTemplateManager';
 
 /** 系统设置视图：品牌库/人员预设/版次库 + 号型规格 + 款式分类 + 尺寸部位预设 */
-const SettingsView = ({ settings, saveSetting, loadSettings, onBack, onOpenSidebar }) => {
+const SettingsView = ({ settings, saveSetting, loadSettings, onOpenSidebar }) => {
   return (
     <div className="custom-scrollbar" style={{ background: '#020617', height: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
       <header className="top-bar glass">
         <div className="logo" onClick={onOpenSidebar}>
           <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="#38bdf8" /></span><span>PatternMaster Pro</span>
-        </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button className="btn-ghost" onClick={onBack}>返回主页</button>
         </div>
       </header>
 

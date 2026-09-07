@@ -30,7 +30,7 @@ const STAT_FILTERS = {
  * 统计卡点击筛选清单（REQ-001）+ 品类占比点击筛选清单（REQ-003①），两个筛选可叠加
  * 清单展示最先进批次为主进度 + 版师/样衣工（REQ-003②③）
  */
-const DesignerDashboard = ({ tasks, settings, onTaskClick, onBack, onOpenSidebar, onNewTask }) => {
+const DesignerDashboard = ({ tasks, settings, onTaskClick, onOpenSidebar, onNewTask }) => {
   // 清单筛选：statusFilter（统计卡）+ categoryFilter（品类占比），null=全部；再次点击各自恢复（REQ-003④ 5 张卡）
   const [statusFilter, setStatusFilter] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState(null);
@@ -82,19 +82,17 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onBack, onOpenSidebar
   ];
 
   return (
-    <div className="dashboard-view">
-      {/* 顶部栏（REQ-012：顶级页无返回箭头，菜单按钮收敛为仅图标热区） */}
+    <div className="dashboard-view custom-scrollbar" style={{ height: '100vh', overflowY: 'auto', overflowX: 'hidden', background: '#020617' }}>
+      {/* 顶部栏（REQ-012 修订：顶级页无返回箭头；菜单按钮与其他页面一致置于左侧 logo 区，仅图标热区） */}
       <header className="top-bar glass">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div>
-            <div style={{ fontSize: 11, color: '#94a3b8' }}>设计师视角 · 款级宏观</div>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>开发总览仪表盘</h2>
-          </div>
+        <div className="logo" onClick={onOpenSidebar} style={{ gap: 12 }}>
+          <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="#38bdf8" /></span>
+          <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
+            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: 0.5, WebkitTextFillColor: '#94a3b8' }}>设计师视角 · 款级宏观</span>
+            <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -0.5 }}>开发总览仪表盘</span>
+          </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}>
-            <button className="btn-icon" onClick={onOpenSidebar} title="菜单"><Layout size={18} /></button>
-          </span>
           <button className="btn-blue" onClick={onNewTask}><Plus size={16} /> 新建打样单</button>
         </div>
       </header>

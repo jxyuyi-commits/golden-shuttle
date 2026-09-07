@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Layout, Trash2, History, Edit2, Edit3, Upload, Plus, FolderOpen, Copy } from 'lucide-react';
+import { Layout, Trash2, History, Edit2, Edit3, Upload, Plus, FolderOpen, Copy, ArrowLeftRight } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import PdfPickerModal from '../common/PdfPickerModal';
 import ConfirmModal from '../common/ConfirmModal';
+import RunPickerModal from '../common/RunPickerModal';
 import VersionHistoryModal from '../common/VersionHistoryModal';
 import DatePicker from '../common/DatePicker';
 import SizeTable from '../size-table/SizeTable';
@@ -49,11 +50,12 @@ const DetailView = ({
   const [bomTick, setBomTick] = useState(0); // REQ-011 回滚后强制 BomEditor 重拉
   const pdfInputRef = useRef(null);
 
-  // REQ-005 尺寸表归属版次：款内批次 + 尺寸 Tab 当前选中批次
+  // REQ-005 尺寸表归属版次：款内批次 + 尺寸 Tab 当前编辑版次（修订：弹窗式明确选择，移除随意下拉）
   const [runs, setRuns] = useState([]);
   const [sizeRunId, setSizeRunId] = useState(null);
-  const [confirmCopyPrev, setConfirmCopyPrev] = useState(false);
-  const [copyBlockedMsg, setCopyBlockedMsg] = useState(null); // REQ-005 修订：来源尺寸表为空时阻止复制并提示
+  const [runPicker, setRunPicker] = useState(null);      // { mode: 'switch' | 'import' } 版次选择弹窗
+  const [confirmImport, setConfirmImport] = useState(null); // 待确认的导入来源批次
+  const [toastMsg, setToastMsg] = useState(null);        // 尺寸页操作反馈（切换/导入结果）
 
   const reloadRuns = () => {
     if (!task?.id) return;
@@ -68,6 +70,13 @@ const DetailView = ({
 
   useEffect(() => { reloadRuns(); }, [task?.id]);
 
+  // 操作反馈提示：3 秒自动消失
+  useEffect(() => {
+    if (!toastMsg) return undefined;
+    const t = setTimeout(() => setToastMsg(null), 3200);
+    return () => clearTimeout(t);
+  }, [toastMsg]);
+
   // REQ-005 修订：进入尺寸页时拉取最新批次，基本信息页新增的版次即时可见
   const handleSetTab = (t) => {
     if (t === 'size') reloadRuns();
@@ -75,27 +84,29 @@ const DetailView = ({
   };
 
   const selectedRun = runs.find(r => r.id == sizeRunId) || runs[0] || null;
-  // 复制来源 = 除当前批次外最后一个批次（顺序即创建顺序）
-  const copyPrev = runs.filter(r => r.id !== selectedRun?.id).slice(-1)[0];
-  const copySrcRows = Array.isArray(copyPrev?.size_data) ? copyPrev.size_data : [];
 
-  // REQ-005 修订：点击复制先校验来源非空——空数据直接阻止，避免把空表覆盖到当前版次
-  const handleCopyClick = () => {
-    if (copySrcRows.length === 0) {
-      setCopyBlockedMsg(copyPrev?.order_no || '上一版次');
-      return;
-    }
-    setConfirmCopyPrev(true);
+  // REQ-005 修订：切换编辑版次——弹窗明确选择目标版次后切换
+  const doSwitchRun = (target) => {
+    if (!target) return;
+    setSizeRunId(target.id);
+    setRunPicker(null);
+    setToastMsg(`已切换：当前编辑「${target.order_no || '未编号'}」（${target.sample_type || ''} · ${target.size || '无码'}）的尺寸表`);
   };
 
-  const copyFromPrevRun = async () => {
-    if (!selectedRun || !confirmCopyPrev || !copyPrev) return;
+  // REQ-005 修订：从其它版次导入——先明确选择来源版次，再二次确认覆盖
+  const doImportRun = async () => {
+    if (!selectedRun || !confirmImport) return;
+    const srcRows = Array.isArray(confirmImport.size_data) ? confirmImport.size_data : [];
     try {
-      await updateRun(selectedRun.id, { size_data: copySrcRows });
-      setRuns(prevRuns => prevRuns.map(r => r.id === selectedRun.id ? { ...r, size_data: copySrcRows } : r));
+      await updateRun(selectedRun.id, { size_data: srcRows });
+      setRuns(prev => prev.map(r => r.id === selectedRun.id ? { ...r, size_data: srcRows } : r));
       onStatusSync && onStatusSync();
-    } catch { /* 静默 */ }
-    setConfirmCopyPrev(false);
+      setToastMsg(`已从「${confirmImport.order_no || '未编号'}」导入 ${srcRows.length} 行尺寸数据到当前版次，原数据已覆盖`);
+    } catch {
+      setToastMsg('导入失败，请重试');
+    }
+    setConfirmImport(null);
+    setRunPicker(null);
   };
 
   // 自动保存（REQ-006③ 修订）：工作动态条目输入防抖 400ms 提交，镜像最新 progress_nodes
@@ -203,38 +214,40 @@ const DetailView = ({
         {detailTab === 'process' && <ProcessEditor taskId={task.id} />}
         {detailTab === 'size' && (
           <div className="glass" style={{ gridColumn: '1/-1', padding: 32 }}>
-            {/* REQ-005① 尺寸表归属版次：每批次独立尺寸表，可选择批次编辑 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13, color: 'var(--text-2)' }}>切换版次尺寸表：</span>
-              <select
-                className="glass-select"
-                style={{ padding: '6px 12px', borderRadius: 6, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontSize: 13 }}
-                value={selectedRun?.id || ''}
-                onChange={e => setSizeRunId(Number(e.target.value))}
+            {/* REQ-005① 尺寸表归属版次：绑定当前编辑版次，切换/导入均需弹窗明确选择（修订） */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+              <button
+                className="btn-ghost-sm"
+                style={{ color: 'var(--accent)', border: '1px solid var(--accent-soft-2)', padding: '6px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+                onClick={() => setRunPicker({ mode: 'switch' })}
+                title="选择要编辑尺寸表的版次（弹窗明确选择，防止误改）"
               >
-                {runs.map(r => (
-                  <option key={r.id} value={r.id}>{r.order_no || '未编号'} · {r.sample_type || '未知版次'}（{r.size || '无码'}）</option>
-                ))}
-              </select>
+                <ArrowLeftRight size={14} /> 切换编辑版次
+              </button>
               {selectedRun && runs.filter(r => r.id !== selectedRun.id).length > 0 && (
                 <button
                   className="btn-ghost-sm"
                   style={{ color: 'var(--accent)', border: '1px solid var(--accent-soft-2)', padding: '6px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
-                  onClick={handleCopyClick}
-                  title="将上一版次（其它批次）的尺寸表整体复制到当前批次"
+                  onClick={() => setRunPicker({ mode: 'import' })}
+                  title="从其它版次导入尺寸数据：先明确选择来源版次，再确认覆盖"
                 >
-                  <Copy size={14} /> 从上一版次复制
+                  <Copy size={14} /> 从其它版次导入
                 </button>
               )}
+              {toastMsg && (
+                <span style={{ fontSize: 12, color: '#4ade80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', padding: '6px 12px', borderRadius: 8 }}>
+                  {toastMsg}
+                </span>
+              )}
             </div>
-            {/* REQ-005 修订：当前编辑版次醒目标识，防止误改其它版次尺寸表 */}
+            {/* REQ-005 修订：当前编辑版次醒目标识，尺寸表已绑定该版次 */}
             {selectedRun && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', marginBottom: 16, borderRadius: 8, background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)' }}>
                 <Edit3 size={15} color="var(--accent)" />
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>当前编辑版次：</span>
                 <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)' }}>{selectedRun.order_no || '未编号'}</span>
                 <span style={{ fontSize: 12, color: 'var(--text-2)' }}>（{selectedRun.sample_type || '未知版次'} · {selectedRun.size || '无码'}）</span>
-                <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 'auto' }}>修改自动保存到该版次，导出/跨版次对比均以当前版次为准</span>
+                <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 'auto' }}>尺寸表已绑定该版次 · 修改自动保存 · 导出/跨版次对比均以当前版次为准</span>
               </div>
             )}
             <SizeTable
@@ -508,25 +521,40 @@ const DetailView = ({
         />
       )}
 
-      {/* REQ-005① 从上一版次复制尺寸表确认 */}
-      {confirmCopyPrev && (
-        <ConfirmModal
-          title="从上一版次复制尺寸表"
-          message={`确定将「${copyPrev ? `${copyPrev.order_no || '未编号'} · ${copyPrev.sample_type || ''}` : '上一批次'}」的尺寸表（${copySrcRows.length} 行）整体复制到当前版次「${selectedRun?.order_no || ''}」？\n当前版次已有尺寸数据将被覆盖。`}
-          onConfirm={copyFromPrevRun}
-          onCancel={() => setConfirmCopyPrev(false)}
+      {/* REQ-005 修订：版次选择弹窗（切换编辑版次 / 从其它版次导入来源） */}
+      {runPicker && (
+        <RunPickerModal
+          runs={runs}
+          excludeId={selectedRun?.id}
+          onlyWithData={runPicker.mode === 'import'}
+          title={runPicker.mode === 'import' ? '选择导入来源版次' : '切换编辑版次'}
+          subtitle={
+            runPicker.mode === 'import'
+              ? '明确选择要从中导入尺寸数据的版次（仅列出有数据的版次），确认后将覆盖当前版次尺寸表。'
+              : '明确选择要编辑尺寸表的版次（当前版次修改已自动保存）。'
+          }
+          confirmText={runPicker.mode === 'import' ? '下一步：确认导入' : '切换到此版次'}
+          onConfirm={run => {
+            if (runPicker.mode === 'import') {
+              setConfirmImport(run);
+              setRunPicker(null);
+            } else {
+              doSwitchRun(run);
+            }
+          }}
+          onCancel={() => setRunPicker(null)}
         />
       )}
 
-      {/* REQ-005 修订：来源尺寸表为空时阻止复制 */}
-      {copyBlockedMsg && (
+      {/* REQ-005 修订：导入前二次确认（明确来源版次与行数） */}
+      {confirmImport && (
         <ConfirmModal
-          title="无法复制：来源版次尺寸表为空"
-          message={`上一版次「${copyBlockedMsg}」暂无尺寸数据（0 行），无内容可复制。\n可先在「切换版次尺寸表」中选择该版次并录入尺寸后，再执行复制。`}
+          title="确认导入尺寸数据"
+          message={`将把「${confirmImport.order_no || '未编号'} · ${confirmImport.sample_type || ''}（${Array.isArray(confirmImport.size_data) ? confirmImport.size_data.length : 0} 行）」的尺寸数据整体导入到当前版次「${selectedRun?.order_no || ''}」？\n当前版次已有尺寸数据将被覆盖。`}
           danger={false}
-          confirmText="知道了"
-          onConfirm={() => setCopyBlockedMsg(null)}
-          onCancel={() => setCopyBlockedMsg(null)}
+          confirmText="确认导入"
+          onConfirm={doImportRun}
+          onCancel={() => setConfirmImport(null)}
         />
       )}
     </div>

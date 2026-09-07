@@ -60,7 +60,15 @@ const DetailView = ({
       .then(list => {
         const arr = list || [];
         setRuns(arr);
-        setSizeRunId(prev => (prev && arr.some(r => r.id == prev)) ? prev : (arr[0]?.id ?? null));
+        // REQ-005 修订3：未指定批次时默认展示「最新编辑的尺寸表」（updated_at 最新，其次 id 最大）
+        setSizeRunId(prev => {
+          if (prev && arr.some(r => r.id == prev)) return prev;
+          const latest = [...arr].sort((a, b) => {
+            const t = String(b.updated_at || '').localeCompare(String(a.updated_at || ''));
+            return t !== 0 ? t : (b.id || 0) - (a.id || 0);
+          })[0];
+          return latest?.id ?? null;
+        });
       })
       .catch(() => {});
   };

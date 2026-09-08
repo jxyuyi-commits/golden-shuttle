@@ -107,7 +107,7 @@ const SizeTable = ({
     const instructionValStr = isStd ? row.base : (sVals[sizeName] || calcGraded(row.base, row.grading, sIdx));
     const av = parseFloat(actualVal);
     const iv = parseFloat(instructionValStr);
-    const tolV = parseFloat((row.tolerance || '').replace(/[±\+\-]/g, ''));
+    const tolV = parseFloat(String(row.tolerance || '').match(/\d+(\.\d+)?/)?.[0] || '');
     if (isNaN(av) || isNaN(iv) || isNaN(tolV)) return { out: false, diff: 0 };
     const diff = Math.abs(av - iv);
     return { out: diff > tolV, diff: av - iv };
@@ -209,10 +209,10 @@ const SizeTable = ({
           <button
             className={`btn-mode-toggle ${isActualMode ? 'active' : ''}`}
             onClick={() => setIsActualMode(!isActualMode)}
-            title={isActualMode ? '正在录入成衣实测尺寸，并对比指令值' : '正在录入/调整尺寸规格（指令值）'}
+            title={isActualMode ? '退出实测录入模式，返回指令/拓码维护' : '进入实测录入模式，录入成衣实测尺寸并与指令值对比'}
           >
             {isActualMode ? <CheckCircle2 size={15} /> : <Calculator size={15} />}
-            {isActualMode ? '录入成衣实测' : '指令/拓码维护'}
+            {isActualMode ? '退出实测录入' : '进入实测录入'}
           </button>
           <button className="btn-blue" onClick={() => setIsModalOpen(true)}>
             <Plus size={15} /> 从预设加入

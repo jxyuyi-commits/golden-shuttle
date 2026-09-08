@@ -146,6 +146,12 @@
       .data-table tr:hover {background: rgba(56,189,248,0.03); }
       .data-table input {background: transparent; border: 1px solid transparent; width: 100%; padding: 8px; color: var(--text-2); border-radius: 6px; transition: all 0.2s; }
       .data-table input:focus {background: var(--input-bg); border-color: rgba(56,189,248,0.4); outline: none; box-shadow: 0 0 10px var(--accent-soft); }
+      .data-table textarea {background: transparent; border: 1px solid transparent; width: 100%; padding: 8px; color: var(--text-2); border-radius: 6px; transition: all 0.2s; }
+      .data-table textarea:focus {background: var(--input-bg); border-color: rgba(56,189,248,0.4); outline: none; box-shadow: 0 0 10px var(--accent-soft); }
+      /* REQ-014 列宽拖拽手柄 */
+      .col-drag {position: absolute; right: -3px; top: 0; bottom: 0; width: 6px; cursor: col-resize; z-index: 3; border-radius: 3px; }
+      .col-drag:hover {background: rgba(56,189,248,0.45); }
+      .col-drag:active {background: rgba(56,189,248,0.7); }
       .row-selected {background: rgba(56,189,248,0.05) !important; }
 
       /* 部位选择弹窗增强 */

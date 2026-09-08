@@ -1,4 +1,5 @@
 // 工艺指示编辑器：行内编辑 + 防抖自动保存（输入停顿约 400ms 自动提交）
+// REQ-014：长文本列（工艺要求/做法、标准/参数、备注）改自动撑高 textarea；表头支持拖拽调列宽（localStorage 记忆）
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import {
@@ -15,12 +16,72 @@ const cellStyle = {
   fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box'
 };
 
+// REQ-014 长文本输入：自动撑高 textarea（行随内容增长，超 5 行出内部滚动）
+const textareaStyle = {
+  ...cellStyle,
+  height: 'auto', minHeight: 34, maxHeight: 130,
+  resize: 'none', overflowY: 'auto', overflowX: 'hidden',
+  lineHeight: 1.5, fontFamily: 'inherit', display: 'block'
+};
+
+const autoGrow = (el) => {
+  if (!el) return;
+  el.style.height = 'auto';
+  const h = Math.min(el.scrollHeight + 2, 130);
+  el.style.height = h + 'px';
+};
+
+const COL_KEY = 'proc_col_widths_v1';
+const DEFAULT_COLS = { section: 110, name: 150, requirement: 320, standard: 200, note: 140, action: 56 };
+const loadCols = () => {
+  try {
+    const s = localStorage.getItem(COL_KEY);
+    if (s) return { ...DEFAULT_COLS, ...JSON.parse(s) };
+  } catch (e) { /* ignore */ }
+  return DEFAULT_COLS;
+};
+
+// REQ-014 列宽拖拽手柄：mousedown 起监听 mousemove，实时回调宽度
+const ColDragHandle = ({ colKey, width, onWidth }) => {
+  const start = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startW = width;
+    const move = (ev) => {
+      const w = Math.max(80, Math.min(560, startW + ev.clientX - startX));
+      onWidth(colKey, w);
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  };
+  return <span className="col-drag" onMouseDown={start} title="拖拽调整列宽" />;
+};
+
 /** 工艺指示：一表多行，挂靠在打样单下 */
 const ProcessEditor = ({ taskId }) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [confirmDelId, setConfirmDelId] = useState(null); // REQ-006② 待删除工艺 id
+  const [colWidths, setColWidths] = useState(loadCols);
+
+  // REQ-014 拖拽列宽：更新 state 并记忆到 localStorage
+  const setColWidth = useCallback((key, w) => {
+    setColWidths(prev => {
+      const next = { ...prev, [key]: w };
+      try { localStorage.setItem(COL_KEY, JSON.stringify(next)); } catch (e) { /* ignore */ }
+      return next;
+    });
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -63,12 +124,19 @@ const ProcessEditor = ({ taskId }) => {
     catch (e) { alert('删除失败: ' + e.message); }
   };
 
+  const thStyle = (w) => ({
+    padding: '10px 8px', textAlign: 'left', fontSize: 12, color: 'var(--text-3)',
+    background: 'var(--bg-elev)', borderBottom: '2px solid rgba(56,189,248,0.15)',
+    whiteSpace: 'nowrap', width: w, position: 'relative', minWidth: w
+  });
+  const tdStyle = (w) => ({ padding: 6, width: w, minWidth: w });
+
   return (
     <div className="glass" style={{ gridColumn: '1/-1', padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div className="section-title" style={{ borderLeftColor: '#f59e0b' }}>
           <div>工艺指示</div>
-          <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项</span>
+          <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项 · 拖动表头右侧竖线可调列宽</span>
         </div>
         <button className="btn-blue-sm" onClick={handleAdd} disabled={busy}>
           {busy ? <Loader2 size={14} className="spin" /> : <Plus size={14} />} 添加工艺
@@ -83,36 +151,88 @@ const ProcessEditor = ({ taskId }) => {
         </div>
       ) : (
         <div style={{ overflow: 'auto' }}>
-          <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
+          <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12, tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: 44 }} />
+              <col style={{ width: colWidths.section }} />
+              <col style={{ width: colWidths.name }} />
+              <col style={{ width: colWidths.requirement }} />
+              <col style={{ width: colWidths.standard }} />
+              <col style={{ width: colWidths.note }} />
+              <col style={{ width: colWidths.action }} />
+            </colgroup>
             <thead>
               <tr>
-                {['序号', '分类', '工艺项目', '工艺要求 / 做法', '标准 / 参数', '备注', ''].map((h, i) => (
-                  <th key={i} style={{ padding: '10px 8px', textAlign: 'left', fontSize: 12, color: 'var(--text-3)', background: 'var(--bg-elev)', borderBottom: '2px solid rgba(56,189,248,0.15)', whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
+                <th style={{ ...thStyle(44), width: 44, minWidth: 44 }}>序号</th>
+                <th style={thStyle(colWidths.section)}>
+                  分类
+                  <ColDragHandle colKey="section" width={colWidths.section} onWidth={setColWidth} />
+                </th>
+                <th style={thStyle(colWidths.name)}>
+                  工艺项目
+                  <ColDragHandle colKey="name" width={colWidths.name} onWidth={setColWidth} />
+                </th>
+                <th style={thStyle(colWidths.requirement)}>
+                  工艺要求 / 做法
+                  <ColDragHandle colKey="requirement" width={colWidths.requirement} onWidth={setColWidth} />
+                </th>
+                <th style={thStyle(colWidths.standard)}>
+                  标准 / 参数
+                  <ColDragHandle colKey="standard" width={colWidths.standard} onWidth={setColWidth} />
+                </th>
+                <th style={thStyle(colWidths.note)}>
+                  备注
+                  <ColDragHandle colKey="note" width={colWidths.note} onWidth={setColWidth} />
+                </th>
+                <th style={{ ...thStyle(colWidths.action), width: colWidths.action, minWidth: colWidths.action }} />
               </tr>
             </thead>
             <tbody>
               {rows.map((row, idx) => (
                 <tr key={row.id} style={{ borderBottom: '1px solid var(--bg-hover)' }}>
-                  <td style={{ padding: '8px 8px', color: 'var(--text-2)', textAlign: 'center' }}>{idx + 1}</td>
-                  <td style={{ padding: 6, width: 110 }}>
+                  <td style={{ padding: '8px 8px', color: 'var(--text-2)', textAlign: 'center', width: 44 }}>{idx + 1}</td>
+                  <td style={tdStyle(colWidths.section)}>
                     <select style={cellStyle} value={row.section || '部位工艺'} onChange={e => { setField(row.id, 'section', e.target.value); scheduleCommit(row.id, 'section', e.target.value); }}>
                       {SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </td>
-                  <td style={{ padding: 6, width: 150 }}>
+                  <td style={tdStyle(colWidths.name)}>
                     <input style={cellStyle} value={row.name || ''} placeholder="工艺项目（如：领口罗纹）" onChange={e => { setField(row.id, 'name', e.target.value); scheduleCommit(row.id, 'name', e.target.value); }} />
                   </td>
-                  <td style={{ padding: 6, width: 260 }}>
-                    <input style={cellStyle} value={row.requirement || ''} placeholder="工艺要求 / 做法" onChange={e => { setField(row.id, 'requirement', e.target.value); scheduleCommit(row.id, 'requirement', e.target.value); }} />
+                  <td style={tdStyle(colWidths.requirement)}>
+                    <textarea
+                      style={textareaStyle}
+                      rows={1}
+                      ref={el => { if (el) autoGrow(el); }}
+                      value={row.requirement || ''}
+                      placeholder="工艺要求 / 做法（可多行）"
+                      onChange={e => { setField(row.id, 'requirement', e.target.value); scheduleCommit(row.id, 'requirement', e.target.value); }}
+                      onInput={e => autoGrow(e.target)}
+                    />
                   </td>
-                  <td style={{ padding: 6, width: 200 }}>
-                    <input style={cellStyle} value={row.standard || ''} placeholder="标准 / 参数（如：针距3针/cm）" onChange={e => { setField(row.id, 'standard', e.target.value); scheduleCommit(row.id, 'standard', e.target.value); }} />
+                  <td style={tdStyle(colWidths.standard)}>
+                    <textarea
+                      style={textareaStyle}
+                      rows={1}
+                      ref={el => { if (el) autoGrow(el); }}
+                      value={row.standard || ''}
+                      placeholder="标准 / 参数（如：针距3针/cm）"
+                      onChange={e => { setField(row.id, 'standard', e.target.value); scheduleCommit(row.id, 'standard', e.target.value); }}
+                      onInput={e => autoGrow(e.target)}
+                    />
                   </td>
-                  <td style={{ padding: 6, width: 140 }}>
-                    <input style={cellStyle} value={row.note || ''} placeholder="备注" onChange={e => { setField(row.id, 'note', e.target.value); scheduleCommit(row.id, 'note', e.target.value); }} />
+                  <td style={tdStyle(colWidths.note)}>
+                    <textarea
+                      style={textareaStyle}
+                      rows={1}
+                      ref={el => { if (el) autoGrow(el); }}
+                      value={row.note || ''}
+                      placeholder="备注"
+                      onChange={e => { setField(row.id, 'note', e.target.value); scheduleCommit(row.id, 'note', e.target.value); }}
+                      onInput={e => autoGrow(e.target)}
+                    />
                   </td>
-                  <td style={{ padding: 6, textAlign: 'center' }}>
+                  <td style={{ padding: 6, textAlign: 'center', width: colWidths.action }}>
                     <button className="icon-btn-danger" onClick={() => setConfirmDelId(row.id)} title="删除">
                       <Trash2 size={14} />
                     </button>

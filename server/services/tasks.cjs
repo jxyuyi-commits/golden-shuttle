@@ -41,7 +41,7 @@ function safeParse(json, fallback) {
 
 const TASK_JOIN_SELECT = `
   SELECT t.*,
-         s.style_no, s.title, s.brand, s.designer, s.year, s.season, s.month, s.category, s.pdf_url
+         s.style_no, s.title, s.brand, s.designer, s.year, s.season, s.month, s.category, s.pdf_url, s.pattern_maker
   FROM tasks t
   LEFT JOIN styles s ON t.style_id = s.id
 `;
@@ -184,8 +184,8 @@ function create(b) {
 
     if (!style_id) {
       const styleInfo = db.prepare(`
-        INSERT INTO styles (style_no, title, brand, designer, year, season, month, category, pdf_url)
-        VALUES (@style_no, @title, @brand, @designer, @year, @season, @month, @category, @pdf_url)
+        INSERT INTO styles (style_no, title, brand, designer, year, season, month, category, pdf_url, pattern_maker)
+        VALUES (@style_no, @title, @brand, @designer, @year, @season, @month, @category, @pdf_url, @pattern_maker)
       `).run({
         style_no: b.style_no || `TMP-${Date.now()}`,
         title: b.title || '未命名',
@@ -195,7 +195,8 @@ function create(b) {
         season: b.season || '',
         month: b.month || '',
         category: b.category || '',
-        pdf_url: b.pdf_url || ''
+        pdf_url: b.pdf_url || '',
+        pattern_maker: b.pattern_maker || ''
       });
       style_id = styleInfo.lastInsertRowid;
     }
@@ -264,7 +265,7 @@ function update(id, b) {
   const { style_id } = row;
   const oldTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
 
-  const STYLE_KEYS = ['style_no', 'title', 'brand', 'designer', 'year', 'season', 'month', 'category', 'pdf_url'];
+  const STYLE_KEYS = ['style_no', 'title', 'brand', 'designer', 'year', 'season', 'month', 'category', 'pdf_url', 'pattern_maker'];
   const styleUpdates = {};
   for (const key of STYLE_KEYS) {
     if (key in b) styleUpdates[key] = b[key];

@@ -215,7 +215,7 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onOpenSidebar, onNewT
                           <span className="dash-status-pill" style={{ background: 'rgba(100,116,139,0.15)', color: 'var(--text-3)', borderColor: 'rgba(100,116,139,0.3)' }}>无批次</span>
                         )}
                       </td>
-                      <td>{topRun?.pattern_maker || '未分配'}</td>
+                      <td>{t.pattern_maker || topRun?.pattern_maker || '未分配'}</td>
                       <td>{topRun?.sample_maker || '未分配'}</td>
                       <td>{runs.length}</td>
                     </tr>

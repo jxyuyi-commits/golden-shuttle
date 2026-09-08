@@ -480,6 +480,29 @@ const migrations = [
       // 权威数据下沉批次，tasks.size_data 清空（投影由 attachRuns 从批次派生）
       db.exec("UPDATE tasks SET size_data = '[]'");
     }
+  },
+  {
+    version: 17,
+    description: 'REQ-015 版师上移款级：styles 加 pattern_maker；取该款最近非空版师批次回填（用户拍板：最近的非空版师批次）',
+    up: () => {
+      addColumnIfNotExists('styles', 'pattern_maker', "TEXT DEFAULT ''");
+      // 每款取「最近的非空版师批次」上移：sort_order 最大且 pattern_maker 非空
+      db.exec(`
+        UPDATE styles SET pattern_maker = (
+          SELECT sr.pattern_maker FROM sample_runs sr
+          JOIN tasks t ON t.style_id = styles.id
+          WHERE sr.task_id = t.id
+            AND sr.pattern_maker IS NOT NULL AND sr.pattern_maker != ''
+          ORDER BY sr.sort_order DESC, sr.id DESC
+          LIMIT 1
+        ) WHERE EXISTS (
+          SELECT 1 FROM sample_runs sr2
+          JOIN tasks t2 ON t2.style_id = styles.id
+          WHERE sr2.task_id = t2.id
+            AND sr2.pattern_maker IS NOT NULL AND sr2.pattern_maker != ''
+        );
+      `);
+    }
   }
 ];
 

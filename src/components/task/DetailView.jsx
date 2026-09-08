@@ -282,7 +282,10 @@ const DetailView = ({
               <label>设计师</label>
               <SmartSelect value={task.designer} onChange={v => { onSetField('designer', v); onCommitField('designer', v); }} options={peopleByRole(settings.people, '设计师')} />
             </div>
-            <div className="field"></div>
+            <div className="field">
+              <label>版师</label>
+              <SmartSelect value={task.pattern_maker || ''} onChange={v => { onSetField('pattern_maker', v); onCommitField('pattern_maker', v); }} options={peopleByRole(settings.people, '版师')} placeholder="选择版师或输入" />
+            </div>
             <div className="field">
               <label>年度</label>
               <select value={task.year || ''} onChange={e => { onSetField('year', e.target.value); onCommitField('year', e.target.value); }}>

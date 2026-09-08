@@ -212,15 +212,6 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
               </select>
             </div>
             <div className="field">
-              <label>版师</label>
-              <SmartSelect
-                value={r.pattern_maker || ''}
-                onChange={v => patch(r.id, { pattern_maker: v })}
-                options={peopleByRole(settings.people, '版师')}
-                placeholder="选择版师或输入"
-              />
-            </div>
-            <div className="field">
               <label>样衣工</label>
               <SmartSelect
                 value={r.sample_maker || ''}

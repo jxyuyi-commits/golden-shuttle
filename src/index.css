@@ -1154,9 +1154,9 @@ body {
 }
 
 .btn-mode-toggle.active {
-  background: rgba(244, 63, 94, 0.1);
-  border-color: rgba(244, 63, 94, 0.3);
-  color: #fb7185;
+  background: var(--accent-soft-2);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* =========================================

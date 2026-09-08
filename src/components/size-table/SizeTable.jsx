@@ -209,10 +209,10 @@ const SizeTable = ({
           <button
             className={`btn-mode-toggle ${isActualMode ? 'active' : ''}`}
             onClick={() => setIsActualMode(!isActualMode)}
-            title={isActualMode ? '退出实测录入模式，返回指令/拓码维护' : '进入实测录入模式，录入成衣实测尺寸并与指令值对比'}
+            title={isActualMode ? '退出成衣尺寸核对模式，返回指令/拓码维护' : '进入成衣尺寸核对模式，录入成衣实测尺寸并与指令值对比'}
           >
             {isActualMode ? <CheckCircle2 size={15} /> : <Calculator size={15} />}
-            {isActualMode ? '退出实测录入' : '进入实测录入'}
+            成衣尺寸核对
           </button>
           <button className="btn-blue" onClick={() => setIsModalOpen(true)}>
             <Plus size={15} /> 从预设加入
@@ -302,8 +302,8 @@ const SizeTable = ({
               )}
               {isActualMode && (
                 <>
-                  <th style={{ width: 100, color: '#fb7185', textAlign: 'center' }}>成衣实测</th>
-                  <th style={{ width: 80, color: '#fb7185', textAlign: 'center' }}>报警/偏差</th>
+                  <th style={{ width: 100, textAlign: 'center' }}>成衣实测</th>
+                  <th style={{ width: 80, textAlign: 'center' }}>报警/偏差</th>
                 </>
               )}
               {isExpanding && allSizes.filter(s => s !== standardSize).map(s => (
@@ -373,7 +373,7 @@ const SizeTable = ({
                       <td style={{ background: 'rgba(251, 113, 133, 0.03)' }}>
                         <input
                           className={pulse.row === i && pulse.field === standardSize ? 'cell-pulse' : ''}
-                          style={{ color: '#fb7185', fontWeight: 600, textAlign: 'center' }}
+                          style={{ textAlign: 'center' }}
                           value={actualVals[standardSize] || ''}
                           onChange={e => updateSizeVal(i, standardSize, e.target.value, true)}
                           placeholder="录入"

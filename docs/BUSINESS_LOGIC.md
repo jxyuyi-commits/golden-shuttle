@@ -277,6 +277,7 @@ progress_nodes 改为用户可自由增删改的节点列表，每个节点有 l
 - **跟随系统的正确方式（用户拍板）**：豆包客户端深浅配色＝系统原生配色（零自定义色差）→ 用 **CSS 系统语义色**（Canvas/CanvasText/Field/AccentColor/AccentColorText）+ `color-scheme: light dark` + `light-dark()` 中性透明层；浏览器自动映射系统主题真实颜色（深色=系统面板 #121212 系、浅色=白、强调色=系统 AccentColor），accent 上文字用 AccentColorText
 - **边界（用户确认）**：次要文字/边框/悬停/玻璃层用中性黑白透明层（非自定义色板）；业务状态色（红绿黄等语义色）保留
 - **浅色穿帮点修复**：14 处深色半透明输入框/卡片硬编码背景→CSS 变量（KanbanView 筛选框、CategoryManager select、BomEditor/ProcessEditor/DrawingLibrary 表格输入框、accent 硬编码→var(--accent-soft) 等）
+- **二轮修复（用户实测反馈）**：`.bento-box` 卡片 `rgba(0,0,0,0.2)!important` 浅色下=中灰 #ccc（惨不忍睹根因）→`var(--card-bg)`/`var(--border-strong)`；全站白半透明边框 23 处+白透明背景 19 处（浅色下边框消失/发灰）→`var(--border)`/`var(--bg-panel)` 等；黑透明背景 4 处→`var(--input-bg)`/`var(--bg-elev-2)`；复验全页扫描中灰残留=0
 - **验证**：E2E 13/13 PASS（三态切换/语义色实际计算渲染/reload 持久化/还原）+看板浅色·深色观感截图目检
 
 ### 10.7 版师归属：款级共享，样衣工维持版次级（REQ-015，2026-09-08 拍板）

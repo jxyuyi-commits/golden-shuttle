@@ -402,7 +402,7 @@ const DrawingLibrary = ({ taskId }) => {
               className="drawing-dropzone"
               onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
               onDrop={e => { e.preventDefault(); e.stopPropagation(); collectFiles(e.dataTransfer?.files); }}
-              style={{ borderColor: upFiles.length ? 'rgba(167,139,250,0.4)' : 'rgba(255,255,255,0.15)' }}
+              style={{ borderColor: upFiles.length ? 'rgba(167,139,250,0.4)' : 'var(--border-strong)' }}
             >
               <Upload size={26} color="#a78bfa" />
               <div className="dz-title">点击选择 / 拖拽文件到此处 / Ctrl+V 粘贴</div>

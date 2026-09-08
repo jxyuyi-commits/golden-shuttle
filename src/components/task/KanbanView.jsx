@@ -276,7 +276,7 @@ const KanbanView = ({
                   {activeDropdown === 'columns' && (
                     <div className="ss-dropdown" style={{
                       position: 'absolute', top: '100%', right: 0, marginTop: 12, width: 240,
-                      background: 'var(--bg-elev-2)', border: '1px solid rgba(255,255,255,0.15)',
+                      background: 'var(--bg-elev-2)', border: '1px solid var(--border-strong)',
                       borderRadius: 12, boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
                       padding: 16, zIndex: 10000, maxHeight: 500, overflow: 'auto'
                     }}>

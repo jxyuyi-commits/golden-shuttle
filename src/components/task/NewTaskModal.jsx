@@ -73,7 +73,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
   };
 
   return (
-    <div className="overlay" onClick={onClose}>
+    <div className="overlay overlay-show" onClick={onClose}>
       <form className="modal glass" onSubmit={submit} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
           <span>新建打样需求单</span>

@@ -380,7 +380,7 @@ const DrawingLibrary = ({ taskId }) => {
 
       {/* 上传弹窗 */}
       {showUpload && createPortal(
-        <div className="overlay" onClick={() => { if (!busy) setShowUpload(false); }} style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5vh' }}>
+        <div className="overlay overlay-show" onClick={() => { if (!busy) setShowUpload(false); }} style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5vh' }}>
           <div
             className="glass"
             onClick={e => e.stopPropagation()}
@@ -452,7 +452,7 @@ const DrawingLibrary = ({ taskId }) => {
 
       {/* 版本历史弹窗 */}
       {groupModal && createPortal(
-        <div className="overlay" onClick={() => setGroupModal(null)} style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5vh' }}>
+        <div className="overlay overlay-show" onClick={() => setGroupModal(null)} style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5vh' }}>
           <div
             className="glass"
             onClick={e => e.stopPropagation()}

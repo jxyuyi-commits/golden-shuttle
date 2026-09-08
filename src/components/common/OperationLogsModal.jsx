@@ -34,7 +34,7 @@ const OperationLogsModal = ({ onClose }) => {
   }, []);
 
   return (
-    <div className="overlay" onClick={onClose}>
+    <div className="overlay overlay-show" onClick={onClose}>
       <div className="glass" style={{ width: 560, maxWidth: '90vw', maxHeight: '80vh', display: 'flex', flexDirection: 'column', borderRadius: 16, overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

@@ -57,7 +57,7 @@ const ExportButton = ({ label, title, confirmText, fileName, onExport, style, di
 
       {/* 导出确认对话框 */}
       {showConfirm && createPortal(
-        <div className="overlay" onClick={() => setShowConfirm(false)} style={{ zIndex: 9999, alignItems: 'center', justifyContent: 'center' }}>
+        <div className="overlay overlay-show" onClick={() => setShowConfirm(false)} style={{ zIndex: 9999, alignItems: 'center', justifyContent: 'center' }}>
           <div className="modal glass" onClick={e => e.stopPropagation()} style={{ width: 440, padding: 28, gap: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>

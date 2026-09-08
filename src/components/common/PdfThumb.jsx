@@ -133,7 +133,7 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
 
       {enlarged && createPortal(
         <div
-          className="overlay"
+          className="overlay overlay-show"
           onClick={(e) => { e.stopPropagation(); setEnlarged(false); }}
           style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5vh' }}
         >

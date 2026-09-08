@@ -150,7 +150,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
       </div>
 
       {editing && (
-        <div className="overlay" style={{ zIndex: 2000 }} onClick={() => setEditing(null)}>
+        <div className="overlay overlay-show" style={{ zIndex: 2000 }} onClick={() => setEditing(null)}>
           <div className="modal glass" style={{ width: 440 }} onClick={e => e.stopPropagation()}>
             <div className="modal-head">
               <span>{editing.id ? '编辑' : '新增'}预设部位</span>

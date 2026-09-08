@@ -25,7 +25,7 @@ const SizeGroupManager = ({ groups, onChange }) => {
   };
 
   const modal = editing ? createPortal(
-    <div className="overlay" onClick={() => setEditing(null)}>
+    <div className="overlay overlay-show" onClick={() => setEditing(null)}>
       <div className="modal glass" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
         <div className="modal-head"><span>{editing.id ? '编辑' : '新增'}号型系列</span><button className="btn-icon" onClick={() => setEditing(null)}><X size={20} /></button></div>
         <div className="field"><label>系列名称 (如: 成人女装号型)</label><input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} /></div>

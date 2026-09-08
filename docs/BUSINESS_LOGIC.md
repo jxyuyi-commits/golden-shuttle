@@ -289,6 +289,7 @@ progress_nodes 改为用户可自由增删改的节点列表，每个节点有 l
   E2E 测试若把浏览器用户数据目录（_chrome_*）放在项目根目录，Edge 运行中锁定 Sessions 文件，
   Vite FSWatcher 报 `EBUSY: resource busy or locked` → 未捕获 error → Vite 进程崩 → 整个 dev 服务挂。
   规范：① vite.config.js server.watch.ignored 忽略 `**/_*/**`、`**/_*.*`、附件/备份目录；② E2E userDataDir 一律放项目外（%TEMP%）。
+  二度触发（2026-09-08 同日晚，非 E2E 目录）：编辑工具写文件生成的 `*.agent_infra_tmp*` 临时文件（如 docs/待开发文档.md.agent_infra_tmp_*）同样触发 EBUSY 崩溃。vite.config.js 追加忽略 `**/*.agent_infra_tmp*`，并在本环境实测（创建→删除临时文件，服务存活、无新 EBUSY）确认生效。
 - **前端 E2E 断言规范**：断言"弹窗出现"必须校验可见性三要素——computed opacity === '1'、pointer-events === 'auto'、
   elementFromPoint(按钮中心) 命中按钮本体；仅断言 overlay DOM 存在会漏检透明/穿透层缺陷（REQ-016 教训）。
 - **overlay 机制**：`.overlay` 默认 opacity:0 + pointer-events:none（REQ-006 侧边栏动画引入）；

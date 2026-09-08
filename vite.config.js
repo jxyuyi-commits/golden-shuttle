@@ -13,6 +13,7 @@ export default defineConfig({
       ignored: [
         '**/_*/**', // _ 开头的测试/临时目录（_chrome_*、_probe_* 等）
         '**/_*.*', // 根目录 _ 开头测试文件（_dev_out.log 等）
+        '**/*.agent_infra_tmp*', // 编辑工具写文件生成的临时文件（如 待开发文档.md.agent_infra_tmp_*）
         '**/attachments_download/**',
         '**/server/backup_empty/**',
       ],

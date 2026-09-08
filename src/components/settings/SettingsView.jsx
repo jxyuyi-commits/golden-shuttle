@@ -7,7 +7,7 @@ import CategoryManager from './CategoryManager';
 import MeasurementTemplateManager from '../measurement/MeasurementTemplateManager';
 
 /** 系统设置视图：品牌库/人员预设/版次库 + 号型规格 + 款式分类 + 尺寸部位预设 + 外观主题(REQ-010) */
-const SettingsView = ({ settings, saveSetting, loadSettings, onOpenSidebar, themeMode = 'auto', onThemeModeChange }) => {
+const SettingsView = ({ settings, saveSetting, loadSettings, onOpenSidebar, themeMode = 'custom', onThemeModeChange }) => {
   return (
     <div className="custom-scrollbar" style={{ background: 'var(--bg)', height: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
       <header className="top-bar glass">
@@ -52,20 +52,20 @@ const SettingsView = ({ settings, saveSetting, loadSettings, onOpenSidebar, them
           />
         </div>
 
-        {/* REQ-010 外观主题（深/浅两套配色 + 跟随系统） */}
+        {/* REQ-010 外观主题（自定义 + 系统深/浅三套配色） */}
         <div className="main-settings-area glass animate-slide-up">
           <div className="area-header">
             <div className="area-title-group">
               <div className="area-dot" style={{ background: 'var(--accent)' }} />
               <div className="area-title">外观主题</div>
             </div>
-            <div className="area-subtitle">深浅两套配色（浅色参考豆包客户端），可跟随系统自动切换</div>
+            <div className="area-subtitle">系统深/浅跟随系统原生配色（零色差），自定义为现有配色</div>
           </div>
           <div style={{ display: 'flex', gap: 10, padding: '8px 4px 4px', flexWrap: 'wrap' }}>
             {[
-              { key: 'auto', label: '跟随系统', desc: '随系统深浅自动切换' },
-              { key: 'light', label: '浅色', desc: '浅灰白底 · 品牌蓝点缀' },
-              { key: 'dark', label: '深色', desc: '深蓝黑底 · 亮蓝点缀' },
+              { key: 'custom', label: '自定义', desc: '深蓝黑自写配色（现有）' },
+              { key: 'dark', label: '系统深色', desc: '系统原生深色 · 零色差' },
+              { key: 'light', label: '系统浅色', desc: '系统原生浅色 · 零色差' },
             ].map(o => (
               <button
                 key={o.key}

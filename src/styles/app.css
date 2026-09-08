@@ -47,7 +47,7 @@
       .add-row-enhanced input, .add-row-enhanced select {background: var(--input-bg); border: 1px solid var(--border); padding: 8px; border-radius: 6px; color: var(--text); font-size: 12px; outline: none; }
       .add-row-enhanced input:focus, .add-row-enhanced select:focus {border-color: var(--accent); }
 
-      .btn-blue-sm {background: var(--accent); color: #000; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+      .btn-blue-sm {background: var(--accent); color: var(--accent-text); border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
       .btn-blue-sm:hover {transform: scale(1.05); box-shadow: 0 0 15px rgba(56,189,248,0.4); }
       .btn-icon-xs {background: var(--border-weak); border: none; color: var(--text-2); padding: 4px; border-radius: 4px; cursor: pointer; display: flex; }
       .btn-icon-xs:hover {background: var(--border-strong); color: var(--text); }
@@ -60,7 +60,7 @@
       .sidebar-title {font-size: 12px; font-weight: 800; color: var(--text-3); text-transform: uppercase; margin-bottom: 16px; letter-spacing: 1px; }
       .sidebar-add {display: flex; gap: 8px; margin-bottom: 20px; padding-right: 2px; }
       .sidebar-add input {flex: 1; background: var(--input-bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; color: var(--text); font-size: 13px; outline: none; min-width: 0; }
-      .btn-add-circle {width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; background: var(--accent); color: #000; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 0 15px var(--accent-soft-2); }
+      .btn-add-circle {width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; background: var(--accent); color: var(--accent-text); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 0 15px var(--accent-soft-2); }
       .btn-add-circle:hover {transform: scale(1.1); box-shadow: 0 0 20px rgba(56,189,248,0.5); }
 
       .sidebar-list {flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
@@ -78,7 +78,7 @@
       .content-v4 {flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; overflow: hidden; }
       .content-header-v4 {display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; }
       .header-info {display: flex; align-items: center; gap: 12px; }
-      .active-cat-badge {background: var(--accent); color: #000; font-size: 11px; font-weight: 900; padding: 3px 10px; border-radius: 6px; text-transform: uppercase; }
+      .active-cat-badge {background: var(--accent); color: var(--accent-text); font-size: 11px; font-weight: 900; padding: 3px 10px; border-radius: 6px; text-transform: uppercase; }
       .header-title {font-size: 16px; font-weight: 800; color: var(--text); }
 
       .tpl-table-wrapper {flex: 1; overflow-y: auto; border-radius: 16px; border: 1px solid var(--bg-hover-2); background: rgba(15,23,42,0.3); width: 100%; }
@@ -286,7 +286,7 @@
       .add-row-mini {display: flex; gap: 6px; }
       .add-row-mini input {flex: 1; background: var(--input-bg); border: 1px solid var(--bg-hover-2); padding: 7px 10px; border-radius: 6px; color: var(--text); font-size: 12px; outline: none; }
       .add-row-mini input:focus {border-color: var(--accent); }
-      .btn-add-mini {background: var(--accent); color: #000; border: none; border-radius: 6px; padding: 0 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+      .btn-add-mini {background: var(--accent); color: var(--accent-text); border: none; border-radius: 6px; padding: 0 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
       /* 人员预设编辑器（REQ-006） */
       .people-list {display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; margin-bottom: 6px; }
@@ -323,7 +323,7 @@
       .modal-foot {display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
 
       /* 按钮 */
-      .btn-blue {display: flex; align-items: center; gap: 8px; background: var(--accent); color: #000; font-weight: 800; border: none; padding: 10px 22px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+      .btn-blue {display: flex; align-items: center; gap: 8px; background: var(--accent); color: var(--accent-text); font-weight: 800; border: none; padding: 10px 22px; border-radius: 10px; cursor: pointer; font-size: 14px; }
       .btn-blue:hover {opacity: .9; } .btn-blue:disabled {opacity: .4; cursor: not-allowed; }
       .btn-ghost {background: rgba(255,255,255,.05); color: var(--text); font-weight: 600; border: 1px solid rgba(255,255,255,.1); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; }
       .btn-icon {background: none; border: none; color: var(--text-3); cursor: pointer; padding: 6px; border-radius: 8px; display: flex; }

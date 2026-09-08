@@ -81,7 +81,7 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
                     </div>
                   )}
                   {d.version > 1 && (
-                    <div style={{ position: 'absolute', left: 6, bottom: 6, fontSize: 10, color: 'var(--text-2)', background: 'rgba(2,6,23,0.75)', borderRadius: 6, padding: '2px 6px' }}>V{d.version}</div>
+                    <div style={{ position: 'absolute', left: 6, bottom: 6, fontSize: 10, color: 'var(--text-2)', background: 'var(--bg-elev-2)', borderRadius: 6, padding: '2px 6px' }}>V{d.version}</div>
                   )}
                 </div>
               );

@@ -150,13 +150,13 @@ const KanbanView = ({
         <div className="glass" style={{ padding: '16px 24px', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'nowrap', minWidth: 0, overflow: 'visible' }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-2)', whiteSpace: 'nowrap' }}>数据检索过滤</div>
           <input
-            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, minWidth: 200, outline: 'none' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, minWidth: 200, outline: 'none' }}
             placeholder="输入款号 / 款名搜索"
             value={filters.keyword}
             onChange={e => setFilters({ ...filters, keyword: e.target.value })}
           />
           <select
-            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             value={filters.category}
             onChange={e => setFilters({ ...filters, category: e.target.value })}
           >
@@ -167,7 +167,7 @@ const KanbanView = ({
             })}
           </select>
           <select
-            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             value={filters.sample_type}
             onChange={e => setFilters({ ...filters, sample_type: e.target.value })}
           >
@@ -175,7 +175,7 @@ const KanbanView = ({
             {sampleTypeOptions.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <select
-            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             value={filters.designer}
             onChange={e => setFilters({ ...filters, designer: e.target.value })}
           >
@@ -183,7 +183,7 @@ const KanbanView = ({
             {peopleByRole(settings.people, '设计师').map(d => <option key={d} value={d}>{d}</option>)}
           </select>
           <select
-            style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             value={filters.priority}
             onChange={e => setFilters({ ...filters, priority: e.target.value })}
           >
@@ -209,12 +209,12 @@ const KanbanView = ({
               style={{ padding: '7px 12px', borderRadius: 8, background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, whiteSpace: 'nowrap' }}
             />
 
-            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: 2 }}>
+            <div style={{ display: 'flex', background: 'var(--bg-hover-2)', borderRadius: 8, padding: 2 }}>
               <button
                 className={`btn-icon-sm ${displayMode === 'kanban' ? 'active-mode' : ''}`}
                 onClick={() => setDisplayMode('kanban')}
                 title="看板视图"
-                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'kanban' ? 'var(--accent)' : 'transparent', color: displayMode === 'kanban' ? '#000' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
+                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'kanban' ? 'var(--accent)' : 'transparent', color: displayMode === 'kanban' ? 'var(--accent-text)' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
               >
                 <Layout size={16} />
               </button>
@@ -222,7 +222,7 @@ const KanbanView = ({
                 className={`btn-icon-sm ${displayMode === 'list' ? 'active-mode' : ''}`}
                 onClick={() => setDisplayMode('list')}
                 title="列表视图"
-                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'list' ? 'var(--accent)' : 'transparent', color: displayMode === 'list' ? '#000' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
+                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'list' ? 'var(--accent)' : 'transparent', color: displayMode === 'list' ? 'var(--accent-text)' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
               >
                 <FileText size={16} />
               </button>

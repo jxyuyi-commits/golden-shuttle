@@ -70,7 +70,7 @@ const ExportButton = ({ label, title, confirmText, fileName, onExport, style, di
             <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.7 }}>{confirmText}</div>
             {fileName && (
               <div style={{
-                padding: '10px 14px', background: 'rgba(56,189,248,0.08)',
+                padding: '10px 14px', background: 'var(--accent-soft)',
                 border: '1px solid rgba(56,189,248,0.15)', borderRadius: 8,
                 color: 'var(--accent)', fontSize: 12, wordBreak: 'break-all',
                 display: 'flex', alignItems: 'center', gap: 8

@@ -45,7 +45,7 @@ function fileExtOf(url, filename) {
 }
 
 const inputStyle = {
-  background: 'rgba(2,6,23,0.45)',
+  background: 'var(--input-bg)',
   border: '1px solid var(--border)',
   padding: '7px 10px', borderRadius: 6, color: 'var(--text)',
   fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box'

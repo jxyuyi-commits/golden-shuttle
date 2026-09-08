@@ -337,7 +337,7 @@ const DetailView = ({
             {pdfSyncState && pdfSyncState.error && <div className="pdf-sync-tip err">同步失败：{pdfSyncState.error}</div>}
             <div
               className="pdf-upload-zone"
-              style={dragPdf ? { borderColor: 'rgba(56,189,248,0.75)', background: 'rgba(56,189,248,0.06)' } : undefined}
+              style={dragPdf ? { borderColor: 'rgba(56,189,248,0.75)', background: 'var(--accent-soft)' } : undefined}
               onClick={() => { if (!task.pdf_url) pdfInputRef.current?.click(); }}
               onDragOver={e => { e.preventDefault(); e.stopPropagation(); if (!dragPdf) setDragPdf(true); }}
               onDragEnter={e => { e.preventDefault(); e.stopPropagation(); setDragPdf(true); }}

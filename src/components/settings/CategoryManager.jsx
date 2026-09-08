@@ -43,7 +43,7 @@ const CategoryManager = ({ items = [], sizeGroups = [], onChange }) => {
               <div key={idx} className="category-item-row" style={{ flexDirection: 'column', gap: 6 }}>
                 <input className="cat-edit-input" value={editVal.name} onChange={e => setEditVal({ ...editVal, name: e.target.value })} autoFocus />
                 <div style={{ display: 'flex', gap: 6, width: '100%' }}>
-                  <select style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-strong)', color: 'var(--text)', padding: '4px 8px', borderRadius: 6, fontSize: 11, outline: 'none' }} value={editVal.size_group_id} onChange={e => setEditVal({ ...editVal, size_group_id: e.target.value })}>
+                  <select style={{ flex: 1, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', padding: '4px 8px', borderRadius: 6, fontSize: 11, outline: 'none' }} value={editVal.size_group_id} onChange={e => setEditVal({ ...editVal, size_group_id: e.target.value })}>
                     <option value="">不绑定</option>
                     {sizeGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                   </select>

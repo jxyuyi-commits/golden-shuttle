@@ -62,22 +62,18 @@ const App = () => {
   const { tasks, loadTasks } = useTasks();
   const { settings, loadSettings, saveSetting } = useSettings();
 
-  // REQ-010 主题系统：auto 跟随系统 / light / dark（手动开关在系统设置页）
+  // REQ-010 主题系统：三套配色 custom(自定义深蓝黑) / dark(系统深) / light(系统浅)
+  // 系统深/浅用 CSS 系统语义色（Canvas/CanvasText/Field/AccentColor）+ color-scheme，与系统零色差
   const [themeMode, setThemeMode] = useState(() => {
-    try { return localStorage.getItem('pm_theme') || 'auto'; } catch { return 'auto'; }
+    try {
+      const saved = localStorage.getItem('pm_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+      return 'custom'; // 含旧值 'auto' → 默认自定义（保持用户当前所见）
+    } catch { return 'custom'; }
   });
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: light)');
-    const apply = () => {
-      const actual = themeMode === 'auto' ? (mq.matches ? 'light' : 'dark') : themeMode;
-      document.documentElement.setAttribute('data-theme', actual);
-      try { localStorage.setItem('pm_theme', themeMode); } catch {}
-    };
-    apply();
-    if (themeMode === 'auto') {
-      mq.addEventListener('change', apply);
-      return () => mq.removeEventListener('change', apply);
-    }
+    document.documentElement.setAttribute('data-theme', themeMode);
+    try { localStorage.setItem('pm_theme', themeMode); } catch {}
   }, [themeMode]);
 
   // 看板/列表增强状态

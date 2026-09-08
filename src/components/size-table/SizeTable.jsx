@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle2, Calculator, AlertCircle, ChevronUp, ChevronDown, Trash2, Database, Download, Eye } from 'lucide-react';
+import { Plus, CheckCircle2, Calculator, AlertCircle, ChevronUp, ChevronDown, Trash2, Database, Download, Info } from 'lucide-react';
 import { autoSign, formatTime } from '../../utils/format';
 import { fetchMeasurementTemplates, saveMeasurementTemplate } from '../../api';
 import MeasurementModal from '../measurement/MeasurementModal';
@@ -94,6 +94,11 @@ const SizeTable = ({
     return (b + (curStdIdx - compStdIdx) * g).toFixed(1);
   };
 
+  // REQ-005 修订6：当前版次尺寸表为空时，选中对比版次则以该版次数据为「预览行」供查看，确认后导入
+  // 注意：预览行为浅拷贝，避免编辑/排序污染对比版次原始数据（输入框经 .preview-row 禁编辑）
+  const previewCompare = data.length === 0 && compareRun && Array.isArray(compareRun.size_data) && compareRun.size_data.length > 0;
+  const displayRows = previewCompare ? compareRun.size_data.map(r => ({ ...r })) : data;
+
   const checkOutLimit = (row, sizeName, actualVal) => {
     if (!actualVal) return { out: false, diff: 0 };
     const sIdx = allSizes.indexOf(sizeName);
@@ -176,7 +181,7 @@ const SizeTable = ({
     ? measurementCategories
     : ['针织上装', '针织下装', '半裙', '梭织上装', '梭织下装', '毛衫'];
 
-  const allSelected = data.length > 0 && selectedIndices.length === data.length;
+  const allSelected = displayRows.length > 0 && selectedIndices.length === displayRows.length;
 
   return (
     <div className="size-table-container">
@@ -252,7 +257,7 @@ const SizeTable = ({
           </select>
           {compareRun && (
             <span style={{ fontSize: 12, color: 'var(--text-2)' }}>
-              💡 同码对比（当前 {standardSize} vs {compareRun.size || standardSize}），下方为参考版次完整尺寸表（只读），与主表并排核对后再决定导入。
+              💡 同码对比（当前 {standardSize} vs {compareRun.size || standardSize}）——表格「比对值」列为 {compareRun.order_no || '对比版次'} 尺寸数据，紫色高亮差异（增减量）；查看确认合适后点「导入该版次数据到当前版次」。
             </span>
           )}
           {compareRun && onImportCompare && (
@@ -261,7 +266,7 @@ const SizeTable = ({
               className="btn-ghost-sm"
               style={{ color: 'var(--accent)', border: '1px solid var(--accent-soft-2)', padding: '4px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, marginLeft: 'auto' }}
               onClick={() => setConfirmImportRun(compareRun)}
-              title="将对比版次的尺寸数据整体导入到当前版次（已核对下方完整表与差异后再决定）"
+              title="将对比版次的尺寸数据整体导入到当前版次（已在「比对值」列核对数据与差异后再决定）"
             >
               <Download size={13} /> 导入该版次数据到当前版次
             </button>
@@ -269,55 +274,13 @@ const SizeTable = ({
         </div>
       )}
 
-      {/* REQ-005 修订4：参考版次完整尺寸表——直接在当前窗口内嵌预览（只读），替代弹窗 */}
-      {compareRun && (
-        <div className="glass" style={{ margin: '0 24px 16px', padding: '14px 16px', borderRadius: 8, border: '1px solid rgba(129,140,248,0.18)', background: 'rgba(129,140,248,0.04)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-            <Eye size={14} color="#818cf8" />
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#818cf8' }}>
-              参考版次完整尺寸表：{compareRun.order_no || '未编号'} · {compareRun.sample_type || '未知版次'}（{compareRun.size || '无码'}）
-            </span>
-            <span style={{ fontSize: 11.5, color: 'var(--text-3)' }}>
-              只读 · 共 {Array.isArray(compareRun.size_data) ? compareRun.size_data.length : 0} 行 · 含测量方法与全部码值，导入前在此核对
-            </span>
-          </div>
-          <div className="table-wrapper custom-scrollbar" style={{ overflowX: 'auto', maxHeight: 340, overflowY: 'auto' }}>
-            <table className="data-table" style={{ fontSize: 12 }}>
-              <thead>
-                <tr>
-                  <th style={{ padding: '8px 10px' }}>部位名称</th>
-                  <th style={{ padding: '8px 10px' }}>测量方法</th>
-                  <th style={{ padding: '8px 10px', textAlign: 'center', color: 'var(--accent)' }}>标准码 {compareRun.size || ''}</th>
-                  <th style={{ padding: '8px 10px' }}>各码值</th>
-                  <th style={{ padding: '8px 10px', textAlign: 'center' }}>放码规则</th>
-                  <th style={{ padding: '8px 10px', textAlign: 'center' }}>公差</th>
-                  <th style={{ padding: '8px 10px' }}>备注</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(Array.isArray(compareRun.size_data) ? compareRun.size_data : []).map((row, i) => {
-                  const sv = typeof row.size_values === 'string' ? JSON.parse(row.size_values || '{}') : (row.size_values || {});
-                  const codes = Object.keys(sv).filter(k => k !== compareRun.size);
-                  return (
-                    <tr key={i}>
-                      <td style={{ padding: '6px 10px', fontWeight: 600 }}>{row.name || ''}</td>
-                      <td style={{ padding: '6px 10px', color: 'var(--text-2)' }}>{row.method || ''}</td>
-                      <td style={{ padding: '6px 10px', textAlign: 'center', fontWeight: 700, color: 'var(--accent)' }}>{row.base || ''}</td>
-                      <td style={{ padding: '6px 10px', color: 'var(--text-2)' }}>
-                        {codes.map(k => `${k}:${sv[k]}`).join(' · ')}
-                      </td>
-                      <td style={{ padding: '6px 10px', textAlign: 'center' }}>{row.grading || ''}</td>
-                      <td style={{ padding: '6px 10px', textAlign: 'center' }}>{row.tolerance || ''}</td>
-                      <td style={{ padding: '6px 10px', color: 'var(--text-2)' }}>{row.note || ''}</td>
-                    </tr>
-                  );
-                })}
-                {(!Array.isArray(compareRun.size_data) || compareRun.size_data.length === 0) && (
-                  <tr><td colSpan="7" style={{ padding: 20, textAlign: 'center', color: 'var(--text-3)' }}>该版次暂无尺寸数据</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+      {/* REQ-005 修订6：空表 + 对比版次 → 预览提示（表格暂显示参考版次数据，查看后决定导入） */}
+      {previewCompare && (
+        <div style={{ margin: '0 24px 12px', padding: '10px 14px', borderRadius: 8, border: '1px dashed rgba(129,140,248,0.5)', background: 'rgba(129,140,248,0.08)', fontSize: 12.5, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <Info size={14} />
+          <span>
+            当前版次尺寸表为空，表格暂显示「{compareRun.order_no || '未编号'} · {compareRun.sample_type || ''}」的{compareRun.size_data.length} 行数据预览（标准码留空、紫色「比对值」列为该版次数值）。查看确认合适后，点「导入该版次数据到当前版次」整体复制。
+          </span>
         </div>
       )}
 
@@ -328,7 +291,7 @@ const SizeTable = ({
               <th className="sticky-col sticky-th sticky-col-1" style={{ width: 36 }}>
                 <input type="checkbox" className="table-checkbox"
                   checked={allSelected}
-                  onChange={() => setSelectedIndices(allSelected ? [] : data.map((_, i) => i))} />
+                  onChange={() => setSelectedIndices(allSelected ? [] : displayRows.map((_, i) => i))} />
               </th>
               <th className="sticky-col sticky-th sticky-col-2" style={{ width: 56 }}>排序</th>
               <th className="sticky-col sticky-th sticky-col-3" style={{ minWidth: 140 }}>部位名称</th>
@@ -353,11 +316,11 @@ const SizeTable = ({
             </tr>
           </thead>
           <tbody>
-            {data.map((row, i) => {
+            {displayRows.map((row, i) => {
               const instrVals = typeof row.size_values === 'string' ? JSON.parse(row.size_values || '{}') : (row.size_values || {});
               const actualVals = typeof row.actual_values === 'string' ? JSON.parse(row.actual_values || '{}') : (row.actual_values || {});
               return (
-                <tr key={i} className={selectedIndices.includes(i) ? 'row-selected' : ''}>
+                <tr key={i} className={`${selectedIndices.includes(i) ? 'row-selected' : ''} ${previewCompare ? 'preview-row' : ''}`}>
                   <td className="sticky-col sticky-col-1">
                     <input type="checkbox" className="table-checkbox"
                       checked={selectedIndices.includes(i)}
@@ -381,9 +344,9 @@ const SizeTable = ({
                     <input
                       className={`${pulse.row === i && pulse.field === 'base' ? 'cell-pulse' : ''} ${shake.row === i && shake.field === 'base' ? 'cell-shake' : ''}`}
                       style={{ color: 'var(--accent)', fontWeight: 700 }}
-                      value={row.base || ''}
+                      value={previewCompare ? '' : (row.base || '')}
                       onChange={e => updateRow(i, 'base', e.target.value)}
-                      placeholder="0.0"
+                      placeholder={previewCompare ? '待导入' : '0.0'}
                     />
                   </td>
                   {compareRun && (() => {

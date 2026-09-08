@@ -275,3 +275,14 @@ progress_nodes 改为用户可自由增删改的节点列表，每个节点有 l
 
 - CSS 变量双套（:root 深色 + [data-theme="light"] 浅色），手动切换开关（跟随系统/浅色/深色）在设置页
 - **当前状态：用户搁置**（"关于主题的问题由于不影响系统稳定，暂时搁置"）——不主动改动其代码/样式，等待用户重新提起
+
+## 11. 技术经验（2026-09-08）
+
+- **Vite 文件监听与测试目录**：vite dev 默认监听项目根目录（vite.config.js 无 server.watch.ignored 时）。
+  E2E 测试若把浏览器用户数据目录（_chrome_*）放在项目根目录，Edge 运行中锁定 Sessions 文件，
+  Vite FSWatcher 报 `EBUSY: resource busy or locked` → 未捕获 error → Vite 进程崩 → 整个 dev 服务挂。
+  规范：① vite.config.js server.watch.ignored 忽略 `**/_*/**`、`**/_*.*`、附件/备份目录；② E2E userDataDir 一律放项目外（%TEMP%）。
+- **前端 E2E 断言规范**：断言"弹窗出现"必须校验可见性三要素——computed opacity === '1'、pointer-events === 'auto'、
+  elementFromPoint(按钮中心) 命中按钮本体；仅断言 overlay DOM 存在会漏检透明/穿透层缺陷（REQ-016 教训）。
+- **overlay 机制**：`.overlay` 默认 opacity:0 + pointer-events:none（REQ-006 侧边栏动画引入）；
+  任何弹窗复用 `.overlay` 时必须同时加 `.overlay-show`，否则不可见不可点。

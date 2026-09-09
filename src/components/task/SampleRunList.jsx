@@ -151,20 +151,18 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
           <div className="run-card-head">
             <div className="run-card-title">
               <span className="run-idx">#{idx + 1}</span>
-              <div style={{ width: 150 }}>
-                <SmartSelect
-                  value={r.sample_type || ''}
-                  onChange={v => patch(r.id, { sample_type: v })}
-                  options={settings.sampleTypes || []}
-                  placeholder="选择版次"
-                />
-              </div>
+              <SmartSelect
+                value={r.sample_type || ''}
+                onChange={v => patch(r.id, { sample_type: v })}
+                options={settings.sampleTypes || []}
+                placeholder="选择版次"
+              />
               <span className="run-status-dot" style={{ background: statusColor(r.status) }} />
               <select
                 className="run-status-select"
                 value={r.status}
                 onChange={e => patch(r.id, { status: e.target.value })}
-                style={{ color: statusColor(r.status) }}
+                style={{ '--sel-color': statusColor(r.status) }}
               >
                 {RUN_STATUS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select>
@@ -207,9 +205,10 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
             <div className="field">
               <label>审核状态</label>
               <select
+                className="audit-select"
                 value={r.audit_status || '未提交'}
                 onChange={e => patch(r.id, { audit_status: e.target.value })}
-                style={{ color: auditColor(r.audit_status || '未提交') }}
+                style={{ '--sel-color': auditColor(r.audit_status || '未提交') }}
               >
                 {AUDIT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -223,7 +222,6 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
               placeholder="本版次审版意见 / 修改点，可多行输入，各版次互不影响"
               onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, audit_comment: e.target.value } : x))}
               onBlur={e => patch(r.id, { audit_comment: e.target.value })}
-              style={{ width: '100%', resize: 'vertical', minHeight: 120, lineHeight: 1.6 }}
             />
           </div>
           <div className="field" style={{ marginTop: 8 }}>
@@ -248,9 +246,10 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
             <div className="field">
               <label>阻塞原因</label>
               <select
+                className="blocker-select"
                 value={r.blocker || 'none'}
                 onChange={e => patch(r.id, { blocker: e.target.value })}
-                style={r.blocker && r.blocker !== 'none' ? { color: '#f87171' } : undefined}
+                style={{ '--sel-color': r.blocker && r.blocker !== 'none' ? '#f87171' : 'var(--text)' }}
               >
                 {BLOCKERS.map(b => <option key={b.key} value={b.key}>{b.label}</option>)}
               </select>

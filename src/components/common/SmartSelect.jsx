@@ -17,7 +17,7 @@ const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择�
 
   return (
     <div className="smart-select" ref={ref}>
-      <div className="ss-display" onClick={() => setOpen(o => !o)}>
+      <div className={`ss-display${open ? ' open' : ''}`} onClick={() => setOpen(o => !o)}>
         <span className={value ? '' : 'placeholder'}>{value || placeholder}</span>
         <ChevronDown size={14} />
       </div>

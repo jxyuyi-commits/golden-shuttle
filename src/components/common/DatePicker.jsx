@@ -59,7 +59,7 @@ const DatePicker = ({ value, onChange, className, placeholder = '年/月/日', w
 
   return (
     <div className="dp-wrap" ref={wrapRef} style={{ width }}>
-      <div className={`dp-input${className ? ' ' + className : ''}`} onClick={openPicker}>
+      <div className={`dp-input${open ? ' open' : ''}${className ? ' ' + className : ''}`} onClick={openPicker}>
         <Calendar size={14} className="dp-icon" />
         <span className={value ? '' : 'dp-placeholder'}>{value ? value.replace(/-/g, '/') : placeholder}</span>
       </div>

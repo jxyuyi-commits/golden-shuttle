@@ -29,7 +29,7 @@
   --accent-text: #000000;
   --accent-btn: #38bdf8;
   --accent-btn-text: #06283d;
-  --accent-soft: rgba(56, 189, 248, 0.1);
+  --accent-soft: rgba(56, 189, 248, 0.14);
   --accent-soft-2: rgba(56, 189, 248, 0.22);
   --overlay: rgba(2, 6, 23, 0.6);
   --overlay-strong: rgba(2, 6, 23, 0.85);
@@ -61,8 +61,10 @@
   --input-bg-strong: #232327;
   --accent: AccentColor;
   --accent-text: AccentColorText;
-  --accent-soft: rgba(0, 110, 255, 0.14);
-  --accent-soft-2: rgba(0, 110, 255, 0.26);
+  --accent-btn: AccentColor;
+  --accent-btn-text: AccentColorText;
+  --accent-soft: rgba(0, 110, 255, 0.08);
+  --accent-soft-2: rgba(0, 110, 255, 0.16);
   --overlay: rgba(2, 6, 23, 0.6);
   --overlay-strong: rgba(2, 6, 23, 0.85);
   --scroll-thumb: rgba(148, 163, 184, 0.4);
@@ -92,11 +94,38 @@
   --input-bg-strong: #eef0f3;
   --accent: AccentColor;
   --accent-text: AccentColorText;
-  --accent-soft: rgba(0, 110, 255, 0.08);
-  --accent-soft-2: rgba(0, 110, 255, 0.16);
+  --accent-btn: AccentColor;
+  --accent-btn-text: AccentColorText;
+  --accent-soft: rgba(0, 110, 255, 0.06);
+  --accent-soft-2: rgba(0, 110, 255, 0.12);
   --overlay: rgba(15, 23, 42, 0.45);
   --overlay-strong: rgba(15, 23, 42, 0.6);
   --scroll-thumb: rgba(100, 116, 139, 0.4);
   --shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
   --card-bg: #ffffff;
+}
+
+/* 旧内核浏览器（豆包内置浏览器等）不支持 AccentColor/AccentColorText/CanvasText/Field 系统色：
+   回退为标准系统蓝/白/中性色，保证强调色、图标、文字、输入框始终可见（2026-09-09 用户实测） */
+@supports not (color: AccentColor) {
+  [data-theme="dark"] {
+    --accent: #0a84ff;
+    --accent-text: #ffffff;
+    --accent-btn: #0a84ff;
+    --accent-btn-text: #ffffff;
+  }
+  [data-theme="light"] {
+    --accent: #0a84ff;
+    --accent-text: #ffffff;
+    --accent-btn: #0a84ff;
+    --accent-btn-text: #ffffff;
+  }
+}
+@supports not (color: CanvasText) {
+  [data-theme="dark"] { --text: #f2f3f5; }
+  [data-theme="light"] { --text: #1a1a1a; }
+}
+@supports not (background: Field) {
+  [data-theme="dark"] { --input-bg: #2a2a2e; }
+  [data-theme="light"] { --input-bg: #ffffff; }
 }

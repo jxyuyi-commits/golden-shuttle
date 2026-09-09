@@ -602,7 +602,7 @@ body {
 }
 
 .template-item.active {
-  background: rgba(56, 189, 248, 0.1);
+  background: var(--accent-soft);
   color: var(--accent);
   font-weight: 600;
 }
@@ -693,7 +693,7 @@ body {
 }
 
 .side-nav-item.active {
-  background: rgba(56, 189, 248, 0.15);
+  background: var(--accent-soft);
   color: var(--accent);
   font-weight: 600;
 }
@@ -720,7 +720,7 @@ body {
 }
 
 .template-card.selected {
-  background: rgba(56, 189, 248, 0.15);
+  background: var(--accent-soft);
   border-color: var(--accent);
 }
 
@@ -873,7 +873,7 @@ body {
 }
 
 .sidebar-add button {
-  background: rgba(56, 189, 248, 0.15);
+  background: var(--accent-soft);
   border: none;
   border-radius: 6px;
   color: var(--accent);
@@ -883,7 +883,7 @@ body {
 }
 
 .sidebar-add button:hover {
-  background: rgba(56, 189, 248, 0.3);
+  background: var(--accent-soft);
 }
 
 .sidebar-list {
@@ -911,7 +911,7 @@ body {
 }
 
 .cat-item.active {
-  background: rgba(56, 189, 248, 0.15);
+  background: var(--accent-soft);
   color: var(--accent);
   font-weight: 600;
 }
@@ -1039,11 +1039,11 @@ body {
 /* 尺寸表增强交互样式 */
 @keyframes pulse-update {
   0% {
-    background: rgba(56, 189, 248, 0.2);
+    background: var(--accent-soft);
   }
 
   60% {
-    background: rgba(56, 189, 248, 0.05);
+    background: var(--accent-soft);
   }
 
   100% {
@@ -1091,8 +1091,8 @@ body {
 }
 
 .data-table input:focus {
-  background: rgba(56, 189, 248, 0.08) !important;
-  box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.3) !important;
+  background: var(--bg-hover) !important;
+  box-shadow: inset 0 0 0 1px var(--border-strong) !important;
 }
 
 /* 核心部位标签 */

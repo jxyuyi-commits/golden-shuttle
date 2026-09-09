@@ -7,7 +7,7 @@ const FIELDS = [
   'status', 'blocker', 'pattern_maker', 'sample_maker',
   'fabric_date', 'pattern_date', 'accessory_date', 'start_date', 'expected_date', 'finish_date',
   'note', 'sort_order', 'linked_drawing_ids',
-  'order_no', 'audit_status', 'audit_comment', 'size_data',
+  'audit_status', 'audit_comment', 'size_data',
 ];
 
 /** 批次状态枚举（板师手动推进） */
@@ -155,11 +155,12 @@ function create(taskId, d) {
   ).get(taskId);
   data.sort_order = (last?.m ?? -1) + 1;
   data.task_id = taskId;
+  // order_no 服务端只读：忽略客户端传入，始终按规则生成（PO-{款号}-V{max+1}，唯一索引兜底）
+  data.order_no = generateOrderNo(taskId);
   if (!data.status) data.status = 'waiting_material';
   if (!data.blocker) data.blocker = 'none';
   if (!data.priority) data.priority = '中';
   if (!data.sample_count) data.sample_count = 1;
-  if (!data.order_no) data.order_no = generateOrderNo(taskId);
   if (!data.audit_status) data.audit_status = '未提交';
   // REQ-005①：未显式传 size_data 时，按款品类从预设生成初始尺寸表
   if (!data.size_data && d.init_size_data) {

@@ -511,6 +511,13 @@ const migrations = [
       addColumnIfNotExists('sample_runs', 'pattern_date', "TEXT DEFAULT ''");
       addColumnIfNotExists('sample_runs', 'accessory_date', "TEXT DEFAULT ''");
     }
+  },
+  {
+    version: 19,
+    description: 'REQ-004 补强：sample_runs.order_no 唯一索引（服务端只读化配套，防重复单号；部分索引排除空串）',
+    up: () => {
+      db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_sample_runs_order_no ON sample_runs(order_no) WHERE order_no != ''");
+    }
   }
 ];
 

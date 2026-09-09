@@ -5,7 +5,7 @@ const { getDb } = require('../db.cjs');
 const FIELDS = [
   'sample_type', 'size', 'sample_color', 'sample_count', 'priority',
   'status', 'blocker', 'pattern_maker', 'sample_maker',
-  'fabric_date', 'start_date', 'expected_date', 'finish_date',
+  'fabric_date', 'pattern_date', 'accessory_date', 'start_date', 'expected_date', 'finish_date',
   'note', 'sort_order', 'linked_drawing_ids',
   'order_no', 'audit_status', 'audit_comment', 'size_data',
 ];

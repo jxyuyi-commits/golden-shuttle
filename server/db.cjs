@@ -503,6 +503,14 @@ const migrations = [
         );
       `);
     }
+  },
+  {
+    version: 18,
+    description: 'REQ-018 版次数据模型补全：sample_runs 加 pattern_date（纸样完成时间）、accessory_date（辅料到库时间），覆盖样衣制作全流程',
+    up: () => {
+      addColumnIfNotExists('sample_runs', 'pattern_date', "TEXT DEFAULT ''");
+      addColumnIfNotExists('sample_runs', 'accessory_date', "TEXT DEFAULT ''");
+    }
   }
 ];
 

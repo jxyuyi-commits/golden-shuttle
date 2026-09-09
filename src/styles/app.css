@@ -420,6 +420,24 @@
 .run-grid .field { margin: 0; }
 .run-grid .field label { font-size: 11px; margin-bottom: 3px; }
 .run-grid input, .run-grid select { font-size: 12.5px; padding: 6px 8px; }
+/* REQ-018 批次卡片 5 组分区标题 + 资料入口 */
+.run-section-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; color: var(--text-2);
+  margin: 14px 0 8px; padding-left: 8px;
+  border-left: 3px solid var(--accent);
+  letter-spacing: 0.5px;
+}
+.run-card > .run-section-title:first-of-type { margin-top: 4px; }
+.run-materials-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.run-material-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 6px; font-size: 12px;
+  color: var(--accent); background: var(--accent-soft);
+  border: 1px solid var(--accent-soft-2); cursor: pointer;
+  transition: all 0.15s;
+}
+.run-material-btn:hover { background: var(--accent-soft-2); }
 .run-add-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 9px; border: 1px dashed var(--accent-soft-2); border-radius: 10px;

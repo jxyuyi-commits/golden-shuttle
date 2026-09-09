@@ -7,7 +7,7 @@ import CategoryManager from './CategoryManager';
 import MeasurementTemplateManager from '../measurement/MeasurementTemplateManager';
 
 /** 系统设置视图：品牌库/人员预设/版次库 + 号型规格 + 款式分类 + 尺寸部位预设 + 外观主题(REQ-010) */
-const SettingsView = ({ settings, saveSetting, loadSettings, onOpenSidebar, themeMode = 'custom', onThemeModeChange }) => {
+const SettingsView = ({ settings, saveSetting, loadSettings, loadTasks, onOpenSidebar, themeMode = 'custom', onThemeModeChange }) => {
   return (
     <div className="custom-scrollbar" style={{ background: 'var(--bg)', height: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
       <header className="top-bar glass">
@@ -21,7 +21,8 @@ const SettingsView = ({ settings, saveSetting, loadSettings, onOpenSidebar, them
           <SettingListEditor label="品牌库" items={settings.brands || []}
             onChange={items => saveSetting('brands', items)} />
           <PeopleEditor people={settings.people || []}
-            onChange={items => saveSetting('people', items)} />
+            onChange={items => saveSetting('people', items)}
+            onRenamed={() => { loadSettings(); loadTasks?.(); }} />
           <SettingListEditor label="打样版次库" items={settings.sampleTypes || []}
             onChange={items => saveSetting('sampleTypes', items)} />
         </div>

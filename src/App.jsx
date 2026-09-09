@@ -326,6 +326,7 @@ const App = () => {
           settings={settings}
           saveSetting={saveSetting}
           loadSettings={loadSettings}
+          loadTasks={loadTasks}
           onOpenSidebar={() => setShowSidebar(true)}
           themeMode={themeMode}
           onThemeModeChange={setThemeMode}

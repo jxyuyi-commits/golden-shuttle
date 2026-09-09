@@ -50,6 +50,7 @@ function registerIpcHandlers() {
   // Settings
   ipcMain.handle('settings:getAll', () => settingsService.getAll());
   ipcMain.handle('settings:set', (_e, key, value) => settingsService.set(key, value));
+  ipcMain.handle('settings:renamePerson', (_e, oldName, newName) => settingsService.renamePerson(oldName, newName));
 
   // Size Groups
   ipcMain.handle('sizeGroups:list', () => sizeGroupService.list());

@@ -45,6 +45,8 @@ export const updateStyle = (id, data) => apiPut(`/api/styles/${id}`, data);
 /* ── 系统设置 Settings ── */
 export const fetchSettings = () => apiGet('/api/settings');
 export const saveSettings = (data) => apiPost('/api/settings', data);
+// REQ-019：人员改名（后端事务同步 styles.designer / 批次版师·样衣工引用）
+export const renamePerson = (oldName, newName) => apiPatch('/api/people/rename', { oldName, newName });
 
 /* ── 号型组 Size Groups ── */
 export const fetchSizeGroups = () => apiGet('/api/size-groups');

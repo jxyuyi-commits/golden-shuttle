@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('api', {
   settings: {
     getAll: () => ipcRenderer.invoke('settings:getAll'),
     set: (key, value) => ipcRenderer.invoke('settings:set', key, value),
+    renamePerson: (oldName, newName) => ipcRenderer.invoke('settings:renamePerson', oldName, newName),
   },
   sizeGroups: {
     list: () => ipcRenderer.invoke('sizeGroups:list'),

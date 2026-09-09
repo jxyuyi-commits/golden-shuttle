@@ -288,10 +288,14 @@
       .add-row-mini input:focus {border-color: var(--accent); }
       .btn-add-mini {background: var(--accent-btn); color: var(--accent-btn-text); border: none; border-radius: 6px; padding: 0 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-      /* 人员预设编辑器（REQ-006） */
+      /* 人员预设编辑器（REQ-006 / REQ-019 姓名可编辑） */
       .people-list {display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; margin-bottom: 6px; }
       .people-row {display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; background: var(--bg-panel); }
-      .people-name {font-size: 12.5px; font-weight: 700; color: var(--text); min-width: 76px; }
+      .people-name {font-size: 12.5px; font-weight: 700; color: var(--text); min-width: 76px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; padding: 1px 4px; margin-left: -4px; border-radius: 5px; }
+      .people-name:hover {background: var(--bg-hover); color: var(--accent); }
+      .people-name-pen {opacity: 0; transition: opacity 0.15s; }
+      .people-row:hover .people-name-pen {opacity: 0.6; }
+      .people-name-input {width: 84px; background: var(--input-bg); border: 1px solid var(--accent); color: var(--text); border-radius: 6px; padding: 2px 6px; font-size: 12px; font-weight: 700; outline: none; }
       .people-roles {display: flex; flex-wrap: wrap; gap: 4px; align-items: center; flex: 1; }
       .people-add-role {background: transparent; border: 1px dashed var(--border-strong); color: var(--text-3); font-size: 10.5px; border-radius: 6px; padding: 2px 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px; }
       .people-add-role:hover {color: var(--accent); border-color: var(--accent-soft-2); }

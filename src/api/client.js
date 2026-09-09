@@ -47,6 +47,8 @@ function ipcRequest(path, method, body) {
   // Settings
   if (method === 'GET' && path === '/api/settings') return api.settings.getAll();
   if (method === 'POST' && path === '/api/settings') return api.settings.set(body.key, body.value);
+  // REQ-019：人员改名（事务同步全站引用）
+  if (method === 'PATCH' && path === '/api/people/rename') return api.settings.renamePerson(body.oldName, body.newName);
 
   // Size Groups
   if (method === 'GET' && path === '/api/size-groups') return api.sizeGroups.list();

@@ -87,14 +87,15 @@ function renamePerson(oldName, newName) {
       }
     }
 
-    // 3. 同步款式设计师
+    // 3. 同步款式设计师 + 款级版师（styles.pattern_maker 为 REQ-015 上移字段，同样按姓名引用）
     const stylesRes = db.prepare('UPDATE styles SET designer = ? WHERE designer = ?').run(n, o);
+    const stylesPmRes = db.prepare('UPDATE styles SET pattern_maker = ? WHERE pattern_maker = ?').run(n, o);
 
     // 4. 同步批次版师 / 样衣工
     const pmRes = db.prepare('UPDATE sample_runs SET pattern_maker = ? WHERE pattern_maker = ?').run(n, o);
     const smRes = db.prepare('UPDATE sample_runs SET sample_maker = ? WHERE sample_maker = ?').run(n, o);
 
-    return { styles: stylesRes.changes, runs: pmRes.changes + smRes.changes };
+    return { styles: stylesRes.changes + stylesPmRes.changes, runs: pmRes.changes + smRes.changes };
   });
 
   const { styles, runs } = tx();

@@ -65,8 +65,8 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-  color: white;
+  background: var(--accent-btn);
+  color: var(--accent-btn-text);
   border: none;
   padding: 10px 20px;
   border-radius: 8px;
@@ -118,7 +118,6 @@ body {
   right: 0;
   height: 2px;
   background: var(--accent);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
 }
 
 /* 尺寸数据表格 */
@@ -1291,7 +1290,7 @@ body {
   font-size: 24px !important;
   font-weight: 950 !important;
   color: var(--accent) !important;
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+
   line-height: 1 !important;
   white-space: nowrap !important;
   letter-spacing: 0.5px !important;

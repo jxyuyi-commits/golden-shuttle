@@ -66,11 +66,11 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
                     border: '1px solid var(--border-strong)', transition: 'border-color .15s, box-shadow .15s',
                     background: 'var(--bg-elev)',
                     ...(isSelected
-                      ? { borderColor: 'var(--accent)', boxShadow: '0 0 0 2px rgba(56,189,248,0.18)' }
-                      : isCurrent ? { borderColor: 'rgba(56,189,248,0.55)' } : {}),
+                      ? { borderColor: 'var(--accent)', boxShadow: '0 0 0 2px var(--accent-soft-2)' }
+                      : isCurrent ? { borderColor: 'var(--accent-soft-2)' } : {}),
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = isSelected || isCurrent ? 'var(--accent)' : 'rgba(56,189,248,0.5)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = isSelected ? 'var(--accent)' : isCurrent ? 'rgba(56,189,248,0.55)' : 'var(--border-strong)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = isSelected || isCurrent ? 'var(--accent)' : 'var(--accent-soft-2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = isSelected ? 'var(--accent)' : isCurrent ? 'var(--accent-soft-2)' : 'var(--border-strong)'; }}
                 >
                   <div style={{ height: 130 }}>
                     <PdfThumb pdfUrl={d.url} interactive={false} />

@@ -81,7 +81,7 @@ body {
 
 /* ── 尺寸表与通用 UI 增强 ── */
 .glass {
-  background: rgba(30, 41, 59, 0.5);
+  background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
@@ -237,7 +237,7 @@ body {
 }
 
 .side-nav-item.active {
-  background: rgba(56, 189, 248, 0.1);
+  background: var(--accent-soft);
   color: var(--accent);
   border-right: 2px solid var(--accent);
 }
@@ -265,12 +265,12 @@ body {
 
 .template-card:hover {
   border-color: var(--accent);
-  background: rgba(56, 189, 248, 0.05);
+  background: var(--accent-soft);
 }
 
 .template-card.selected {
   border-color: var(--accent);
-  background: rgba(56, 189, 248, 0.1);
+  background: var(--accent-soft);
 }
 
 .card-title {
@@ -403,7 +403,7 @@ body {
 }
 
 .cat-item.active {
-  background: rgba(56, 189, 248, 0.1);
+  background: var(--accent-soft);
   color: var(--accent);
   font-weight: 600;
 }
@@ -715,8 +715,8 @@ body {
 }
 
 .template-card:hover {
-  background: rgba(56, 189, 248, 0.08);
-  border-color: rgba(56, 189, 248, 0.3);
+  background: var(--accent-soft);
+  border-color: var(--accent-soft-2);
 }
 
 .template-card.selected {
@@ -783,7 +783,7 @@ body {
 }
 
 .data-table tr.row-selected td {
-  background: rgba(56, 189, 248, 0.07);
+  background: var(--accent-soft);
 }
 
 .data-table input {

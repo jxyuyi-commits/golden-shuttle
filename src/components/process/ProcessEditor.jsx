@@ -126,7 +126,7 @@ const ProcessEditor = ({ taskId }) => {
 
   const thStyle = (w) => ({
     padding: '10px 8px', textAlign: 'left', fontSize: 12, color: 'var(--text-3)',
-    background: 'var(--bg-elev)', borderBottom: '2px solid rgba(56,189,248,0.15)',
+    background: 'var(--bg-elev)', borderBottom: '2px solid var(--border)',
     whiteSpace: 'nowrap', width: w, position: 'relative', minWidth: w
   });
   const tdStyle = (w) => ({ padding: 6, width: w, minWidth: w });

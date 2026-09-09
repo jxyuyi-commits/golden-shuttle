@@ -204,6 +204,7 @@ const browser = await puppeteer.launch({
 - git add 必须指定文件，禁止 `git add -A`（会误捡 _chrome_t* / _*.cjs / _test_upload.pdf 等测试残留）
 - **light-dark()/color-mix() 兼容性（2026-09-09 关键发现）**：用户实机浏览器（豆包内置浏览器）不支持这两个函数——系统深/浅主题下所有 `light-dark(a,b)` 变量失效→次要文字/边框/背景全无效→控件隐形（"按钮不见了""输入框空白"）。**theme.css 系统深/浅块必须写显式双值，禁止再用 light-dark()/color-mix()**。教训：E2E 用本机系统 Edge（支持新特性）断言"没问题"≠用户实机（旧内核）真实效果——浏览器特性兼容必须按用户真实环境内核验证，不能仅凭本机浏览器断言（用户已多次强调）
 - **AccentColor 系统色兼容（2026-09-09 第⑤轮）**：豆包内置浏览器连 `AccentColor/AccentColorText` 也不支持（logo 图标变黑不可见）。**正确写法：系统色变量加 @supports fallback**——`--accent: AccentColor;` 后跟 `@supports not (color: AccentColor) { [data-theme="dark"] { --accent: #0a84ff; ... } }`——支持系统色的浏览器零色差，旧内核回退标准系统蓝。CanvasText/Field 同理。**深浅主题强调色/主按钮=系统色，自定义主题才用品牌色**
+- **深浅主题中性化架构（2026-09-09 第⑥轮，REQ-010 最终形态）**：用户拍板深浅主题零蓝零发光后，dark/light 主题块不再引用 AccentColor（中文 Windows 系统强调色本身是蓝，与零蓝冲突），--accent 系直接写中性灰阶（dark #e6e8eb/白透明层、light #1f2329/黑透明层），主按钮 --accent-btn 深=浅底深字、浅=黑底白字；全站强调色只允许走 var(--accent)/--accent-btn/--accent-soft/--accent-soft-2 四个变量，硬编码蓝（#38bdf8/#7dd3fc/rgba(56,189,248,x) 等）一律视为 bug；发光感三处技术根因：①页面背景径向光晕用 --app-bg 变量隔离（自定义保留、深浅纯色）；②阴影错用 var(--input-bg) 在浅色主题下变白阴影（必须用 --shadow）；③毛玻璃 backdrop-filter 透出模糊光斑，深浅主题 .glass/.glass-card 覆盖为 var(--card-bg) 实色 + backdrop-filter:none。排查"发光/残留色"不能只扫 box-shadow/text-shadow，必须同时扫 radial-gradient、半透明背景、backdrop-filter、错用的浅色阴影变量，并以三主题全页真实浏览器截图目检为准。
 
 ## 8. 构建与打包
 

@@ -32,7 +32,7 @@ const TYPE_COLORS = {
   bmp: '#22c55e', svg: '#22c55e', avif: '#22c55e', tif: '#22c55e', tiff: '#22c55e',
   pdf: '#ef4444',
   dxf: '#f59e0b',
-  emf: '#0ea5e9',
+  emf: '#94a3b8',
   pla: '#a78bfa', prj: '#a78bfa', zprj: '#a78bfa', zpac: '#a78bfa',
 };
 const typeColor = (ext) => TYPE_COLORS[ext] || 'var(--text-3)';

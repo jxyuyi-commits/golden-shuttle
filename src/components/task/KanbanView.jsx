@@ -464,7 +464,7 @@ const KanbanView = ({
             <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, tableLayout: 'fixed' }} onClick={() => setActiveDropdown(null)}>
               <thead>
                 <tr>
-                  <th style={{ position: 'sticky', top: 0, left: 0, zIndex: 13, background: 'var(--bg-elev)', padding: '14px 10px', textAlign: 'center', fontSize: 13, color: 'var(--text-3)', width: 60, whiteSpace: 'nowrap', borderBottom: '2px solid rgba(56,189,248,0.15)' }}>
+                  <th style={{ position: 'sticky', top: 0, left: 0, zIndex: 13, background: 'var(--bg-elev)', padding: '14px 10px', textAlign: 'center', fontSize: 13, color: 'var(--text-3)', width: 60, whiteSpace: 'nowrap', borderBottom: '2px solid var(--border)' }}>
                     序号
                   </th>
                   {stickyCols.map(col => (
@@ -478,7 +478,7 @@ const KanbanView = ({
                         left: col.isSticky ? col.left : 'auto',
                         zIndex: col.isSticky ? 12 : 10,
                         background: 'var(--bg-elev)',
-                        borderBottom: '2px solid rgba(56,189,248,0.15)'
+                        borderBottom: '2px solid var(--border)'
                       }}
                       onClick={() => {
                         const isAsc = sortConfig.key === col.id && sortConfig.direction === 'asc';

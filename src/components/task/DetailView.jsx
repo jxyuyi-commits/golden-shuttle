@@ -337,7 +337,7 @@ const DetailView = ({
             {pdfSyncState && pdfSyncState.error && <div className="pdf-sync-tip err">同步失败：{pdfSyncState.error}</div>}
             <div
               className="pdf-upload-zone"
-              style={dragPdf ? { borderColor: 'rgba(56,189,248,0.75)', background: 'var(--accent-soft)' } : undefined}
+              style={dragPdf ? { borderColor: 'var(--accent)', background: 'var(--accent-soft)' } : undefined}
               onClick={() => { if (!task.pdf_url) pdfInputRef.current?.click(); }}
               onDragOver={e => { e.preventDefault(); e.stopPropagation(); if (!dragPdf) setDragPdf(true); }}
               onDragEnter={e => { e.preventDefault(); e.stopPropagation(); setDragPdf(true); }}
@@ -393,7 +393,7 @@ const DetailView = ({
 
               {dragPdf && (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--overlay-strong)', borderRadius: 12, zIndex: 5, pointerEvents: 'none' }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#7dd3fc', background: 'var(--overlay-strong)', padding: '12px 24px', borderRadius: 10, border: '1px dashed rgba(56,189,248,0.6)' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--accent)', background: 'var(--overlay-strong)', padding: '12px 24px', borderRadius: 10, border: '1px dashed rgba(56,189,248,0.6)' }}>
                     松开鼠标{task.pdf_url ? '更换' : '上传'}设计稿
                   </div>
                 </div>

@@ -36,6 +36,7 @@
   --scroll-thumb: rgba(148, 163, 184, 0.25);
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   --card-bg: rgba(15, 23, 42, 0.65);
+  --app-bg: radial-gradient(circle at top right, rgba(56,189,248,0.05), transparent 40%), radial-gradient(circle at bottom left, rgba(244,63,94,0.03), transparent 40%);
   color-scheme: dark;
 }
 
@@ -59,17 +60,18 @@
   --border-strong: rgba(255, 255, 255, 0.3);
   --input-bg: Field;
   --input-bg-strong: #232327;
-  --accent: AccentColor;
-  --accent-text: AccentColorText;
-  --accent-btn: AccentColor;
-  --accent-btn-text: AccentColorText;
-  --accent-soft: rgba(0, 110, 255, 0.08);
-  --accent-soft-2: rgba(0, 110, 255, 0.16);
+  --accent: #e6e8eb;
+  --accent-text: #1a1a1a;
+  --accent-btn: #e6e8eb;
+  --accent-btn-text: #1a1a1a;
+  --accent-soft: rgba(255, 255, 255, 0.1);
+  --accent-soft-2: rgba(255, 255, 255, 0.18);
   --overlay: rgba(2, 6, 23, 0.6);
   --overlay-strong: rgba(2, 6, 23, 0.85);
   --scroll-thumb: rgba(148, 163, 184, 0.4);
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   --card-bg: #1f1f23;
+  --app-bg: var(--bg);
 }
 
 /* 系统浅色：显式值（兼容不支持 light-dark() 的旧内核浏览器） */
@@ -92,35 +94,23 @@
   --border-strong: rgba(0, 0, 0, 0.26);
   --input-bg: Field;
   --input-bg-strong: #eef0f3;
-  --accent: AccentColor;
-  --accent-text: AccentColorText;
-  --accent-btn: AccentColor;
-  --accent-btn-text: AccentColorText;
-  --accent-soft: rgba(0, 110, 255, 0.06);
-  --accent-soft-2: rgba(0, 110, 255, 0.12);
+  --accent: #1f2329;
+  --accent-text: #ffffff;
+  --accent-btn: #1f2329;
+  --accent-btn-text: #ffffff;
+  --accent-soft: rgba(0, 0, 0, 0.06);
+  --accent-soft-2: rgba(0, 0, 0, 0.12);
   --overlay: rgba(15, 23, 42, 0.45);
   --overlay-strong: rgba(15, 23, 42, 0.6);
   --scroll-thumb: rgba(100, 116, 139, 0.4);
   --shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
   --card-bg: #ffffff;
+  --app-bg: var(--bg);
 }
 
-/* 旧内核浏览器（豆包内置浏览器等）不支持 AccentColor/AccentColorText/CanvasText/Field 系统色：
-   回退为标准系统蓝/白/中性色，保证强调色、图标、文字、输入框始终可见（2026-09-09 用户实测） */
-@supports not (color: AccentColor) {
-  [data-theme="dark"] {
-    --accent: #0a84ff;
-    --accent-text: #ffffff;
-    --accent-btn: #0a84ff;
-    --accent-btn-text: #ffffff;
-  }
-  [data-theme="light"] {
-    --accent: #0a84ff;
-    --accent-text: #ffffff;
-    --accent-btn: #0a84ff;
-    --accent-btn-text: #ffffff;
-  }
-}
+/* 旧内核浏览器（豆包内置浏览器等）不支持 CanvasText/Field 系统色：
+   回退为中性色，保证文字、输入框始终可见（2026-09-09 用户实测）。
+   深浅主题强调色一律中性灰阶（用户拍板：深浅主题零蓝色，不跟随系统 AccentColor） */
 @supports not (color: CanvasText) {
   [data-theme="dark"] { --text: #f2f3f5; }
   [data-theme="light"] { --text: #1a1a1a; }
@@ -128,4 +118,16 @@
 @supports not (background: Field) {
   [data-theme="dark"] { --input-bg: #2a2a2e; }
   [data-theme="light"] { --input-bg: #ffffff; }
+}
+
+/* 深浅主题零发光：毛玻璃改实色、去模糊（用户拍板：深浅主题不要发光感，2026-09-09） */
+[data-theme="dark"] .glass, [data-theme="light"] .glass {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--card-bg);
+}
+[data-theme="dark"] .glass-card, [data-theme="light"] .glass-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--card-bg);
 }

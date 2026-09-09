@@ -4,7 +4,7 @@ import { PEOPLE_ROLES } from '../../utils/people';
 import ConfirmModal from '../common/ConfirmModal';
 
 const roleColor = (r) => (
-  r === '设计师' ? 'rgba(56,189,248,0.18)'
+  r === '设计师' ? 'var(--accent-soft)'
   : r === '版师' ? 'rgba(167,139,250,0.18)'
   : r === '样衣工' ? 'rgba(52,211,153,0.18)'
   : 'var(--bg-hover)'

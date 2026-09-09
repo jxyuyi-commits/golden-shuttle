@@ -3,8 +3,10 @@
    2) 系统深（data-theme="dark"）：CSS 系统语义色（Canvas/CanvasText/Field/AccentColor）+ color-scheme: dark
    3) 系统浅（data-theme="light"）：同上 + color-scheme: light
    系统语义色由浏览器按 color-scheme 自动映射系统主题的真实颜色，与系统零色差（豆包同款逻辑）；
-   系统不提供的次要文字/边框/悬停/玻璃层用中性黑白色 light-dark()（中性叠加，非自定义色板）；
-   accent 跟随系统强调色 AccentColor，accent 上文字用 AccentColorText */
+   次要文字/边框/悬停/玻璃层用中性黑白叠加（非自定义色板）；
+   accent 跟随系统强调色 AccentColor，accent 上文字用 AccentColorText
+   注意：全部显式写两套值，不使用 light-dark()/color-mix()——旧内核浏览器（如豆包内置浏览器）
+   不支持这些函数会导致变量失效、控件隐形（2026-09-09 用户实测发现） */
 :root, [data-theme="custom"] {
   --bg: #020617;
   --bg-elev: #0f172a;
@@ -37,33 +39,64 @@
   color-scheme: dark;
 }
 
-[data-theme="dark"] { color-scheme: dark; }
-[data-theme="light"] { color-scheme: light; }
-[data-theme="dark"], [data-theme="light"] {
+/* 系统深色：显式值（兼容不支持 light-dark() 的旧内核浏览器） */
+[data-theme="dark"] {
+  color-scheme: dark;
   --bg: Canvas;
   --bg-elev: Canvas;
-  --bg-elev-2: light-dark(#eef0f3, #232327);
-  --glass-bg: light-dark(rgba(255, 255, 255, 0.85), rgba(31, 31, 35, 0.8));
-  --glass-bg-strong: light-dark(rgba(255, 255, 255, 0.95), rgba(31, 31, 35, 0.92));
-  --bg-panel: light-dark(rgba(0, 0, 0, 0.03), rgba(255, 255, 255, 0.04));
-  --bg-hover: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
-  --bg-hover-2: light-dark(rgba(0, 0, 0, 0.07), rgba(255, 255, 255, 0.08));
+  --bg-elev-2: #232327;
+  --glass-bg: rgba(31, 31, 35, 0.8);
+  --glass-bg-strong: rgba(31, 31, 35, 0.92);
+  --bg-panel: rgba(255, 255, 255, 0.06);
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-hover-2: rgba(255, 255, 255, 0.1);
   --text: CanvasText;
-  --text-2: light-dark(#4e5969, #9aa3b0);
-  --text-3: light-dark(#86909c, #6e7784);
-  --text-4: light-dark(#a9aeb8, #4e5663);
-  --border: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.12));
-  --border-weak: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.08));
-  --border-strong: light-dark(rgba(0, 0, 0, 0.18), rgba(255, 255, 255, 0.2));
+  --text-2: #b4bcc8;
+  --text-3: #8f99a6;
+  --text-4: #67707e;
+  --border: rgba(255, 255, 255, 0.18);
+  --border-weak: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.3);
   --input-bg: Field;
-  --input-bg-strong: light-dark(#eef0f3, #232327);
+  --input-bg-strong: #232327;
   --accent: AccentColor;
   --accent-text: AccentColorText;
-  --accent-soft: light-dark(color-mix(in srgb, AccentColor 8%, transparent), color-mix(in srgb, AccentColor 15%, transparent));
-  --accent-soft-2: light-dark(color-mix(in srgb, AccentColor 16%, transparent), color-mix(in srgb, AccentColor 28%, transparent));
-  --overlay: light-dark(rgba(15, 23, 42, 0.45), rgba(2, 6, 23, 0.6));
-  --overlay-strong: light-dark(rgba(15, 23, 42, 0.6), rgba(2, 6, 23, 0.85));
-  --scroll-thumb: light-dark(rgba(100, 116, 139, 0.3), rgba(148, 163, 184, 0.3));
-  --shadow: light-dark(0 8px 32px rgba(15, 23, 42, 0.12), 0 8px 32px rgba(0, 0, 0, 0.35));
-  --card-bg: light-dark(#ffffff, #1f1f23);
+  --accent-soft: rgba(0, 110, 255, 0.14);
+  --accent-soft-2: rgba(0, 110, 255, 0.26);
+  --overlay: rgba(2, 6, 23, 0.6);
+  --overlay-strong: rgba(2, 6, 23, 0.85);
+  --scroll-thumb: rgba(148, 163, 184, 0.4);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --card-bg: #1f1f23;
+}
+
+/* 系统浅色：显式值（兼容不支持 light-dark() 的旧内核浏览器） */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: Canvas;
+  --bg-elev: Canvas;
+  --bg-elev-2: #eef0f3;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg-strong: rgba(255, 255, 255, 0.95);
+  --bg-panel: rgba(0, 0, 0, 0.05);
+  --bg-hover: rgba(0, 0, 0, 0.06);
+  --bg-hover-2: rgba(0, 0, 0, 0.08);
+  --text: CanvasText;
+  --text-2: #3d4757;
+  --text-3: #5c6675;
+  --text-4: #8b92a0;
+  --border: rgba(0, 0, 0, 0.16);
+  --border-weak: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.26);
+  --input-bg: Field;
+  --input-bg-strong: #eef0f3;
+  --accent: AccentColor;
+  --accent-text: AccentColorText;
+  --accent-soft: rgba(0, 110, 255, 0.08);
+  --accent-soft-2: rgba(0, 110, 255, 0.16);
+  --overlay: rgba(15, 23, 42, 0.45);
+  --overlay-strong: rgba(15, 23, 42, 0.6);
+  --scroll-thumb: rgba(100, 116, 139, 0.4);
+  --shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
+  --card-bg: #ffffff;
 }

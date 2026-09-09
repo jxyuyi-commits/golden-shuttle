@@ -202,6 +202,7 @@ const browser = await puppeteer.launch({
 - Edit 工具对 CRLF 文件报 Native execution failed：先 PowerShell 转 LF 再 Edit
 - Vite dev server 已配 Cache-Control: no-store（src 热更新）
 - git add 必须指定文件，禁止 `git add -A`（会误捡 _chrome_t* / _*.cjs / _test_upload.pdf 等测试残留）
+- **light-dark()/color-mix() 兼容性（2026-09-09 关键发现）**：用户实机浏览器（豆包内置浏览器）不支持这两个函数——系统深/浅主题下所有 `light-dark(a,b)` 变量失效→次要文字/边框/背景全无效→控件隐形（"按钮不见了""输入框空白"）。**theme.css 系统深/浅块必须写显式双值，禁止再用 light-dark()/color-mix()**。教训：E2E 用本机系统 Edge（支持新特性）断言"没问题"≠用户实机（旧内核）真实效果——浏览器特性兼容必须按用户真实环境内核验证，不能仅凭本机浏览器断言（用户已多次强调）
 
 ## 8. 构建与打包
 

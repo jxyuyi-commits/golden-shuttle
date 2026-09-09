@@ -66,7 +66,7 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
                     border: '1px solid var(--border-strong)', transition: 'border-color .15s, box-shadow .15s',
                     background: 'var(--bg-elev)',
                     ...(isSelected
-                      ? { borderColor: 'var(--accent)', boxShadow: '0 0 0 2px rgba(56,189,248,0.55)' }
+                      ? { borderColor: 'var(--accent)', boxShadow: '0 0 0 2px rgba(56,189,248,0.18)' }
                       : isCurrent ? { borderColor: 'rgba(56,189,248,0.55)' } : {}),
                   }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = isSelected || isCurrent ? 'var(--accent)' : 'rgba(56,189,248,0.5)'; }}

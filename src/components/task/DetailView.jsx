@@ -193,7 +193,7 @@ const DetailView = ({
             className="btn-ghost-sm"
             onClick={() => setShowVersions(true)}
             title="历史版本：查看快照/对比/回滚"
-            style={{ color: 'var(--text-2)', border: '1px solid rgba(148,163,184,0.2)', padding: '6px 12px', borderRadius: 8 }}
+            style={{ color: 'var(--text-2)', border: '1px solid var(--border-weak)', padding: '6px 12px', borderRadius: 8 }}
           >
             <History size={14} /> 历史版本
           </button>

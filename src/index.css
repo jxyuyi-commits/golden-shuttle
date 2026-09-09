@@ -143,7 +143,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  background: rgba(15, 23, 42, 0.3);
+  background: var(--bg-panel);
 }
 
 .data-table th {
@@ -221,7 +221,7 @@ body {
   width: 200px;
   border-right: 1px solid var(--border);
   padding: 16px 0;
-  background: rgba(15, 23, 42, 0.2);
+  background: var(--bg-panel);
 }
 
 .side-nav-item {
@@ -775,7 +775,7 @@ body {
 }
 
 .data-table td {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-weak);
   padding: 4px 6px;
 }
 
@@ -852,14 +852,14 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--bg-elev);
 }
 
 .sidebar-add {
   display: flex;
   gap: 6px;
   padding: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-weak);
 }
 
 .sidebar-add input {
@@ -957,7 +957,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-weak);
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
@@ -980,7 +980,7 @@ body {
   font-size: 12px;
   color: var(--text-3);
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-weak);
   position: sticky;
   top: 0;
   background: rgba(15, 23, 42, 0.8);
@@ -988,7 +988,7 @@ body {
 
 .tpl-table td {
   padding: 8px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--border-weak);
   color: var(--text-2);
 }
 
@@ -1012,7 +1012,7 @@ body {
 }
 
 .row-ops button:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--bg-hover-2);
   color: var(--text);
 }
 
@@ -1236,7 +1236,7 @@ body {
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
-  background: rgba(2, 6, 23, 0.4) !important;
+  background: var(--bg-panel) !important;
   color: var(--text-3) !important;
   box-sizing: border-box !important;
 }

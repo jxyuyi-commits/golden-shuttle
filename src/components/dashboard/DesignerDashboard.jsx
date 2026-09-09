@@ -212,7 +212,7 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onOpenSidebar, onNewT
                             {topRun.sample_type ? `${topRun.sample_type}·${runMeta.label}` : runMeta.label}
                           </span>
                         ) : (
-                          <span className="dash-status-pill" style={{ background: 'rgba(100,116,139,0.15)', color: 'var(--text-3)', borderColor: 'rgba(100,116,139,0.3)' }}>无批次</span>
+                          <span className="dash-status-pill" style={{ background: 'var(--bg-hover)', color: 'var(--text-3)', borderColor: 'var(--border-weak)' }}>无批次</span>
                         )}
                       </td>
                       <td>{t.pattern_maker || topRun?.pattern_maker || '未分配'}</td>

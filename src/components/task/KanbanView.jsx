@@ -39,22 +39,45 @@ const taskTopPriority = (t) => {
 };
 
 /**
- * 逾期判定（基于 expected_date 期望交期）
+ * 逾期判定（REQ-022 权威口径：交期基准 = 最先进批次预期完成时间）
+ * 基准优先级：最先进批次 top_run.expected_date → 该款全部批次中最早的预期 → 款级 expected_date（旧数据兜底）→ 无则 none
+ * 完成判定：款级已完结（done/completed）或最先进批次已完成（done）→ 不算逾期
  * state: overdue(已逾期) / today(今日到期) / soon(3天内到期) / ok(正常) / none(无交期或已完结)
  */
 function getOverdueInfo(task) {
   if (task.status === 'done' || task.status === 'completed') return { state: 'none', days: 0 };
-  if (!task.expected_date) return { state: 'none', days: 0 };
-  const m = String(task.expected_date).match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-  if (!m) return { state: 'none', days: 0 };
+  if (task.top_run?.status === 'done') return { state: 'none', days: 0 };
+  let dueStr = task.top_run?.expected_date || '';
+  if (!dueStr && Array.isArray(task.runs) && task.runs.length) {
+    const dates = task.runs.map(r => r.expected_date).filter(Boolean).sort();
+    dueStr = dates[0] || '';
+  }
+  if (!dueStr) dueStr = task.expected_date || '';
+  if (!dueStr) return { state: 'none', days: 0, due: '' };
+  const m = String(dueStr).match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (!m) return { state: 'none', days: 0, due: dueStr };
   const due = new Date(+m[1], +m[2] - 1, +m[3]);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff = Math.round((today - due) / 86400000);
-  if (diff > 0) return { state: 'overdue', days: diff };
-  if (diff === 0) return { state: 'today', days: 0 };
-  if (diff >= -3) return { state: 'soon', days: -diff };
-  return { state: 'ok', days: 0 };
+  if (diff > 0) return { state: 'overdue', days: diff, due: dueStr };
+  if (diff === 0) return { state: 'today', days: 0, due: dueStr };
+  if (diff >= -3) return { state: 'soon', days: -diff, due: dueStr };
+  return { state: 'ok', days: 0, due: dueStr };
+}
+
+/** REQ-022 底部进度节点：从最先进批次真实数据派生（不再展示手填工作动态，与版次条同源 runs）
+ *  配料=面料到库 / 跟版=任务开始 / 版师=纸样完成（负责人=款级版师）/ 样衣=实际完工（负责人=批次样衣工）/ 工艺=无对应批次字段 */
+function buildRunNodes(task) {
+  const top = task.top_run;
+  const mk = (label, date, by) => ({ label, date: date || '', by: by || '', status: date ? 'done' : 'pending' });
+  return [
+    mk('配料', top?.fabric_date, ''),
+    mk('跟版', top?.start_date, ''),
+    mk('版师', top?.pattern_date, task.pattern_maker),
+    mk('样衣', top?.finish_date, top?.sample_maker),
+    mk('工艺', '', ''),
+  ];
 }
 
 /** 看板/列表双视图：筛选器 + 看板三列 + 任务卡片 + 可配置列表视图 */
@@ -353,13 +376,13 @@ const KanbanView = ({
                     return (
                     <div key={task.id} className="card glass bento-card" onClick={() => onTaskClick(task)} style={{ position: 'relative', ...(ov.state === 'overdue' ? { borderColor: 'rgba(239,68,68,0.55)' } : {}) }}>
                       {ov.state === 'overdue' && (
-                        <div className="bento-overdue-badge" title={`期望交期 ${task.expected_date}，已逾期`}>⚠ 逾期 {ov.days} 天</div>
+                        <div className="bento-overdue-badge" title={`期望交期 ${ov.due}（最先进批次），已逾期`}>⚠ 逾期 {ov.days} 天</div>
                       )}
                       {ov.state === 'today' && (
-                        <div className="bento-overdue-badge" style={{ background: 'rgba(245,158,11,0.92)' }} title="今日为期望交期">今日到期</div>
+                        <div className="bento-overdue-badge" style={{ background: 'rgba(245,158,11,0.92)' }} title="今日为期望交期（最先进批次）">今日到期</div>
                       )}
                       {ov.state === 'soon' && (
-                        <div className="bento-overdue-badge" style={{ background: 'rgba(234,179,8,0.85)' }} title={`期望交期 ${task.expected_date}`}>{ov.days} 天后到期</div>
+                        <div className="bento-overdue-badge" style={{ background: 'rgba(234,179,8,0.85)' }} title={`期望交期 ${ov.due}（最先进批次）`}>{ov.days} 天后到期</div>
                       )}
                       <div className="bento-upper">
                         <div className="bento-box bento-left">
@@ -417,19 +440,17 @@ const KanbanView = ({
                       <div className="bento-box bento-bottom">
                         <div className="bento-nodes">
                           {(() => {
-                            const nodes = (task.progress_nodes || []).filter(n => n.label || n.date);
-                            const visible = nodes.slice(0, 5);
-                            const hidden = nodes.length - visible.length;
+                            // REQ-022：底部节点=最先进批次真实数据（配料/跟版/版师/样衣/工艺），不再读手填工作动态
+                            const nodes = buildRunNodes(task);
                             return (
                               <>
-                                {visible.map((n, i) => (
-                                  <div key={i} className="bento-node-cell" title={`${n.label || ''}${n.by ? ' · 负责人:' + n.by : ''}${n.note ? ' · ' + n.note : ''}`}>
+                                {nodes.map((n, i) => (
+                                  <div key={i} className="bento-node-cell" title={`${n.label}${n.by ? ' · 负责人:' + n.by : ''}${n.date ? '' : ' · 未填'}`}>
                                     {getNodeIcon(n.status)}
-                                    <span className="bento-node-label">{n.label || '（未命名）'}</span>
+                                    <span className="bento-node-label">{n.label}</span>
                                     <span className="bento-node-date">{n.date || '--'}</span>
                                   </div>
                                 ))}
-                                {hidden > 0 && <span className="bento-node-more" title={`另有 ${hidden} 条工作动态`}>+{hidden}</span>}
                               </>
                             );
                           })()}

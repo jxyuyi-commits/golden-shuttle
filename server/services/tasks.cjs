@@ -92,9 +92,24 @@ function attachRuns(rows) {
     // REQ-004：单号/审核已下沉版次（v14），task 级字段清空；此处从最先进批次投影，
     // 保持看板卡片「版单/审核」行、列表列、导出等消费点展示"当前进行中批次"的信息。
     const topRun = findTopRun(runs);
+    // REQ-022 进度权威口径：最先进批次摘要投影（与 derived_status 同源 findTopRun），
+    // 供看板逾期判定/底部进度节点直接消费，保证「看板分组/逾期角标/进度节点/版次条」四处口径一致
+    const topRunInfo = topRun ? {
+      id: topRun.id,
+      sample_type: topRun.sample_type || '',
+      status: topRun.status || '',
+      expected_date: topRun.expected_date || '',
+      fabric_date: topRun.fabric_date || '',
+      start_date: topRun.start_date || '',
+      pattern_date: topRun.pattern_date || '',
+      finish_date: topRun.finish_date || '',
+      sample_maker: topRun.sample_maker || '',
+      audit_status: topRun.audit_status || '',
+    } : null;
     return {
       ...t,
       runs,
+      top_run: topRunInfo,
       derived_status: derived,
       derived_status_label: DERIVED_STATUS_LABEL[derived],
       sample_type: top?.sample_type || '',

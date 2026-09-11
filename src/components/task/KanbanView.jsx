@@ -129,6 +129,8 @@ const KanbanView = ({
     if (filters.sample_type && !taskRunTypes(t).includes(filters.sample_type)) return false;
     if (filters.designer && t.designer !== filters.designer) return false;
     if (filters.priority && taskTopPriority(t) !== filters.priority) return false;
+    // REQ-031 版次状态筛选：存在处于该状态的版次（与分栏口径解耦，存在性匹配）
+    if (filters.run_status && !taskRuns(t).some(r => r.status === filters.run_status)) return false;
     return true;
   });
 
@@ -316,6 +318,14 @@ const KanbanView = ({
             <option value="A">A</option>
             <option value="S">S</option>
           </select>
+          <select
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+            value={filters.run_status || ''}
+            onChange={e => setFilters({ ...filters, run_status: e.target.value })}
+          >
+            <option value="">全部版次状态</option>
+            {Object.entries(RUN_STATUS_META).map(([k, m]) => <option key={k} value={k}>{m.label}</option>)}
+          </select>
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
             {/* 导出当前筛选列表（确认 + 反馈） */}
@@ -452,7 +462,7 @@ const KanbanView = ({
         // REQ-024 重开：「全部」视图卡片直排自适应多列（grid auto-fill），顶部检索过滤照常叠加
         <div className="board custom-scrollbar" style={{
           flex: 1, overflow: 'auto', padding: '0 32px 32px',
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(500px, 1fr))', // REQ-032 卡片最小宽度 500px
           gap: 24, alignContent: 'start',
         }}>
           {filterTasks(tasks).map(task => renderBentoCard(task))}
@@ -468,7 +478,7 @@ const KanbanView = ({
               return true;
             });
             return (
-              <div key={col.id} className="col" style={{ width: 400, flex: '0 0 400px', boxSizing: 'border-box' }}>
+              <div key={col.id} className="col" style={{ width: 500, flex: '0 0 500px', boxSizing: 'border-box' }}>
                 <div className="col-title" style={{
                   position: 'sticky', top: 0, zIndex: 50,
                   background: 'var(--bg)', width: '100%',

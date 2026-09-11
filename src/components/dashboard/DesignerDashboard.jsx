@@ -4,10 +4,10 @@ import { Plus, Layout, BarChart3, PieChart, CheckCircle2, Clock, AlertCircle, XC
 // 款级聚合状态元数据（与后端 tasks.cjs DERIVED_STATUS_LABEL 一致）
 const STATUS_META = {
   not_started:      { label: '未开始', color: 'var(--text-3)' },
-  waiting_material: { label: '待配料', color: 'var(--text-2)' },
+  waiting_material: { label: '待安排', color: 'var(--text-2)' }, // REQ-030 改词
   pattern_making:   { label: '打版中', color: 'var(--accent)' },
   sample_making:    { label: '样衣中', color: '#fbbf24' },
-  pending_confirm:  { label: '待确认', color: '#a78bfa' },
+  pending_confirm:  { label: '待审版', color: '#a78bfa' }, // REQ-030 改词
   done:             { label: '已完成', color: '#4ade80' },
 };
 const STATUS_ORDER = ['not_started', 'waiting_material', 'pattern_making', 'sample_making', 'pending_confirm', 'done'];
@@ -76,8 +76,8 @@ const DesignerDashboard = ({ tasks, settings, onTaskClick, onOpenSidebar, onNewT
   const statCards = [
     { filterKey: 'all', label: '总款数', value: stats.total, icon: <BarChart3 size={22} />, color: 'var(--accent)' },
     { filterKey: 'inProgress', label: '进行中', value: stats.inProgress, icon: <Clock size={22} />, color: '#fbbf24' },
-    { filterKey: 'waiting', label: '待配料/未开始', value: stats.byStatus.waiting_material + stats.byStatus.not_started, icon: <AlertCircle size={22} />, color: 'var(--text-2)' },
-    { filterKey: 'pendingConfirm', label: '待确认', value: stats.byStatus.pending_confirm, icon: <XCircle size={22} />, color: '#a78bfa' },
+    { filterKey: 'waiting', label: '待安排/未开始', value: stats.byStatus.waiting_material + stats.byStatus.not_started, icon: <AlertCircle size={22} />, color: 'var(--text-2)' },
+    { filterKey: 'pendingConfirm', label: '待审版', value: stats.byStatus.pending_confirm, icon: <XCircle size={22} />, color: '#a78bfa' },
     { filterKey: 'done', label: '已完成(可下大货)', value: stats.doneCount, icon: <CheckCircle2 size={22} />, color: '#4ade80' },
   ];
 

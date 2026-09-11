@@ -8,10 +8,10 @@ import { peopleByRole } from '../../utils/people';
 
 // 批次状态（板师手动推进）
 export const RUN_STATUS = [
-  { key: 'waiting_material', label: '待配料', color: 'var(--text-2)' },
+  { key: 'waiting_material', label: '待安排', color: 'var(--text-2)' }, // REQ-030 改词
   { key: 'pattern_making', label: '打版中', color: 'var(--accent)' },
   { key: 'sample_making', label: '样衣中', color: '#fbbf24' },
-  { key: 'pending_confirm', label: '待确认', color: '#a78bfa' },
+  { key: 'pending_confirm', label: '待审版', color: '#a78bfa' }, // REQ-030 改词
   { key: 'done', label: '已完成', color: '#4ade80' },
 ];
 // 阻塞原因（独立字段）
@@ -22,7 +22,9 @@ const BLOCKERS = [
   { key: 'wait_tech', label: '待工艺单' },
   { key: 'other', label: '其他' },
 ];
-const PRIORITIES = ['低', '中', '高', '紧急'];
+const PRIORITIES = ['C', 'B', 'A', 'S']; // REQ-030 优先级四级（S 最高）
+// REQ-030 优先级值色：S 红 / A 橙 / B 品牌色 / C 中性
+const prioColor = (v) => v === 'S' ? '#f43f5e' : v === 'A' ? '#fb923c' : v === 'B' ? 'var(--accent)' : 'var(--text)';
 const AUDIT_STATUSES = ['未提交', '待审核', '已通过', '已驳回'];
 const auditColor = (s) => (s === '已通过' ? '#4ade80' : s === '已驳回' ? '#f87171' : s === '待审核' ? '#fbbf24' : 'var(--text-2)');
 const statusLabel = (k) => RUN_STATUS.find(s => s.key === k)?.label || k;
@@ -225,8 +227,9 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
             <div className="field">
               <label>优先级</label>
               <SmartSelect
-                value={r.priority || '中'}
+                value={r.priority || 'B'}
                 onChange={v => patch(r.id, { priority: v })}
+                style={{ '--sel-color': prioColor(r.priority) }}
                 options={PRIORITIES}
                 placeholder="选择优先级"
                 allowCustom={false}

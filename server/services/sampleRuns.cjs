@@ -164,7 +164,7 @@ function create(taskId, d) {
   data.order_no = generateOrderNo(taskId);
   if (!data.status) data.status = 'waiting_material';
   if (!data.blocker) data.blocker = 'none';
-  if (!data.priority) data.priority = '中';
+  if (!data.priority) data.priority = 'B'; // REQ-030 默认优先级改 B
   if (!data.sample_count) data.sample_count = 1;
   if (!data.audit_status) data.audit_status = '未提交';
   // REQ-005①：未显式传 size_data 时，按款品类从预设生成初始尺寸表

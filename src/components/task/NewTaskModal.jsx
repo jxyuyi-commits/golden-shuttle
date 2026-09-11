@@ -9,7 +9,7 @@ const STATUS_CN = { todo: '待处理', doing: '打版中', done: '已完结' };
 const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
   const [fd, setFd] = useState({
     title: '', style_no: '', category: '', brand: '', designer: '',
-    sample_type: '', sample_color: '', priority: '中', size: ''
+    sample_type: '', sample_color: '', priority: 'B', size: '' // REQ-030
   });
   const [loading, setLoading] = useState(false);
   const [isStyleFound, setIsStyleFound] = useState(false);
@@ -167,10 +167,10 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
             <div className="field">
               <label>优先级</label>
               <select value={fd.priority} onChange={e => setFd({ ...fd, priority: e.target.value })}>
-                <option value="低">低</option>
-                <option value="中">中</option>
-                <option value="高">高</option>
-                <option value="紧急">紧急</option>
+                <option value="C">C</option>
+                <option value="B">B</option>
+                <option value="A">A</option>
+                <option value="S">S</option>
               </select>
             </div>
           </div>

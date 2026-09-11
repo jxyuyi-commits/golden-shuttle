@@ -518,6 +518,15 @@ const migrations = [
     up: () => {
       db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_sample_runs_order_no ON sample_runs(order_no) WHERE order_no != ''");
     }
+  },
+  {
+    version: 20,
+    description: 'REQ-030 优先级体系替换：低/中/高/紧急 → C/B/A/S（存量迁移，S 最高）',
+    up: () => {
+      const map = "CASE priority WHEN '紧急' THEN 'S' WHEN '高' THEN 'A' WHEN '中' THEN 'B' WHEN '低' THEN 'C' ELSE priority END";
+      db.exec(`UPDATE sample_runs SET priority = ${map} WHERE priority IN ('紧急','高','中','低')`);
+      db.exec(`UPDATE tasks SET priority = ${map} WHERE priority IN ('紧急','高','中','低')`);
+    }
   }
 ];
 

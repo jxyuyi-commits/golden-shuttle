@@ -37,7 +37,7 @@ const TaskCard = ({ task, onClick }) => {
             <div className="bento-box bento-info">
               <div className="bento-order-no" title={task.order_no}>版单：{task.order_no || '—'}</div>
               <div className="bento-row" title={task.sample_type}><span>版次：</span><em>{task.sample_type || '—'}</em> {task.sample_color ? `(${task.sample_color})` : ''}</div>
-              <div className="bento-row" title={task.priority}><span>优先：</span><em className={`prio-${task.priority === '紧急' ? 'high' : task.priority === '高' ? 'mid' : 'low'}`}>{task.priority || '中'}</em></div>
+              <div className="bento-row" title={task.priority}><span>优先：</span><em className={`prio-${task.priority === 'S' ? 'high' : task.priority === '高' ? 'mid' : 'low'}`}>{task.priority || '中'}</em></div>
               <div className="bento-row" title={task.sample_count}><span>件数：</span>{task.sample_count ? `${task.sample_count}件` : ''} {task.size ? `${task.size}码` : ''}</div>
               <div className="bento-row" title={task.audit_status}><span>审核：</span><em className={`audit-${task.audit_status === '已通过' ? 'pass' : 'wait'}`}>{task.audit_status || '待审核'}</em></div>
             </div>

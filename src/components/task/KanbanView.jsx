@@ -16,13 +16,13 @@ const getNodeIcon = (status) => {
 
 // 版次批次状态元数据（与 SampleRunList / 后端 sampleRuns.cjs 保持一致）
 const RUN_STATUS_META = {
-  waiting_material: { label: '待配料', color: 'var(--text-2)' },
+  waiting_material: { label: '待安排', color: 'var(--text-2)' }, // REQ-030 改词
   pattern_making: { label: '打版中', color: 'var(--accent)' },
   sample_making: { label: '样衣中', color: '#fbbf24' },
-  pending_confirm: { label: '待确认', color: '#a78bfa' },
+  pending_confirm: { label: '待审版', color: '#a78bfa' }, // REQ-030 改词
   done: { label: '已完成', color: '#4ade80' },
 };
-const PRIO_RANK = { '紧急': 3, '高': 2, '中': 1, '低': 0 };
+const PRIO_RANK = { 'S': 3, 'A': 2, 'B': 1, 'C': 0 }; // REQ-030 优先级 S/A/B/C
 /** 取任务的批次列表（兼容迁移前旧字段，无 runs 时用 task 顶层字段拼一条） */
 const taskRuns = (t) => {
   if (Array.isArray(t.runs) && t.runs.length) return t.runs;
@@ -34,12 +34,12 @@ const taskRunTypes = (t) => [...new Set(taskRuns(t).map(r => r.sample_type).filt
 /** 任务的最高优先级（批次中取最高，兼容顶层字段） */
 const taskTopPriority = (t) => {
   const ps = taskRuns(t).map(r => r.priority).filter(Boolean);
-  if (!ps.length) return t.priority || '中';
+  if (!ps.length) return t.priority || 'B'; // REQ-030 默认 B
   return ps.sort((a, b) => (PRIO_RANK[b] ?? 1) - (PRIO_RANK[a] ?? 1))[0];
 };
 
 /** REQ-027：款级分栏口径 = 后端 derived_status（最新未完成版次，sort_order 最大）实时推导，不再依赖可能过期的 task.status
- *  done=全部批次已完成 / doing=最新版次打版中·样衣中·待确认 / todo=未开始·待配料·无批次 */
+ *  done=全部批次已完成 / doing=最新版次打版中·样衣中·待审版 / todo=未开始·待安排·无批次 */
 const derivedCol = (t) => {
   const d = t.derived_status;
   if (d === 'done') return 'done';
@@ -149,10 +149,10 @@ const KanbanView = ({
     }
     if (kanbanGroupBy === 'priority') {
       return [
-        { id: '紧急', name: '紧急', color: '#f43f5e' },
-        { id: '高', name: '高', color: '#fb923c' },
-        { id: '中', name: '中', color: 'var(--accent)' },
-        { id: '低', name: '低', color: 'var(--text-2)' }
+        { id: 'S', name: 'S', color: '#f43f5e' }, // REQ-030 四级
+        { id: 'A', name: 'A', color: '#fb923c' },
+        { id: 'B', name: 'B', color: 'var(--accent)' },
+        { id: 'C', name: 'C', color: 'var(--text-2)' }
       ];
     }
     if (kanbanGroupBy === 'overdue') {
@@ -226,7 +226,7 @@ const KanbanView = ({
                     </>
                   );
                 })()}
-                <div className="bento-row"><span>优先：</span><em className={`prio-${taskTopPriority(task) === '紧急' ? 'high' : taskTopPriority(task) === '高' ? 'mid' : 'low'}`}>{taskTopPriority(task)}</em></div>
+                <div className="bento-row"><span>优先：</span><em className={`prio-${taskTopPriority(task) === 'S' ? 'high' : taskTopPriority(task) === 'A' ? 'mid' : 'low'}`}>{taskTopPriority(task)}</em></div>
                 <div className="bento-row" title={task.audit_status}><span>审核：</span><em className={`audit-${task.audit_status === '已通过' ? 'pass' : 'wait'}`}>{task.audit_status || '待审核'}</em></div>
               </div>
             </div>
@@ -311,10 +311,10 @@ const KanbanView = ({
             onChange={e => setFilters({ ...filters, priority: e.target.value })}
           >
             <option value="">全部优先级</option>
-            <option value="低">低</option>
-            <option value="中">中</option>
-            <option value="高">高</option>
-            <option value="紧急">紧急</option>
+            <option value="C">C</option>
+            <option value="B">B</option>
+            <option value="A">A</option>
+            <option value="S">S</option>
           </select>
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -360,7 +360,7 @@ const KanbanView = ({
                 <option value="all">关注点：全部</option>
                 <option value="status">关注点：任务状态</option>
                 <option value="sample_type">关注点：版次进度</option>
-                <option value="priority">关注点：紧急程度</option>
+                <option value="priority">关注点：优先级</option>
                 <option value="overdue">关注点：逾期情况</option>
               </select>
             )}
@@ -569,7 +569,7 @@ const KanbanView = ({
                           ) : col.id === 'action' ? (
                             <button className="btn-blue-sm" style={{ padding: '6px 16px' }} onClick={(e) => { e.stopPropagation(); onTaskClick(task); }}>详情</button>
                           ) : col.id === 'priority' ? (
-                            <span className={`prio-${taskTopPriority(task) === '紧急' ? 'high' : taskTopPriority(task) === '高' ? 'mid' : 'low'}`} style={{ fontSize: 11, fontWeight: 700 }}>
+                            <span className={`prio-${taskTopPriority(task) === 'S' ? 'high' : taskTopPriority(task) === 'A' ? 'mid' : 'low'}`} style={{ fontSize: 11, fontWeight: 700 }}>
                               {taskTopPriority(task)}
                             </span>
                           ) : col.id === 'status_text' ? (

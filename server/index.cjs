@@ -16,6 +16,7 @@ const { registerDrawingRoutes } = require('./routes/drawings.cjs');
 const { registerThumbRoutes } = require('./routes/thumbs.cjs');
 const { registerSampleRunRoutes } = require('./routes/sampleRuns.cjs');
 const { registerVersionRoutes } = require('./routes/versions.cjs');
+const { recalcAllTaskStatus } = require('./services/tasks.cjs');
 
 const app = express();
 const port = 3001;
@@ -52,6 +53,9 @@ app.use((req, res, next) => {
 function startServer(overridePort, dbPath, uploadsPath) {
   // 初始化数据库和文件目录
   initDatabase(dbPath, uploadsPath);
+
+  // REQ-025：存量款级状态按新口径（完成=全部批次已完成）重算归位，幂等
+  try { recalcAllTaskStatus(); console.log('[REQ-025] 款级状态已按新口径重算'); } catch (e) { console.log('[REQ-025] 重算跳过: ' + e.message); }
 
   // 注册所有路由
   registerStyleRoutes(app);

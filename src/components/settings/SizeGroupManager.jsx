@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Edit2, Trash2, Plus } from 'lucide-react';
-import { saveSizeGroups, deleteSizeGroup } from '../../api';
+import { saveSizeGroups, updateSizeGroup, deleteSizeGroup } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
 
 /** 号型规格系列管理（列表 + 新增/编辑弹窗） */
@@ -11,7 +11,9 @@ const SizeGroupManager = ({ groups, onChange }) => {
 
   const save = async () => {
     if (!editing.name || !editing.size_list) return;
-    await saveSizeGroups(editing);
+    // REQ-023：编辑（带 id）走 PATCH 更新原系列，新增（无 id）才 POST
+    if (editing.id) await updateSizeGroup(editing.id, editing);
+    else await saveSizeGroups(editing);
     setEditing(null);
     onChange();
   };

@@ -38,15 +38,24 @@ const taskTopPriority = (t) => {
   return ps.sort((a, b) => (PRIO_RANK[b] ?? 1) - (PRIO_RANK[a] ?? 1))[0];
 };
 
+/** REQ-025：款级分栏口径 = 后端 derived_status（最先进未完成批次）实时推导，不再依赖可能过期的 task.status
+ *  done=全部批次已完成 / doing=有批次打版中·样衣中·待确认 / todo=未开始·待配料·无批次 */
+const derivedCol = (t) => {
+  const d = t.derived_status;
+  if (d === 'done') return 'done';
+  if (d === 'pattern_making' || d === 'sample_making' || d === 'pending_confirm') return 'doing';
+  return 'todo';
+};
+
 /**
  * 逾期判定（REQ-022 权威口径：交期基准 = 最先进批次预期完成时间）
  * 基准优先级：最先进批次 top_run.expected_date → 该款全部批次中最早的预期 → 款级 expected_date（旧数据兜底）→ 无则 none
- * 完成判定：款级已完结（done/completed）或最先进批次已完成（done）→ 不算逾期
+ * 完成判定（REQ-025）：款级 derived_status=done（全部批次已完成）→ 不算逾期
  * state: overdue(已逾期) / today(今日到期) / soon(3天内到期) / ok(正常) / none(无交期或已完结)
  */
 function getOverdueInfo(task) {
   if (task.status === 'done' || task.status === 'completed') return { state: 'none', days: 0 };
-  if (task.top_run?.status === 'done') return { state: 'none', days: 0 };
+  if (task.derived_status === 'done') return { state: 'none', days: 0 };
   let dueStr = task.top_run?.expected_date || '';
   if (!dueStr && Array.isArray(task.runs) && task.runs.length) {
     const dates = task.runs.map(r => r.expected_date).filter(Boolean).sort();
@@ -124,6 +133,9 @@ const KanbanView = ({
   });
 
   const getActiveCols = () => {
+    if (kanbanGroupBy === 'all') {
+      return [{ id: 'all', name: '全部', color: 'var(--accent)' }];
+    }
     if (kanbanGroupBy === 'status') {
       return [
         { id: 'todo', name: '待处理', color: 'var(--text-2)' },
@@ -257,6 +269,7 @@ const KanbanView = ({
                 value={kanbanGroupBy}
                 onChange={e => setKanbanGroupBy(e.target.value)}
               >
+                <option value="all">关注点：全部</option>
                 <option value="status">关注点：任务状态</option>
                 <option value="sample_type">关注点：版次进度</option>
                 <option value="priority">关注点：紧急程度</option>
@@ -351,7 +364,8 @@ const KanbanView = ({
         <div className="board custom-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '0 32px 32px' }}>
           {getActiveCols().map(col => {
             const colTasks = filterTasks(tasks).filter(t => {
-              if (kanbanGroupBy === 'status' && normalizeStatus(t.status) !== col.id) return false;
+              if (kanbanGroupBy === 'all') return true; // REQ-024 全部视图：单栏不过滤
+              if (kanbanGroupBy === 'status' && derivedCol(t) !== col.id) return false;
               if (kanbanGroupBy === 'sample_type' && !taskRunTypes(t).includes(col.id)) return false;
               if (kanbanGroupBy === 'priority' && taskTopPriority(t) !== col.id) return false;
               if (kanbanGroupBy === 'overdue' && (getOverdueInfo(t).state === 'none' ? 'none' : getOverdueInfo(t).state) !== col.id) return false;
@@ -551,8 +565,8 @@ const KanbanView = ({
                             </span>
                           ) : col.id === 'status_text' ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span className="dot" style={{ background: task.status === 'done' ? '#4ade80' : task.status === 'doing' ? 'var(--accent)' : 'var(--text-2)' }} />
-                              {task.status === 'done' ? '已完结' : task.status === 'doing' ? '打版中' : '待处理'}
+                              <span className="dot" style={{ background: derivedCol(task) === 'done' ? '#4ade80' : derivedCol(task) === 'doing' ? 'var(--accent)' : 'var(--text-2)' }} />
+                              {derivedCol(task) === 'done' ? '已完结' : derivedCol(task) === 'doing' ? '打版中' : '待处理'}
                             </div>
                           ) : col.id === 'created_at' || col.id === 'updated_at' || col.id.endsWith('_date') ? (
                             task[col.id] ? new Date(task[col.id]).toLocaleDateString() : '—'

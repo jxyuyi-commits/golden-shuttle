@@ -51,6 +51,8 @@ export const renamePerson = (oldName, newName) => apiPatch('/api/people/rename',
 /* ── 号型组 Size Groups ── */
 export const fetchSizeGroups = () => apiGet('/api/size-groups');
 export const saveSizeGroups = (data) => apiPost('/api/size-groups', data);
+// REQ-023：编辑号型系列走更新语义（原实现永远 POST 导致「编辑变新增」重复行）
+export const updateSizeGroup = (id, data) => apiPatch(`/api/size-groups/${id}`, data);
 export const deleteSizeGroup = (id) => apiDelete(`/api/size-groups/${id}`);
 
 /* ── 尺寸部位预设 Measurement Templates ── */

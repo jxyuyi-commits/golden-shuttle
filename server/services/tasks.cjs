@@ -55,24 +55,42 @@ const DERIVED_STATUS_LABEL = {
   sample_making: '样衣中', pending_confirm: '待确认', done: '已完成',
 };
 
-/** 从批次列表推导款级状态：取最先进（优先级最高）批次的状态；无批次为未开始 */
+/**
+ * 从批次列表推导款级状态（REQ-025 修正口径：完成 = 全部批次已完成）
+ * 任一批次未完成 → 取未完成批次中最先进（rank 最大）的状态；无批次为未开始
+ */
 function deriveStyleStatus(runs) {
   if (!runs || !runs.length) return 'not_started';
+  const active = runs.filter(r => r.status !== 'done');
+  if (!active.length) return 'done';
   let best = 'waiting_material';
-  for (const r of runs) {
+  for (const r of active) {
     if ((RUN_STATUS_RANK[r.status] ?? 0) > (RUN_STATUS_RANK[best] ?? 0)) best = r.status;
   }
   return best;
 }
 
-/** 取最先进批次对象（与 deriveStyleStatus 同口径）；无批次返回 null */
+/**
+ * 取「当前进行中批次」对象：未完成批次中最先进（与 deriveStyleStatus 同口径）
+ * 全部已完成或无批次返回 null（REQ-025：已完结款不再投影版单/审核，避免进行中款错取完成批次）
+ */
 function findTopRun(runs) {
   if (!runs || !runs.length) return null;
-  let top = runs[0];
-  for (const r of runs) {
+  const active = runs.filter(r => r.status !== 'done');
+  const pool = active.length ? active : runs;
+  let top = pool[0];
+  for (const r of pool) {
     if ((RUN_STATUS_RANK[r.status] ?? 0) > (RUN_STATUS_RANK[top.status] ?? 0)) top = r;
   }
   return top;
+}
+
+/** REQ-025 存量款级状态重算：全部打样单按新口径重算 tasks.status（幂等，启动时调用一次） */
+function recalcAllTaskStatus() {
+  const db = getDb();
+  const ids = db.prepare('SELECT id FROM tasks').all();
+  for (const t of ids) syncTaskStatus(t.id);
+  return ids.length;
 }
 
 /** 给任务行附带其全部版次批次（sample_runs），一次查询按 task_id 分组避免 N+1；
@@ -351,4 +369,4 @@ function remove(id) {
   return { success: true };
 }
 
-module.exports = { list, get, versions, create, update, remove, logAction, listLogs };
+module.exports = { list, get, versions, create, update, remove, logAction, listLogs, recalcAllTaskStatus };

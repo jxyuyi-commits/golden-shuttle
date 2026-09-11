@@ -209,7 +209,7 @@
 
       /* SmartSelect（REQ-020 对齐表单基线 + 打开态聚焦 ring） */
       .smart-select {position: relative; }
-      .ss-display {display: flex; align-items: center; justify-content: space-between; background: var(--input-bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--text); min-height: 36px; box-sizing: border-box; transition: border-color .2s, box-shadow .2s; }
+      .ss-display {display: flex; align-items: center; justify-content: space-between; background: var(--input-bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--sel-color, var(--text)); min-height: 36px; box-sizing: border-box; transition: border-color .2s, box-shadow .2s; }
       .ss-display:hover {border-color: var(--accent-soft-2); }
       .ss-display.open {border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
       .ss-display .placeholder { color: var(--text-4); }
@@ -408,16 +408,10 @@
 .run-card-title { display: flex; align-items: center; gap: 8px; }
 .run-idx { font-size: 12px; font-weight: 700; color: var(--text-2); }
 .run-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
-.run-status-select {
-  width: auto !important; min-width: 96px; font-weight: 600; font-size: 12.5px;
-  background: var(--bg-hover);
-  color: var(--sel-color, var(--text));
-}
-/* REQ-020 宽度策略：卡片头紧凑区 SmartSelect 统一 min-width（替代原外包固定 150px div） */
+/* REQ-020 宽度策略：卡片头紧凑区 SmartSelect 统一 min-width（替代原外包固定 150px div）；
+   状态 SmartSelect 内容短，收窄至 96px（外观与版次一致，仅宽度适配） */
 .run-card-title .smart-select { min-width: 140px; flex: none; }
-/* REQ-020 值色走 CSS 变量（--sel-color 由组件计算注入），不直接内联色值 */
-.field select.audit-select { color: var(--sel-color, var(--text)); }
-.field select.blocker-select { color: var(--sel-color, var(--text)); }
+.run-card-title .smart-select.run-status-ss { min-width: 96px; }
 .run-spin { color: var(--accent); animation: run-rotate 1s linear infinite; }
 @keyframes run-rotate { to { transform: rotate(360deg); } }
 .run-del-btn {

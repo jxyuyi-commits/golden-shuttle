@@ -158,14 +158,15 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
                 placeholder="选择版次"
               />
               <span className="run-status-dot" style={{ background: statusColor(r.status) }} />
-              <select
-                className="run-status-select"
+              <SmartSelect
+                className="run-status-ss"
                 value={r.status}
-                onChange={e => patch(r.id, { status: e.target.value })}
+                onChange={v => patch(r.id, { status: v })}
+                options={RUN_STATUS}
+                placeholder="选择状态"
+                allowCustom={false}
                 style={{ '--sel-color': statusColor(r.status) }}
-              >
-                {RUN_STATUS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-              </select>
+              />
               {savingId === r.id && <Loader2 size={13} className="run-spin" />}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -180,10 +181,13 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
           <div className="run-grid">
             <div className="field">
               <label>尺码</label>
-              <select value={r.size || ''} onChange={e => patch(r.id, { size: e.target.value })}>
-                <option value="">选择尺码</option>
-                {getSizeList().map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <SmartSelect
+                value={r.size || ''}
+                onChange={v => patch(r.id, { size: v })}
+                options={getSizeList()}
+                placeholder="选择尺码"
+                allowCustom={false}
+              />
             </div>
             <div className="field">
               <label>样衣颜色</label>
@@ -204,34 +208,15 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
             </div>
             <div className="field">
               <label>审核状态</label>
-              <select
-                className="audit-select"
+              <SmartSelect
                 value={r.audit_status || '未提交'}
-                onChange={e => patch(r.id, { audit_status: e.target.value })}
+                onChange={v => patch(r.id, { audit_status: v })}
+                options={AUDIT_STATUSES}
+                placeholder="选择审核状态"
+                allowCustom={false}
                 style={{ '--sel-color': auditColor(r.audit_status || '未提交') }}
-              >
-                {AUDIT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+              />
             </div>
-          </div>
-          <div className="field" style={{ marginTop: 10 }}>
-            <label>审版意见（各版次独立）</label>
-            <textarea
-              rows={5}
-              value={r.audit_comment || ''}
-              placeholder="本版次审版意见 / 修改点，可多行输入，各版次互不影响"
-              onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, audit_comment: e.target.value } : x))}
-              onBlur={e => patch(r.id, { audit_comment: e.target.value })}
-            />
-          </div>
-          <div className="field" style={{ marginTop: 8 }}>
-            <label>批次备注</label>
-            <input
-              value={r.note || ''}
-              placeholder="本批次的特殊说明"
-              onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, note: e.target.value } : x))}
-              onBlur={e => patch(r.id, { note: e.target.value })}
-            />
           </div>
 
           {/* ② 进度：当前状态在卡片头，以下为优先级/阻塞原因/任务开始 */}
@@ -239,20 +224,24 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
           <div className="run-grid">
             <div className="field">
               <label>优先级</label>
-              <select value={r.priority || '中'} onChange={e => patch(r.id, { priority: e.target.value })}>
-                {PRIORITIES.map(p => <option key={p}>{p}</option>)}
-              </select>
+              <SmartSelect
+                value={r.priority || '中'}
+                onChange={v => patch(r.id, { priority: v })}
+                options={PRIORITIES}
+                placeholder="选择优先级"
+                allowCustom={false}
+              />
             </div>
             <div className="field">
               <label>阻塞原因</label>
-              <select
-                className="blocker-select"
+              <SmartSelect
                 value={r.blocker || 'none'}
-                onChange={e => patch(r.id, { blocker: e.target.value })}
+                onChange={v => patch(r.id, { blocker: v })}
+                options={BLOCKERS}
+                placeholder="选择阻塞原因"
+                allowCustom={false}
                 style={{ '--sel-color': r.blocker && r.blocker !== 'none' ? '#f87171' : 'var(--text)' }}
-              >
-                {BLOCKERS.map(b => <option key={b.key} value={b.key}>{b.label}</option>)}
-              </select>
+              />
             </div>
             <div className="field"><label>任务开始</label><DatePicker value={r.start_date || ''} onChange={v => patch(r.id, { start_date: v })} /></div>
           </div>
@@ -298,6 +287,27 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
             <button type="button" className="run-material-btn" onClick={() => onOpenDrawings?.()} title="查看本款图纸资料（纸样/唛架）">
               <FileText size={13} /> 纸样
             </button>
+          </div>
+
+          {/* REQ-021：审版意见 / 批次备注下移模块底部（收尾字段，位于资料入口之后、绑定资料版本之前） */}
+          <div className="field" style={{ marginTop: 10 }}>
+            <label>审版意见（各版次独立）</label>
+            <textarea
+              rows={5}
+              value={r.audit_comment || ''}
+              placeholder="本版次审版意见 / 修改点，可多行输入，各版次互不影响"
+              onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, audit_comment: e.target.value } : x))}
+              onBlur={e => patch(r.id, { audit_comment: e.target.value })}
+            />
+          </div>
+          <div className="field" style={{ marginTop: 8 }}>
+            <label>批次备注</label>
+            <input
+              value={r.note || ''}
+              placeholder="本批次的特殊说明"
+              onChange={e => setRuns(prev => prev.map(x => x.id === r.id ? { ...x, note: e.target.value } : x))}
+              onBlur={e => patch(r.id, { note: e.target.value })}
+            />
           </div>
 
           {/* 绑定资料版本 */}

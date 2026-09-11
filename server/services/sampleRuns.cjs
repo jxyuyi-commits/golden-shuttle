@@ -56,14 +56,14 @@ const TASK_STATUS_MAP = {
 };
 
 /**
- * 款级状态自动同步：从该款全部批次推导聚合状态（REQ-025 口径：完成=全部批次已完成，
- * 否则取未完成批次中最先进），映射为看板列 todo/doing/done 并写回 tasks.status。
+ * 款级状态自动同步：从该款全部批次推导聚合状态（REQ-027 口径：完成=全部批次已完成，
+ * 否则取未完成批次中 sort_order 最大者=最新版次的状态），映射为看板列 todo/doing/done 并写回 tasks.status。
  * 批次是权威数据源，款级看板列不再手动维护。
  */
 function syncTaskStatus(taskId) {
   try {
     const db = getDb();
-    const runs = db.prepare('SELECT status FROM sample_runs WHERE task_id = ?').all(taskId);
+    const runs = db.prepare('SELECT status, sort_order FROM sample_runs WHERE task_id = ?').all(taskId);
     let derived;
     if (!runs.length) {
       derived = 'not_started';
@@ -72,11 +72,11 @@ function syncTaskStatus(taskId) {
       if (!active.length) {
         derived = 'done';
       } else {
-        let best = 'waiting_material';
+        let latest = active[0];
         for (const r of active) {
-          if ((RUN_STATUS_RANK[r.status] ?? 0) > (RUN_STATUS_RANK[best] ?? 0)) best = r.status;
+          if ((r.sort_order ?? 0) > (latest.sort_order ?? 0)) latest = r;
         }
-        derived = best;
+        derived = latest.status;
       }
     }
     const status = TASK_STATUS_MAP[derived] || 'todo';

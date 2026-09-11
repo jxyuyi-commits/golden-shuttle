@@ -108,7 +108,7 @@
       .col-title {display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; color: var(--text); }
       .dot {width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
       .badge {margin-left: auto; background: var(--bg-hover-2); padding: 2px 10px; border-radius: 20px; font-size: 12px; color: var(--text-2); }
-      .col-body {padding-right: 4px; }
+      .col-body { }
       .col-body::-webkit-scrollbar {width: 4px; } .col-body::-webkit-scrollbar-thumb {background: var(--bg-hover-2); border-radius: 4px; }
 
       /* 任务卡片 */

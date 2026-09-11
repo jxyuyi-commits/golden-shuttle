@@ -56,31 +56,33 @@ const DERIVED_STATUS_LABEL = {
 };
 
 /**
- * 从批次列表推导款级状态（REQ-025 修正口径：完成 = 全部批次已完成）
- * 任一批次未完成 → 取未完成批次中最先进（rank 最大）的状态；无批次为未开始
+ * 从批次列表推导款级状态（REQ-027 修正口径：当前进度 = 最新版次）
+ * 完成 = 全部批次已完成（done）；任一批次未完成 → 取未完成批次中 sort_order 最大者（最新版次）的状态。
+ * 业务依据：开新版次（复版一/复版二等）意味着从头重做，旧版次的样衣中/打版中是历史进度，
+ * 不代表当前在干什么——26AWW526 复版一待配料 → 当前进度=待配料（待处理列）。
  */
 function deriveStyleStatus(runs) {
   if (!runs || !runs.length) return 'not_started';
   const active = runs.filter(r => r.status !== 'done');
   if (!active.length) return 'done';
-  let best = 'waiting_material';
+  let latest = active[0];
   for (const r of active) {
-    if ((RUN_STATUS_RANK[r.status] ?? 0) > (RUN_STATUS_RANK[best] ?? 0)) best = r.status;
+    if ((r.sort_order ?? 0) > (latest.sort_order ?? 0)) latest = r;
   }
-  return best;
+  return latest.status;
 }
 
 /**
- * 取「当前进行中批次」对象：未完成批次中最先进（与 deriveStyleStatus 同口径）
- * 全部已完成或无批次返回 null（REQ-025：已完结款不再投影版单/审核，避免进行中款错取完成批次）
+ * 取「当前进行中批次」对象：未完成批次中 sort_order 最大者（最新版次，与 deriveStyleStatus 同口径）
+ * 全部已完成或无批次 → 回退全部批次中 sort_order 最大者（保证单号/日期投影有值），与 REQ-027 同步
  */
 function findTopRun(runs) {
   if (!runs || !runs.length) return null;
-  const active = runs.filter(r => r.status !== 'done');
-  const pool = active.length ? active : runs;
+  let pool = runs.filter(r => r.status !== 'done');
+  if (!pool.length) pool = runs;
   let top = pool[0];
   for (const r of pool) {
-    if ((RUN_STATUS_RANK[r.status] ?? 0) > (RUN_STATUS_RANK[top.status] ?? 0)) top = r;
+    if ((r.sort_order ?? 0) > (top.sort_order ?? 0)) top = r;
   }
   return top;
 }

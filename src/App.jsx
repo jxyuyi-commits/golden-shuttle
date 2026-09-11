@@ -126,6 +126,14 @@ const App = () => {
   // 初始加载业务数据
   useEffect(() => { loadTasks(); loadSettings(); }, [loadTasks, loadSettings]);
 
+  // REQ-029：看板从其他视图切回时自动重新拉取——详情页即改即存已落库，
+  // 但切换视图不刷新会导致看板分栏/状态/逾期天数/进度节点显示旧数据（必须 F5 才更新）
+  const prevView = useRef(view);
+  useEffect(() => {
+    if (view === 'kanban' && prevView.current !== 'kanban') loadTasks();
+    prevView.current = view;
+  }, [view, loadTasks]);
+
   // REQ-006①（修订）：侧边栏自动展开——仅鼠标靠近顶栏主按钮（logo/菜单）时触发，取消全屏左缘热区防误触
   // 实现见各视图 <div className="logo sidebar-hotzone" onMouseEnter={onOpenSidebar}>
 

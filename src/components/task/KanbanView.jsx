@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import ExportButton from '../common/ExportButton';
+import SmartSelect from '../common/SmartSelect';
 import { exportTasksToExcel, getTaskListFileName } from '../../utils/exportTasks';
 import { peopleByRole } from '../../utils/people';
 
@@ -281,7 +282,7 @@ const KanbanView = ({
             onChange={e => setFilters({ ...filters, keyword: e.target.value })}
           />
           <select
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text-2)', fontSize: 13, outline: 'none' }}
             value={filters.category}
             onChange={e => setFilters({ ...filters, category: e.target.value })}
           >
@@ -292,7 +293,7 @@ const KanbanView = ({
             })}
           </select>
           <select
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text-2)', fontSize: 13, outline: 'none' }}
             value={filters.sample_type}
             onChange={e => setFilters({ ...filters, sample_type: e.target.value })}
           >
@@ -300,7 +301,7 @@ const KanbanView = ({
             {sampleTypeOptions.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <select
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text-2)', fontSize: 13, outline: 'none' }}
             value={filters.designer}
             onChange={e => setFilters({ ...filters, designer: e.target.value })}
           >
@@ -308,7 +309,7 @@ const KanbanView = ({
             {peopleByRole(settings.people, '设计师').map(d => <option key={d} value={d}>{d}</option>)}
           </select>
           <select
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text-2)', fontSize: 13, outline: 'none' }}
             value={filters.priority}
             onChange={e => setFilters({ ...filters, priority: e.target.value })}
           >
@@ -318,14 +319,15 @@ const KanbanView = ({
             <option value="A">A</option>
             <option value="S">S</option>
           </select>
-          <select
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
+          <SmartSelect
+            className="filter-run-status"
+            style={{ minWidth: 150, color: 'var(--text-2)' }}
+            placeholder="全部版次状态"
+            options={Object.entries(RUN_STATUS_META).map(([k, m]) => ({ key: k, label: m.label }))}
             value={filters.run_status || ''}
-            onChange={e => setFilters({ ...filters, run_status: e.target.value })}
-          >
-            <option value="">全部版次状态</option>
-            {Object.entries(RUN_STATUS_META).map(([k, m]) => <option key={k} value={k}>{m.label}</option>)}
-          </select>
+            onChange={v => setFilters({ ...filters, run_status: v })}
+            allowCustom={false}
+          />
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
             {/* 导出当前筛选列表（确认 + 反馈） */}

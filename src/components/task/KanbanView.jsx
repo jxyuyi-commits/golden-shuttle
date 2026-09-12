@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import {
   Layout, Plus, FileText, Database, CheckCircle2, Circle,
-  GripVertical, ChevronUp, ChevronDown, AlertCircle
+  GripVertical, ChevronUp, ChevronDown, AlertCircle, FilterX
 } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import ExportButton from '../common/ExportButton';
@@ -281,55 +281,56 @@ const KanbanView = ({
             value={filters.keyword}
             onChange={e => setFilters({ ...filters, keyword: e.target.value })}
           />
-          <select
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text-2)', fontSize: 13, outline: 'none' }}
-            value={filters.category}
-            onChange={e => setFilters({ ...filters, category: e.target.value })}
-          >
-            <option value="">全部分类</option>
-            {settings.categories.map(c => {
-              const name = typeof c === 'string' ? c : (c.name || '');
-              return <option key={name} value={name}>{name}</option>;
-            })}
-          </select>
-          <select
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text-2)', fontSize: 13, outline: 'none' }}
-            value={filters.sample_type}
-            onChange={e => setFilters({ ...filters, sample_type: e.target.value })}
-          >
-            <option value="">全部打样版次</option>
-            {sampleTypeOptions.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text-2)', fontSize: 13, outline: 'none' }}
-            value={filters.designer}
-            onChange={e => setFilters({ ...filters, designer: e.target.value })}
-          >
-            <option value="">全部分派设计师</option>
-            {peopleByRole(settings.people, '设计师').map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-          <select
-            style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 14px', borderRadius: 8, color: 'var(--text-2)', fontSize: 13, outline: 'none' }}
-            value={filters.priority}
-            onChange={e => setFilters({ ...filters, priority: e.target.value })}
-          >
-            <option value="">全部优先级</option>
-            <option value="C">C</option>
-            <option value="B">B</option>
-            <option value="A">A</option>
-            <option value="S">S</option>
-          </select>
           <SmartSelect
-            className="filter-run-status"
-            style={{ minWidth: 150, color: 'var(--text-2)' }}
+            className="filter-sel"
+            placeholder="全部分类"
+            allowCustom={false}
+            options={[{ key: '', label: '全部分类' }, ...(settings.categories || [])]}
+            value={filters.category || ''}
+            onChange={v => setFilters({ ...filters, category: v })}
+          />
+          <SmartSelect
+            className="filter-sel"
+            placeholder="全部打样版次"
+            allowCustom={false}
+            options={[{ key: '', label: '全部打样版次' }, ...sampleTypeOptions]}
+            value={filters.sample_type || ''}
+            onChange={v => setFilters({ ...filters, sample_type: v })}
+          />
+          <SmartSelect
+            className="filter-sel"
+            placeholder="全部分派设计师"
+            allowCustom={false}
+            options={[{ key: '', label: '全部分派设计师' }, ...peopleByRole(settings.people, '设计师')]}
+            value={filters.designer || ''}
+            onChange={v => setFilters({ ...filters, designer: v })}
+          />
+          <SmartSelect
+            className="filter-sel"
+            placeholder="全部优先级"
+            allowCustom={false}
+            options={[{ key: '', label: '全部优先级' }, 'C', 'B', 'A', 'S']}
+            value={filters.priority || ''}
+            onChange={v => setFilters({ ...filters, priority: v })}
+          />
+          <SmartSelect
+            className="filter-sel"
             placeholder="全部版次状态"
-            options={Object.entries(RUN_STATUS_META).map(([k, m]) => ({ key: k, label: m.label }))}
+            options={[{ key: '', label: '全部版次状态' }, ...Object.entries(RUN_STATUS_META).map(([k, m]) => ({ key: k, label: m.label }))]}
             value={filters.run_status || ''}
             onChange={v => setFilters({ ...filters, run_status: v })}
             allowCustom={false}
           />
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
+            {/* 一键清除所有筛选条件 */}
+            <button
+              onClick={() => setFilters({ keyword: '', category: '', sample_type: '', designer: '', priority: '', run_status: '' })}
+              title="清除所有筛选条件"
+              style={{ padding: '7px 12px', borderRadius: 8, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, whiteSpace: 'nowrap', cursor: 'pointer' }}
+            >
+              <FilterX size={14} /> 清除筛选
+            </button>
             {/* 导出当前筛选列表（确认 + 反馈） */}
             <ExportButton
               label="导出"
@@ -364,17 +365,13 @@ const KanbanView = ({
             </div>
 
             {displayMode === 'kanban' && (
-              <select
-                style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)', padding: '6px 12px', borderRadius: 8, color: 'var(--accent)', fontSize: 13, outline: 'none', fontWeight: 700 }}
+              <SmartSelect
+                className="groupby-ss"
+                allowCustom={false}
+                options={[{ key: 'all', label: '关注点：全部' }, { key: 'status', label: '关注点：任务状态' }, { key: 'sample_type', label: '关注点：版次进度' }, { key: 'priority', label: '关注点：优先级' }, { key: 'overdue', label: '关注点：逾期情况' }]}
                 value={kanbanGroupBy}
-                onChange={e => setKanbanGroupBy(e.target.value)}
-              >
-                <option value="all">关注点：全部</option>
-                <option value="status">关注点：任务状态</option>
-                <option value="sample_type">关注点：版次进度</option>
-                <option value="priority">关注点：优先级</option>
-                <option value="overdue">关注点：逾期情况</option>
-              </select>
+                onChange={setKanbanGroupBy}
+              />
             )}
 
             {displayMode === 'list' && (
@@ -559,7 +556,7 @@ const KanbanView = ({
                     return 0;
                   })
                   .map((task, idx) => (
-                    <tr key={task.id} className="list-row" style={{ borderBottom: '1px solid var(--bg-hover)', transition: '0.2s' }}>
+                    <tr key={task.id} className="list-row" style={{ borderBottom: '1px solid var(--bg-hover)' }}>
                       <td style={{ position: 'sticky', left: 0, zIndex: 11, background: 'var(--bg-elev)', borderRight: '1px solid var(--border-weak)', textAlign: 'center', fontSize: 13, color: 'var(--text-2)', padding: '10px' }}>
                         {idx + 1}
                       </td>

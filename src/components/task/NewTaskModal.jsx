@@ -129,20 +129,11 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div className="field">
             <label>款式类别</label>
-            <select required value={fd.category} onChange={e => setFd({ ...fd, category: e.target.value })}>
-              <option value="">请选择类别</option>
-              {settings.categories.map(c => {
-                const name = typeof c === 'string' ? c : c.name;
-                return <option key={name} value={name}>{name}</option>;
-              })}
-            </select>
+            <SmartSelect value={fd.category || ''} onChange={v => setFd({ ...fd, category: v })} options={settings.categories} placeholder="请选择类别" allowCustom={false} />
           </div>
           <div className="field">
             <label>品牌</label>
-            <select value={fd.brand} onChange={e => setFd({ ...fd, brand: e.target.value })}>
-              <option value="">请选择</option>
-              {settings.brands.map(b => <option key={b}>{b}</option>)}
-            </select>
+            <SmartSelect value={fd.brand || ''} onChange={v => setFd({ ...fd, brand: v })} options={settings.brands} placeholder="请选择" allowCustom={false} />
           </div>
         </div>
 
@@ -155,10 +146,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
             </div>
             <div className="field">
               <label>制作尺码 *</label>
-              <select required value={fd.size} onChange={e => setFd({ ...fd, size: e.target.value })}>
-                <option value="">选择尺码</option>
-                {currentSizeList.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <SmartSelect value={fd.size || ''} onChange={v => setFd({ ...fd, size: v })} options={currentSizeList} placeholder="选择尺码" allowCustom={false} />
             </div>
             <div className="field">
               <label>样衣颜色</label>
@@ -166,12 +154,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
             </div>
             <div className="field">
               <label>优先级</label>
-              <select value={fd.priority} onChange={e => setFd({ ...fd, priority: e.target.value })}>
-                <option value="C">C</option>
-                <option value="B">B</option>
-                <option value="A">A</option>
-                <option value="S">S</option>
-              </select>
+              <SmartSelect value={fd.priority || ''} onChange={v => setFd({ ...fd, priority: v })} options={['C', 'B', 'A', 'S']} placeholder="选择优先级" allowCustom={false} />
             </div>
           </div>
         </div>

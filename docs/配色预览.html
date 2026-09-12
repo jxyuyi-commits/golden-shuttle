@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>golden-shuttle 新配色预览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0e0f11; color: #f0ece6; font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif; padding: 40px 48px; line-height: 1.6; }
+  h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .sub { color: #9d9890; font-size: 13px; margin-bottom: 32px; }
+  h2 { font-size: 14px; font-weight: 700; color: #6b6560; text-transform: uppercase; letter-spacing: 1.5px; margin: 36px 0 14px; border-left: 3px solid #c8a96e; padding-left: 10px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 12px; }
+  .swatch { width: 176px; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.025); }
+  .swatch .chip { height: 64px; }
+  .swatch .meta { padding: 8px 10px 10px; }
+  .swatch .name { font-size: 12px; font-weight: 700; color: #f0ece6; }
+  .swatch .val { font-size: 11px; color: #9d9890; font-family: Consolas, monospace; margin-top: 2px; }
+  .swatch.accent .chip { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14); }
+  .pair { display: flex; gap: 0; align-items: stretch; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.025); margin-bottom: 12px; max-width: 560px; }
+  .pair .side { flex: 1; padding: 12px 14px; }
+  .pair .side.old { border-right: 1px dashed rgba(255,255,255,0.14); }
+  .pair .tag { font-size: 10px; font-weight: 800; letter-spacing: 1px; color: #6b6560; text-transform: uppercase; margin-bottom: 8px; }
+  .pair .bar { height: 34px; border-radius: 6px; margin-bottom: 6px; }
+  .pair .label { font-size: 11.5px; color: #f0ece6; font-weight: 600; }
+  .pair .val { font-size: 11px; color: #9d9890; font-family: Consolas, monospace; }
+  .note { font-size: 12.5px; color: #9d9890; max-width: 760px; margin-bottom: 8px; }
+  .note b { color: #f0ece6; font-weight: 700; }
+  .files { font-size: 12.5px; color: #9d9890; max-width: 760px; }
+  .files code { background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 4px; color: #e8dcc8; font-family: Consolas, monospace; font-size: 11.5px; }
+</style>
+</head>
+<body>
+  <h1>golden-shuttle · 新配色预览（暖黑底 + 香槟金）</h1>
+  <div class="sub">依据新版配色文件 index.css（2026-09-12）调整 · 默认主题（custom）token 全量替换，系统深/浅主题保持不变</div>
+
+  <h2>① 新主题色板（默认主题 token）</h2>
+  <div class="grid">
+    <div class="swatch"><div class="chip" style="background:#0e0f11;border:1px solid rgba(255,255,255,0.10)"></div><div class="meta"><div class="name">bg 页面底色</div><div class="val">#0e0f11</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#161719"></div><div class="meta"><div class="name">bg-elev 抬升层 1</div><div class="val">#161719</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#1e2023"></div><div class="meta"><div class="name">bg-elev-2 抬升层 2</div><div class="val">#1e2023</div></div></div>
+    <div class="swatch accent"><div class="chip" style="background:#c8a96e"></div><div class="meta"><div class="name">accent 强调色（金）</div><div class="val">#c8a96e</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#f0ece6"></div><div class="meta"><div class="name">text 主文字</div><div class="val">#f0ece6</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#9d9890"></div><div class="meta"><div class="name">text-2 次级文字</div><div class="val">#9d9890</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#6b6560"></div><div class="meta"><div class="name">text-3 弱文字</div><div class="val">#6b6560</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#4a4540"></div><div class="meta"><div class="name">text-4 最弱文字</div><div class="val">#4a4540</div></div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14)"></div><div class="meta"><div class="name">border 边框</div><div class="val">rgba(255,255,255,0.07)</div></div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.14)"></div><div class="meta"><div class="name">input-bg 输入底</div><div class="val">rgba(255,255,255,0.04)</div></div></div>
+    <div class="swatch accent"><div class="chip" style="background:rgba(200,169,110,0.12);border:1px solid rgba(200,169,110,0.35)"></div><div class="meta"><div class="name">accent-soft 金弱底</div><div class="val">rgba(200,169,110,0.12)</div></div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(10,10,11,0.65)"></div><div class="meta"><div class="name">overlay 浮层</div><div class="val">rgba(10,10,11,0.65)</div></div></div>
+  </div>
+
+  <h2>② 关键 token 新旧对比</h2>
+  <div class="pair">
+    <div class="side old"><div class="tag">旧 · 冷深蓝</div><div class="bar" style="background:#020617;border:1px solid rgba(255,255,255,0.12)"></div><div class="label">页面底色 bg</div><div class="val">#020617（石板蓝黑）</div></div>
+    <div class="side"><div class="tag">新 · 暖黑</div><div class="bar" style="background:#0e0f11;border:1px solid rgba(255,255,255,0.12)"></div><div class="label">页面底色 bg</div><div class="val">#0e0f11（暖调近黑）</div></div>
+  </div>
+  <div class="pair">
+    <div class="side old"><div class="tag">旧 · 天蓝</div><div class="bar" style="background:#38bdf8"></div><div class="label">强调色 accent</div><div class="val">#38bdf8</div></div>
+    <div class="side"><div class="tag">新 · 香槟金</div><div class="bar" style="background:#c8a96e"></div><div class="label">强调色 accent</div><div class="val">#c8a96e</div></div>
+  </div>
+  <div class="pair">
+    <div class="side old"><div class="tag">旧 · 深色输入框</div><div class="bar" style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.12)"></div><div class="label">输入框底 input-bg</div><div class="val">rgba(0,0,0,0.2) ——“全是输入框”压抑感来源</div></div>
+    <div class="side"><div class="tag">新 · 近透明</div><div class="bar" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12)"></div><div class="label">输入框底 input-bg</div><div class="val">rgba(255,255,255,0.04) —— 无框通透</div></div>
+  </div>
+  <div class="note"><b>设计解读：</b>冷蓝石板底换为暖调近黑（#0e0f11），天蓝强调换为香槟金（#c8a96e，暗底上的暖金对比度更高、更"高定"）；输入框底色从 rgba(0,0,0,0.2) 降至近透明，配合 <code>.grid-cell</code> 无框单元格（hover 显底、focus 金色底线），直接回应"全部都是输入框"的压抑感。</div>
+
+  <h2>③ 状态语义色（保留不变）</h2>
+  <div class="grid">
+    <div class="swatch"><div class="chip" style="background:#fbbf24"></div><div class="meta"><div class="name">样衣中 / 待审核</div><div class="val">#fbbf24</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#a78bfa"></div><div class="meta"><div class="name">待审版</div><div class="val">#a78bfa</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#4ade80"></div><div class="meta"><div class="name">已完成 / 已通过</div><div class="val">#4ade80</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#f87171"></div><div class="meta"><div class="name">已驳回 / 阻塞</div><div class="val">#f87171</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#f43f5e"></div><div class="meta"><div class="name">优先级 S</div><div class="val">#f43f5e</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#fb923c"></div><div class="meta"><div class="name">优先级 A</div><div class="val">#fb923c</div></div></div>
+  </div>
+
+  <h2>④ 已同步的界面文件</h2>
+  <div class="files">
+    <code>src/styles/theme.css</code> 默认主题 token 全量换新（权威层）·
+    <code>src/index.css</code> 全局变量 + .manage-overlay + .grid-cell 无框单元格 ·
+    <code>src/styles/app.css</code> 表头/浮层/日期图标暖化 ·
+    <code>BomEditor / DetailView / ConfirmModal / DrawingLibrary</code> 组件内联蓝 → 金<br><br>
+    系统深/浅主题保持不变；批次状态、优先级、审核等语义色保留。
+  </div>
+</body>
+</html>

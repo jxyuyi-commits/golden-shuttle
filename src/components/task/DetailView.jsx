@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Layout, Trash2, History, Edit2, Edit3, Upload, Plus, FolderOpen } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import PdfPickerModal from '../common/PdfPickerModal';
@@ -90,6 +90,13 @@ const DetailView = ({
 
   const selectedRun = runs.find(r => r.id == sizeRunId) || runs[0] || null;
 
+  // 稳定引用：SizeTable 行级 memo 依赖 onChange 引用不变，否则每键全表重渲染
+  const handleSizeChange = useCallback((val) => {
+    if (!selectedRun) return;
+    setRuns(prev => prev.map(r => r.id === selectedRun.id ? { ...r, size_data: val } : r));
+    updateRun(selectedRun.id, { size_data: val }).catch(() => {});
+  }, [selectedRun?.id]); // 仅切换版次时重建；编辑过程中引用稳定
+
   // REQ-005 修订2：从批次卡片「尺寸表」入口进入——绑定该版次并打开尺寸页
   const handleOpenSizeTable = (run) => {
     if (!run) return;
@@ -157,7 +164,7 @@ const DetailView = ({
               <span className="bc-sep"> / </span>
               <span className="bc-current">编辑</span>
             </div>
-            <div className="bc-title">修改打样需求单 — {task.style_no || task.title}</div>
+            <div className="bc-title">{task.style_no || ''}{task.style_no && task.title ? ' ' : ''}{task.title || ''}</div>
           </div>
         </div>
         <div className="header-ops-v4">
@@ -187,7 +194,7 @@ const DetailView = ({
               ]);
               return exportTechPackPdf(task, bom, proc, selectedRun); // REQ-005 按当前批次导出尺寸表
             }}
-            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(52,211,153,0.25)', background: 'rgba(52,211,153,0.1)', color: '#34d399', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--accent-soft-2)', background: 'var(--accent-soft)', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
           />
           <button
             className="btn-ghost-sm"
@@ -198,9 +205,9 @@ const DetailView = ({
             <History size={14} /> 历史版本
           </button>
           <button
-            className="btn-ghost-sm"
+            className="btn-ghost-sm btn-del-ghost"
             onClick={onDelete}
-            style={{ color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.1)', padding: '6px 12px', borderRadius: 8 }}
+            style={{ border: '1px solid var(--border-weak)', padding: '6px 12px', borderRadius: 8 }}
           >
             <Trash2 size={14} /> 删除单据
           </button>
@@ -238,11 +245,7 @@ const DetailView = ({
             )}
             <SizeTable
               data={selectedRun?.size_data || []}
-              onChange={val => {
-                if (!selectedRun) return;
-                setRuns(prev => prev.map(r => r.id === selectedRun.id ? { ...r, size_data: val } : r));
-                updateRun(selectedRun.id, { size_data: val }).catch(() => {});
-              }}
+              onChange={handleSizeChange}
               updatedAt={task.updated_at}
               standardSize={selectedRun?.size || 'M'}
               sizeGroup={getSizeGroup()}
@@ -288,24 +291,15 @@ const DetailView = ({
             </div>
             <div className="field">
               <label>年度</label>
-              <select value={task.year || ''} onChange={e => { onSetField('year', e.target.value); onCommitField('year', e.target.value); }}>
-                <option value="">请选择</option>
-                {years.map(y => <option key={y}>{y}</option>)}
-              </select>
+              <SmartSelect value={task.year || ''} onChange={v => { onSetField('year', v); onCommitField('year', v); }} options={years} placeholder="请选择" allowCustom={false} />
             </div>
             <div className="field">
               <label>季节</label>
-              <select value={task.season || ''} onChange={e => { onSetField('season', e.target.value); onCommitField('season', e.target.value); }}>
-                <option value="">请选择</option>
-                {seasons.map(s => <option key={s}>{s}</option>)}
-              </select>
+              <SmartSelect value={task.season || ''} onChange={v => { onSetField('season', v); onCommitField('season', v); }} options={seasons} placeholder="请选择" allowCustom={false} />
             </div>
             <div className="field">
               <label>波段</label>
-              <select value={task.month || ''} onChange={e => { onSetField('month', e.target.value); onCommitField('month', e.target.value); }}>
-                <option value="">请选择</option>
-                {months.map(m => <option key={m}>{m}</option>)}
-              </select>
+              <SmartSelect value={task.month || ''} onChange={v => { onSetField('month', v); onCommitField('month', v); }} options={months} placeholder="请选择" allowCustom={false} />
             </div>
           </div>
 
@@ -381,7 +375,7 @@ const DetailView = ({
                     <span>从资料库选</span>
                   </button>
                   <button
-                    className="pdf-action-btn"
+                    className="pdf-action-btn btn-del-ghost"
                     title="移除设计稿"
                     onClick={e => { e.stopPropagation(); setConfirmPdfRemove(true); }}
                   >
@@ -393,7 +387,7 @@ const DetailView = ({
 
               {dragPdf && (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--overlay-strong)', borderRadius: 12, zIndex: 5, pointerEvents: 'none' }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--accent)', background: 'var(--overlay-strong)', padding: '12px 24px', borderRadius: 10, border: '1px dashed rgba(56,189,248,0.6)' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--accent)', background: 'var(--overlay-strong)', padding: '12px 24px', borderRadius: 10, border: '1px dashed rgba(200,169,110,0.6)' }}>
                     松开鼠标{task.pdf_url ? '更换' : '上传'}设计稿
                   </div>
                 </div>
@@ -434,19 +428,18 @@ const DetailView = ({
                 </div>
                 <div className="tl-sub">
                   <div className="t-status-wrap">
-                    <select
-                      className="t-status-sel"
+                    <SmartSelect
+                      className="t-status-ss"
                       value={node.status}
-                      onChange={e => {
+                      onChange={v => {
                         const nodes = [...(task.progress_nodes || [])];
-                        nodes[i] = { ...nodes[i], status: e.target.value };
+                        nodes[i] = { ...nodes[i], status: v };
                         onSetField('progress_nodes', nodes); commitNodesNow(nodes);
                       }}
-                    >
-                      <option value="done">已完成</option>
-                      <option value="active">进行中</option>
-                      <option value="pending">待开始</option>
-                    </select>
+                      options={[{ key: 'done', label: '已完成' }, { key: 'active', label: '进行中' }, { key: 'pending', label: '待开始' }]}
+                      allowCustom={false}
+                      placeholder="状态"
+                    />
                   </div>
                   <DatePicker
                     className="tl-date"

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 
 /** 选项键：string 即自身；对象优先 key（枚举），退 name */
@@ -19,13 +20,38 @@ const optLabel = (o) => (typeof o === 'object' ? (o.label ?? o.name ?? '') : o);
 const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择或输入…', allowCustom = true, className = '', style = {} }) => {
   const [open, setOpen] = useState(false);
   const [custom, setCustom] = useState('');
+  const [pos, setPos] = useState(null);
   const ref = useRef(null);
+  const dropRef = useRef(null);
 
   useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const handler = (e) => {
+      if (ref.current && ref.current.contains(e.target)) return;
+      // Portal 渲染到 body 后，弹层不在 ref 内，需单独判断
+      if (dropRef.current && dropRef.current.contains(e.target)) return;
+      setOpen(false);
+    };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  // 弹层 fixed 定位：rAF 持续跟随锚点——弹窗/容器布局变化（如查重提示插入、居中重排）时弹层实时同步，不再跑偏
+  useEffect(() => {
+    if (!open) return;
+    const el = ref.current;
+    if (!el) return;
+    let raf;
+    const tick = () => {
+      const r = el.getBoundingClientRect();
+      setPos(prev => {
+        const next = { top: r.bottom + 6, left: r.left, width: Math.max(r.width, 140), bottom: r.top - 6 };
+        return (prev && prev.top === next.top && prev.left === next.left && prev.width === next.width) ? prev : next;
+      });
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [open]);
 
   const select = (v) => { onChange(v); setOpen(false); };
   const matched = value !== undefined && value !== null && value !== '' ? options.find(o => optKey(o) === value) : null;
@@ -37,8 +63,8 @@ const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择�
         <span className={value ? '' : 'placeholder'}>{display}</span>
         <ChevronDown size={14} />
       </div>
-      {open && (
-        <div className="ss-dropdown">
+      {open && pos && createPortal(
+        <div ref={dropRef} className="ss-dropdown" style={{ position: 'fixed', top: pos.top, left: pos.left, right: 'auto', minWidth: pos.width, maxWidth: '90vw', zIndex: 10000 }}>
           {allowCustom && (
             <input
               className="ss-custom-input"
@@ -49,7 +75,7 @@ const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择�
               autoFocus
             />
           )}
-          {options.length > 0 && <div className="ss-divider">预设选项</div>}
+          {allowCustom && options.length > 0 && <div className="ss-divider">预设选项</div>}
           {options.map((opt, i) => {
             const k = optKey(opt);
             const label = optLabel(opt);
@@ -60,7 +86,8 @@ const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择�
             );
           })}
           {!allowCustom && !options.length && <div className="ss-empty">暂无可用选项</div>}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

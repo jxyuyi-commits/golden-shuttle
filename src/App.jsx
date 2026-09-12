@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Layout, Plus, X, CheckCircle2, Circle, AlertCircle, ArrowLeft, ArrowUp, ArrowDown, Calculator, Clock, Settings, FileText, Upload, Trash2, ChevronDown, ChevronUp, Edit2, Database, GripVertical, BarChart3 } from 'lucide-react';
+import { Layout, Plus, CheckCircle2, Circle, AlertCircle, ArrowLeft, ArrowUp, ArrowDown, Calculator, Clock, Settings, FileText, Upload, Trash2, ChevronDown, ChevronUp, Edit2, Database, GripVertical, BarChart3 } from 'lucide-react';
 
 import { API } from './api/client';
 import {
@@ -356,16 +356,18 @@ const App = () => {
       <div className={`overlay ${showSidebar ? 'overlay-show' : ''}`} onClick={() => setShowSidebar(false)}>
         <div className={`sidebar glass ${showSidebar ? 'sidebar-open' : ''}`} onClick={e => e.stopPropagation()}>
               <div className="sidebar-head">
-                <span>功能菜单</span>
-                <button className="btn-icon" onClick={() => setShowSidebar(false)}><X size={20} /></button>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="sb-brand">PatternMaster</span>
+                  <span className="sb-pro">Pro</span>
+                </span>
               </div>
-              <div className="menu-item" onClick={() => { setView('kanban'); setShowSidebar(false); }}>
+              <div className={`menu-item ${view === 'kanban' ? 'active' : ''}`} onClick={() => { setView('kanban'); setShowSidebar(false); }}>
                 <Layout size={20} /> 看板主页
               </div>
-              <div className="menu-item" onClick={() => { setView('dashboard'); setShowSidebar(false); }}>
+              <div className={`menu-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => { setView('dashboard'); setShowSidebar(false); }}>
                 <BarChart3 size={20} /> 设计师仪表盘
               </div>
-              <div className="menu-item" onClick={() => { setView('settings'); setShowSidebar(false); }}>
+              <div className={`menu-item ${view === 'settings' ? 'active' : ''}`} onClick={() => { setView('settings'); setShowSidebar(false); }}>
                 <Settings size={20} /> 系统设置
               </div>
               <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid var(--bg-hover-2)' }}>

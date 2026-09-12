@@ -1,7 +1,7 @@
 # PatternMaster Pro 迭代状态追踪
 
 > 本文件是迭代过程的"外部记忆"，上下文压缩后必须先读本文件再继续。
-> 最后更新：2026-09-07（REQ-004 款/版次信息归属重构完成：款式信息抽屉独立载体+单号下沉版次 V 编号+审核按版次独立，迁移 v14）
+> 最后更新：2026-09-12（UI/UX 重构专题上午完成：暖黑金配色换新 + 看板筛选 text-2 + 侧栏参考图样 + Inter/DM Mono 全站字体 + 全站表格无框通透化；下午完成：工艺指示拖拽排序 + 弹窗实底 + SmartSelect 弹层跟随修复 + 跨版次对比退出 + 看板卡片 hover 重叠 + 筛选复位项/清除按钮）
 
 ---
 
@@ -341,6 +341,87 @@ styles(style_no UNIQUE, pdf_url 款级共享)
 - **验证**：构建通过；待浏览器确认
 - **实测修复（用户反馈后）**：①「从资料库选择」按钮冒泡——无稿时容器整块 onClick 打开文件选择 + 按钮打开资料库，同时触发；给 从资料库选择/移除 按钮加 stopPropagation；②用户 3:39 上传的 235-6 设计稿未进库——根因是当时同步功能尚未部署（4:02 才生效），非逻辑 bug；同步链路 API 实测通过（upload-pdf→createDrawing→fetchDrawings→清理），并补录 235-6 设计稿进图纸库（task7 V1）；测试产生的孤儿文件已清理
 - **SS26-TS003 仍未进库（第二轮排查）**：上传文件成功（uploads 有 25FWS014.pdf）但图纸库 0 条、pdf_url 空。后端逐环节实测（CORS preflight/带 Origin POST createDrawing/同名归组/400 分支）全部正常——createDrawing 请求要么未到达后端、要么 task_id 参数异常（400 不打日志）。处置：①server/index.cjs 加请求日志中间件（method/path/body 摘要）；②前端同步失败从 console.warn 改为 alert（错误可见）；③待用户下次上传，日志直接定位。机制澄清：styles.pdf_url 与 drawings.url 均引用 server/uploads 同一文件，非复制
+
+### UI/UX 重构专题：暖黑金视觉系统 + 无框通透化（2026-09-12 上午，设计稿为 `Downloads/index.css`）
+
+> 用户提供设计稿（暖黑底 #0e0f11 + 香槟金 accent #c8a96e，Inter/DM Mono 字体）作为配色与字体的唯一权威来源，逐项重构界面。所有改动均 `npm run build` 验证通过。
+
+**1. 配色全面换新（custom 主题 → 暖黑金 token）**
+- `src/styles/theme.css`：custom 主题全部 token 重写（bg #0e0f11 / bg-elev #161719 / text #f0ece6 / text-2 #9d9890 / accent #c8a96e / accent-soft rgba(200,169,110,.12) / input-bg rgba(255,255,255,.04) 等，app-bg 金色径向渐变）；顶部注释更新为「暖黑底+香槟金（2026-09-12）」；dark/light 系统主题与状态语义色（RUN_STATUS/PRIORITY/AUDIT_COLORS）有意未动
+- `src/index.css`：--glass-bg 改 rgba(22,23,25,.75)；.manage-overlay 背景→var(--overlay-strong)；.data-table th 石板蓝→var(--bg-elev)
+- `src/styles/app.css`：.data-table th→var(--bg-elev)；pdf-empty-hover-tip/generic-file/run-linked-picker 背景 rgba(2,6,23,x)→rgba(10,10,11,x)；tl-date 日期图标 filter hue-rotate(175deg)→0deg（灰→金色系）
+- 组件内联蓝→金（4 处）：BomEditor 表头底线→var(--accent-soft-2)；DetailView 虚线框→rgba(200,169,110,.6)；ConfirmModal 图标底→var(--accent-soft)；DrawingLibrary 拖拽浮层→rgba(22,23,25,.7)
+- `index.css` 新增 `.grid-cell` 无框单元格样式（hover 显底、focus 金色底线）——回应「无框通透」目标
+- 图纸库专属紫色 #a78bfa 系列（drawing-ver-row/.drawing-dropzone/.dz-btn/generic-file 扩展名）有意保留未换金
+
+**2. 看板筛选控件改 text-2**
+- `KanbanView.jsx` 筛选区 5 个原生 select（分类/版次/设计师/优先级/状态）color var(--text)→var(--text-2)，与设计稿次级文字色一致
+
+**3. 侧栏对齐参考图样（两轮）**
+- 第一轮：`App.jsx` 侧栏 JSX 加 .sb-brand/.sb-pro 品牌区；菜单项绑定 view 的 .active 高亮；`app.css` .sidebar 去右侧圆角、品牌样式、.menu-item.active
+- 第二轮按精确参考：菜单项 = 左侧 3px accent 竖条 + border-radius 6px + 13px/500 + width 100% + hover bg-hover；**保留原本 lucide 图标**；品牌 PatternMaster 16px/600 纯色 + Pro 徽标 10px/700/padding 1px 6px/radius 4px（背景 accent）；**关闭 × 移除**（侧栏失焦自动收起）
+
+**4. 字体对齐设计稿 + 全站应用**
+- `src/index.css` 顶部加两条 Google Fonts @import（Inter 400/500/600、DM Mono 0,400;0,500;1,400），body 字体栈 `'Inter', -apple-system, sans-serif`，新增 `.mono { font-family: 'DM Mono', 'Courier New', monospace }`
+- `src/styles/app.css` body 去 Outfit（此前 Outfit 从未被加载，机器差异致字体表现不稳定）
+- **全站贯通**：`button, input, select, textarea, .dp-input, .ss-display, .theme-option { font-family: inherit }`（表单控件默认不继承 body 字体）；等宽规则覆盖数字/编号场景——`input[type="number"]`、`.tl-date`、`.bento-style-no`、`.bento-order-no`、`.run-order-no em`、`.bento-node-date`；SizeTable 标准值/各码/档差/公差输入显式挂 `.mono`
+- 验证：产物 CSS 已确认两条 @import 与继承/等宽规则进入 dist（离线回退系统字体）
+
+**5. 表格无框通透化（BOM → 全站 .data-table）**
+- `BomEditor.jsx`：cellStyle 删除内联 background/border（内联优先级最高是衬底来源），表格挂 .bom-grid 类
+- `ProcessEditor.jsx`：cellStyle 同样删除内联 background/border
+- `app.css` 规则从 .bom-grid 升级为全站 `.data-table`：
+  - 常态：input/textarea/select 用 `input-bg` 近透明微底 rgba(255,255,255,.04)（用户指定「新·近透明」）；select 单独设 background-color 保留下拉箭头图标
+  - hover：行 + 单元格 → accent-soft 金弱底 rgba(200,169,110,.12)（用户指定）
+  - focus：accent-soft-2 + 底部 1px 金色底线（box-shadow 0 1px 0 var(--accent)），border-color transparent 覆盖全局 .data-table input:focus 的 !important 灰边框
+  - 0.15s 过渡动画
+- `SizeTable.jsx`：手动修改单元格橙色底衬 rgba(249,115,22,.05) 移除（保留橙色文字 #f97316 + 加粗作语义标记）；快速添加行独立表单区保留衬底
+- 覆盖范围：BOM / 工艺指示 / 尺寸表 / 看板列表视图（只读表仅行 hover 生效）
+
+### UI/UX 重构专题（下午）：交互修复与控件统一（2026-09-12 下午，承接上午视觉重构）
+
+> 上午完成视觉基座后，下午集中处理交互与控件问题：弹窗透底、下拉跑飞、跨版次对比无法退出、看板 hover 重叠、筛选复位等。所有改动均 `npm run build` 验证通过。
+
+**1. 工艺指示行拖拽排序（ProcessEditor + 后端 process.cjs）**
+- 需求：工艺指示（部位工艺/缝制/后整理/特殊工艺）行可自由上下拖移排序
+- `ProcessEditor.jsx`：序号列改为「拖拽手柄 GripVertical ≡ + 序号」，行 `onDragStart` 存 idx、拖拽行金弱底 + 半透明、行 `onDragOver`/`onDrop` 重排；新增 `dragIdx` state + `rowsRef`（重排时从 `rowsRef.current` 取数再 `setRows`，规避 StrictMode 下 updater 内重复副作用）；`load` 按 `sort_order` 升序渲染；`handleAdd` 新行 `sort_order: rows.length`；表头说明加「拖动行首手柄可排序」
+- `server/services/process.cjs`：`update()` 原只更新 FIELDS 文本字段、`sort_order` 更新会静默失效 → 补 `if (b.sort_order !== undefined) keys.push('sort_order')`，数值走 `Number(b[k])||0` 不字符串化。**改后需重启本地 node 服务生效**
+- 前端样式：app.css `.data-table td [draggable='true']` user-select:none + hover 金
+
+**2. 编辑页标题与导出按钮主题化（DetailView）**
+- 标题由「修改打样需求单 — {style_no||title}」改为 `{style_no}{...}{title}`（款号 + 款式名称）
+- 「导出PDF」按钮内联样式由绿色（rgba(52,211,153,...)/#34d399）改为与「导出工艺单」一致的主题金（`--accent-soft` 底 + `--accent` 字 + `--accent-soft-2` 边）
+
+**3. 设置「绑定号型系列」下拉失效（SmartSelect createPortal）**
+- 现象：CategoryManager 两处 SmartSelect 弹层出现在输入框下方约 200px 外
+- 根因：设置页容器带 `animate-slide-up`（transform），CSS 规定 transform 非 none 的祖先会成为 fixed 后代包含块 → 弹层坐标基准错乱
+- 修复：SmartSelect 弹层改用 `createPortal` 渲染到 `document.body`，彻底脱离 transform/overflow 祖先；点击外部关闭判断同步纳入 `dropRef`（Portal 后弹层不在组件 ref 内）
+
+**4. 跨版次对比缺「取消对比」（SizeTable）**
+- `.compare-run-ss` 的 options 原只有版次列表，选中后无法退出对比
+- 修复：options 首位加 `{ key: '', label: '不对比（隐藏对比列）' }`，选空 key 后 `compareRunId` 置空回到不对比态
+
+**5. 分类库新增行控件对齐（CategoryManager + app.css）**
+- 新增行三控件高度不齐（输入框 32px / mini-ss 约 20px / + 按钮约 14px）
+- 修复：`.add-row-enhanced` 作用域统一 `align-items:center` + 输入框/`.smart-select`/`.btn-add-mini` 全部 32px 高 + `box-sizing:border-box`；`.mini-ss .ss-display` 覆盖为 `min-height:32px; padding:0 24px 0 8px; font-size:12px; display:flex; align-items:center`；按钮 `min-width:36px`
+
+**6. 新建打样弹窗过于透明 + 下拉列表跑飞（app.css 实底 + SmartSelect rAF 跟随）**
+- **透明根因**：custom 主题（`:root` 默认）下 `--glass-bg: rgba(22,23,25,0.75)` 半透明；theme.css 只对 `[data-theme="dark"/"light"] .glass` 有实色覆盖（background: var(--card-bg)），custom 主题漏了 → `.modal`/`.confirm-modal`/`.modal-content` 全部透底。修复：app.css 三处直接补 `background: var(--bg-elev-2)` 实底
+- **跑飞根因**：弹层坐标只在打开瞬间 getBoundingClientRect 计算 + scroll/resize 监听；新建弹窗输入款号失焦后异步查重会向弹窗插入提示区块，弹窗重新居中上移，弹层停旧位
+- 修复：SmartSelect 弹层改为 **rAF 逐帧跟随锚点**（`requestAnimationFrame` 循环 tick，位置未变 setPos 返回 prev 避免重渲染，open 关闭 cancelAnimationFrame）；弹层 z-index 从 400 提到 **10000**（高于 `.overlay` 9999 遮罩）
+
+**7. 看板卡片 hover 与 sticky 列头重叠（三轮修复，最终方案）**
+- 现象：`.col-title` sticky top:0 z-index:50，卡片 `.card:hover{transform:translateY(-4px)}` 上移压住列头
+- 第一轮取消位移（`.card.bento-card:hover{transform:none}`）→ 用户明确要**保留原位移动态**
+- 第二轮恢复位移 + 列头 padding-bottom 16→28px → 用户「还是重叠了」
+- 根因定位：列头与第一张卡片实际 **0 间距**（`.col-body` 空样式、卡片无上 margin），加大列头自身 padding 只会让吸顶背景往下多盖，卡片上移 4px 仍被压
+- **最终方案**：`.col-body` 加 `padding-top: 12px` 创造真实间隙（hover 上移 4px 后仍有 8px 空隙），列头 padding-bottom 还原 16px，保留 hover 位移动画
+
+**8. 筛选区「全部」复位选项 + 清除筛选按钮（KanbanView）**
+- 五个筛选下拉（分类/打样版次/设计师/优先级/版次状态）options 首位各加 `{ key: '', label: '全部XX' }` 复位项，选中即清空该项筛选回到全选态
+- 新增「清除筛选」按钮（FilterX 图标，位于导出按钮左侧）：一键清空全部六项筛选（含关键词搜索框）
+
+**验证**：以上 8 项均 `npx vite build --outDir dist-verify --emptyOutDir` 构建通过（9~10s），核验后清理 dist-verify；改动文件：ProcessEditor.jsx / process.cjs / DetailView.jsx / SmartSelect.jsx / SizeTable.jsx / CategoryManager.jsx / KanbanView.jsx / app.css
 
 ## 四、待办事项（按优先级）
 

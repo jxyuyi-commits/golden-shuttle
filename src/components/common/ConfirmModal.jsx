@@ -11,7 +11,7 @@ import { AlertTriangle, Trash2 } from 'lucide-react';
 const ConfirmModal = ({ title, message, confirmText = '确认删除', danger = true, onConfirm, onCancel }) => (
   <div className="modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onCancel(); }}>
     <div className="confirm-modal glass">
-      <div className="confirm-icon" style={{ color: danger ? '#f87171' : 'var(--accent)', background: danger ? 'rgba(248,113,113,0.12)' : 'rgba(56,189,248,0.12)' }}>
+      <div className="confirm-icon" style={{ color: danger ? '#f87171' : 'var(--accent)', background: danger ? 'rgba(248,113,113,0.12)' : 'var(--accent-soft)' }}>
         {danger ? <Trash2 size={20} /> : <AlertTriangle size={20} />}
       </div>
       <div className="confirm-title">{title}</div>

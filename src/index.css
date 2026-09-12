@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
 :root {
   --bg-color: var(--bg-elev);
-  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-bg: rgba(22, 23, 25, 0.75);
   --accent-blue: var(--accent);
   --accent-purple: #818cf8;
   --text-primary: var(--text);
@@ -11,7 +13,7 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', -apple-system, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-primary);
   background-image:
@@ -21,10 +23,11 @@ body {
   min-height: 100vh;
 }
 
+/* 等宽字体（设计稿 DM Mono，用于单号/编号等数值型文本） */
+.mono { font-family: 'DM Mono', 'Courier New', monospace; }
+
 .glass-card {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
@@ -80,14 +83,6 @@ body {
 }
 
 /* ── 尺寸表与通用 UI 增强 ── */
-.glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
 .tab-bar {
   display: flex;
   gap: 32px;
@@ -146,7 +141,7 @@ body {
 }
 
 .data-table th {
-  background: rgba(30, 41, 59, 0.8);
+  background: var(--bg-elev);
   padding: 12px 16px;
   text-align: left;
   color: var(--text-2);
@@ -186,7 +181,6 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(2, 6, 23, 0.85);
-  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -500,8 +494,7 @@ body {
   z-index: 10;
   display: flex;
   flex-direction: column;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(12px);
+  background: var(--overlay-strong);
   padding: 20px;
   animation: fadeIn 0.2s ease;
 }
@@ -622,7 +615,6 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -764,7 +756,7 @@ body {
 }
 
 .data-table th {
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--bg-elev);
   padding: 10px 12px;
   text-align: left;
   font-weight: 600;
@@ -982,7 +974,7 @@ body {
   border-bottom: 1px solid var(--border-weak);
   position: sticky;
   top: 0;
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--bg-elev);
 }
 
 .tpl-table td {
@@ -1083,16 +1075,6 @@ body {
 .sticky-col-3 {
   left: 92px;
   min-width: 140px;
-}
-
-/* 输入反馈 */
-.data-table input {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.data-table input:focus {
-  background: var(--bg-hover) !important;
-  box-shadow: inset 0 0 0 1px var(--border-strong) !important;
 }
 
 /* 核心部位标签 */
@@ -1427,3 +1409,17 @@ em.audit-wait {
   cursor: default !important;
   white-space: nowrap !important;
 }
+
+/* ── 无框通透 Data Grid 单元格（2026-09-12 新版配色文件附带，重构备用） ──
+   目标：弱化"全部都是输入框"的压抑感；单元格默认透明无框，hover 显示底色，
+   focus 以 1px 金色底线提示可编辑，选中行以 --bg-hover 区分 */
+.grid-cell { display: flex; align-items: center; min-width: 0; }
+.grid-cell input, .grid-cell select, .grid-cell textarea {
+  width: 100%; min-width: 0; background: transparent; border: none; outline: none;
+  color: var(--text); font: inherit; padding: 6px 8px; border-radius: 6px;
+  box-sizing: border-box;
+}
+.grid-cell input::placeholder, .grid-cell textarea::placeholder { color: var(--text-4); }
+.grid-cell:hover { background: var(--bg-hover); border-radius: 6px; }
+.grid-cell:focus-within { background: var(--bg-hover); box-shadow: 0 1px 0 var(--accent); border-radius: 6px; }
+.grid-cell.row-selected { background: var(--bg-hover); }

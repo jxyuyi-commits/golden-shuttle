@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import { Plus, Trash2, Loader2, X, Upload, FileText, ClipboardPaste, History, AlertTriangle } from 'lucide-react';
 import ConfirmModal from '../common/ConfirmModal';
+import SmartSelect from '../common/SmartSelect';
 import PdfThumb from '../common/PdfThumb';
 import {
   fetchDrawings, fetchDrawingGroup, createDrawing, updateDrawing,
@@ -258,7 +259,7 @@ const DrawingLibrary = ({ taskId }) => {
       onDragEnd={() => setDragOver(false)}
     >
       {dragOver && (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.7)', borderRadius: 20, zIndex: 5, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(22,23,25,0.7)', borderRadius: 20, zIndex: 5, pointerEvents: 'none' }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#c4b5fd', background: 'var(--overlay-strong)', padding: '18px 34px', borderRadius: 12, border: '1px dashed rgba(167,139,250,0.6)' }}>
             松开鼠标上传（支持任意格式，可多选）
           </div>
@@ -312,19 +313,17 @@ const DrawingLibrary = ({ taskId }) => {
               <div className="drawing-thumb">
                 <PdfThumb pdfUrl={d.url} objectFit="contain" />
                 <div className="drawing-badges">
-                  <select
+                  <SmartSelect
                     className="drawing-cat-sel"
-                    value={d.category || '设计稿'}
                     title="点击修改分类"
-                    onChange={e => handleCategoryChange(d, e.target.value)}
+                    allowCustom={false}
+                    value={d.category || '设计稿'}
+                    onChange={v => handleCategoryChange(d, v)}
+                    options={DRAWING_CATEGORIES}
                     style={{
-                      background: `${CATEGORY_COLORS[d.category] || 'var(--accent)'}22`,
-                      color: CATEGORY_COLORS[d.category] || 'var(--accent)',
-                      borderColor: `${CATEGORY_COLORS[d.category] || 'var(--accent)'}44`,
+                      '--cat-color': CATEGORY_COLORS[d.category] || 'var(--accent)',
                     }}
-                  >
-                    {DRAWING_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  />
                   {!isReference(d.category) && d._versionCount > 0 && (
                     <button
                       className="drawing-ver-badge"
@@ -393,9 +392,7 @@ const DrawingLibrary = ({ taskId }) => {
 
             <div className="field" style={{ marginBottom: 14 }}>
               <label>资料分类 {isReference(upCategory) ? '（参考资料 · 防冗余）' : '（工作成果 · 可追溯版本）'}</label>
-              <select value={upCategory} onChange={e => setUpCategory(e.target.value)}>
-                {DRAWING_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <SmartSelect value={upCategory} onChange={setUpCategory} options={DRAWING_CATEGORIES} allowCustom={false} placeholder="选择分类" />
             </div>
 
             <div
@@ -426,11 +423,11 @@ const DrawingLibrary = ({ taskId }) => {
                     <span className="uplist-name" title={f.name}>{f.name}</span>
                     <span className="uplist-size">{fmtSize(f.size)}</span>
                     <button
-                      className="btn-icon"
+                      className="btn-icon btn-del-ghost"
                       title="移除"
                       onClick={() => setUpFiles(prev => prev.filter((_, x) => x !== i))}
                       disabled={busy}
-                      style={{ color: '#ef4444', padding: 2 }}
+                      style={{ padding: 2 }}
                     >
                       <X size={14} />
                     </button>

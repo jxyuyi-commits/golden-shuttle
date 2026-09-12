@@ -1,5 +1,5 @@
 /* REQ-010 主题系统：三套配色
-   1) 自定义（:root 默认 + data-theme="custom"）：现有深蓝黑自写配色（保留）
+   1) 自定义（:root 默认 + data-theme="custom"）：暖黑底 + 香槟金强调（2026-09-12 按新版配色文件调整）
    2) 系统深（data-theme="dark"）：CSS 系统语义色（Canvas/CanvasText/Field/AccentColor）+ color-scheme: dark
    3) 系统浅（data-theme="light"）：同上 + color-scheme: light
    系统语义色由浏览器按 color-scheme 自动映射系统主题的真实颜色，与系统零色差（豆包同款逻辑）；
@@ -8,35 +8,35 @@
    注意：全部显式写两套值，不使用 light-dark()/color-mix()——旧内核浏览器（如豆包内置浏览器）
    不支持这些函数会导致变量失效、控件隐形（2026-09-09 用户实测发现） */
 :root, [data-theme="custom"] {
-  --bg: #020617;
-  --bg-elev: #0f172a;
-  --bg-elev-2: #1e293b;
-  --glass-bg: rgba(15, 23, 42, 0.65);
-  --glass-bg-strong: rgba(15, 23, 42, 0.85);
-  --bg-panel: rgba(255, 255, 255, 0.03);
+  --bg: #0e0f11;
+  --bg-elev: #161719;
+  --bg-elev-2: #1e2023;
+  --glass-bg: rgba(22, 23, 25, 0.75);
+  --glass-bg-strong: rgba(22, 23, 25, 0.88);
+  --bg-panel: rgba(255, 255, 255, 0.025);
   --bg-hover: rgba(255, 255, 255, 0.04);
-  --bg-hover-2: rgba(255, 255, 255, 0.06);
-  --text: #f1f5f9;
-  --text-2: #94a3b8;
-  --text-3: #64748b;
-  --text-4: #475569;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-weak: rgba(255, 255, 255, 0.05);
-  --border-strong: rgba(255, 255, 255, 0.15);
-  --input-bg: rgba(0, 0, 0, 0.2);
-  --input-bg-strong: rgba(0, 0, 0, 0.4);
-  --accent: #38bdf8;
-  --accent-text: #000000;
-  --accent-btn: #38bdf8;
-  --accent-btn-text: #06283d;
-  --accent-soft: rgba(56, 189, 248, 0.14);
-  --accent-soft-2: rgba(56, 189, 248, 0.22);
-  --overlay: rgba(2, 6, 23, 0.6);
-  --overlay-strong: rgba(2, 6, 23, 0.85);
-  --scroll-thumb: rgba(148, 163, 184, 0.25);
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  --card-bg: rgba(15, 23, 42, 0.65);
-  --app-bg: radial-gradient(circle at top right, rgba(56,189,248,0.05), transparent 40%), radial-gradient(circle at bottom left, rgba(244,63,94,0.03), transparent 40%);
+  --bg-hover-2: rgba(255, 255, 255, 0.07);
+  --text: #f0ece6;
+  --text-2: #9d9890;
+  --text-3: #6b6560;
+  --text-4: #4a4540;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-weak: rgba(255, 255, 255, 0.04);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --input-bg: rgba(255, 255, 255, 0.04);
+  --input-bg-strong: rgba(255, 255, 255, 0.08);
+  --accent: #c8a96e;
+  --accent-text: #0e0f11;
+  --accent-btn: #c8a96e;
+  --accent-btn-text: #0e0f11;
+  --accent-soft: rgba(200, 169, 110, 0.12);
+  --accent-soft-2: rgba(200, 169, 110, 0.2);
+  --overlay: rgba(10, 10, 11, 0.65);
+  --overlay-strong: rgba(10, 10, 11, 0.88);
+  --scroll-thumb: rgba(160, 150, 140, 0.2);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --card-bg: rgba(22, 23, 25, 0.75);
+  --app-bg: radial-gradient(circle at top right, rgba(200,169,110,0.05), transparent 40%), radial-gradient(circle at bottom left, rgba(200,169,110,0.03), transparent 40%);
   color-scheme: dark;
 }
 

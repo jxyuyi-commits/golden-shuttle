@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Check, Edit2, Plus } from 'lucide-react';
+import SmartSelect from '../common/SmartSelect';
 
 /** 款式分类库管理（绑定号型规格 + 双击编辑） */
 const CategoryManager = ({ items = [], sizeGroups = [], onChange }) => {
@@ -43,10 +44,7 @@ const CategoryManager = ({ items = [], sizeGroups = [], onChange }) => {
               <div key={idx} className="category-item-row" style={{ flexDirection: 'column', gap: 6 }}>
                 <input className="cat-edit-input" value={editVal.name} onChange={e => setEditVal({ ...editVal, name: e.target.value })} autoFocus />
                 <div style={{ display: 'flex', gap: 6, width: '100%' }}>
-                  <select style={{ flex: 1, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', padding: '4px 8px', borderRadius: 6, fontSize: 11, outline: 'none' }} value={editVal.size_group_id} onChange={e => setEditVal({ ...editVal, size_group_id: e.target.value })}>
-                    <option value="">不绑定</option>
-                    {sizeGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                  </select>
+                  <SmartSelect className="mini-ss" style={{ flex: 1, fontSize: 11 }} allowCustom={false} value={editVal.size_group_id != null ? String(editVal.size_group_id) : ''} onChange={v => setEditVal({ ...editVal, size_group_id: v ? Number(v) : '' })} options={sizeGroups.map(g => ({ key: String(g.id), label: g.name }))} placeholder="不绑定" />
                   <button className="btn-icon-xs" style={{ color: '#4ade80' }} onClick={confirmEdit}><Check size={12} /></button>
                   <button className="btn-icon-xs" onClick={() => setEditIdx(-1)}><X size={12} /></button>
                 </div>
@@ -67,10 +65,7 @@ const CategoryManager = ({ items = [], sizeGroups = [], onChange }) => {
       </div>
       <div className="add-row-enhanced">
         <input style={{ flex: 2 }} value={input.name} onChange={e => setInput({ ...input, name: e.target.value })} placeholder="分类名称..." onKeyDown={e => e.key === 'Enter' && add()} />
-        <select style={{ flex: 1.5 }} value={input.size_group_id} onChange={e => setInput({ ...input, size_group_id: e.target.value })}>
-          <option value="">绑定号型系列</option>
-          {sizeGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-        </select>
+        <SmartSelect className="mini-ss" style={{ flex: 1.5 }} allowCustom={false} value={input.size_group_id != null ? String(input.size_group_id) : ''} onChange={v => setInput({ ...input, size_group_id: v ? Number(v) : '' })} options={sizeGroups.map(g => ({ key: String(g.id), label: g.name }))} placeholder="绑定号型系列" />
         <button className="btn-add-mini" onClick={add}><Plus size={14} /></button>
       </div>
     </div>

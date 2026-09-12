@@ -5,16 +5,61 @@ import {
   fetchBomItems, createBomItem, updateBomItem, deleteBomItem
 } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
+import SmartSelect from '../common/SmartSelect';
 
 const CATEGORIES = ['主料', '辅料', '里料', '衬料', '其他'];
 const UNITS = ['米', 'kg', '个', '条', '套', '码'];
 
 const cellStyle = {
-  background: 'var(--input-bg)',
-  border: '1px solid var(--border)',
-  padding: '7px 10px', borderRadius: 6, color: 'var(--text)',
+  padding: '7px 10px', borderRadius: 6, color: 'var(--text-2)',
   fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box'
 };
+
+/** 单行 BOM：React.memo 隔离——输入时仅本行重渲染，不重建整表（卡顿根治） */
+const BomRow = React.memo(({ row, idx, onField }) => {
+  const subtotal = (parseFloat(row.usage) || 0) * (parseFloat(row.price) || 0);
+  const set = (field, value) => onField(row.id, field, value);
+  return (
+    <tr style={{ borderBottom: '1px solid var(--bg-hover)' }}>
+      <td style={{ padding: '8px 8px', color: 'var(--text-2)', textAlign: 'center' }}>{idx + 1}</td>
+      <td style={{ padding: 6, width: 90 }}>
+        <SmartSelect className="tbl-ss" style={{ width: '100%' }} allowCustom={false} value={row.category || ''} onChange={v => set('category', v)} options={CATEGORIES} placeholder="主料" />
+      </td>
+      <td style={{ padding: 6, width: 140 }}>
+        <input style={cellStyle} value={row.name || ''} placeholder="物料名称" onChange={e => set('name', e.target.value)} />
+      </td>
+      <td style={{ padding: 6, width: 170 }}>
+        <input style={cellStyle} value={row.spec || ''} placeholder="规格/成分" onChange={e => set('spec', e.target.value)} />
+      </td>
+      <td style={{ padding: 6, width: 90 }}>
+        <input style={cellStyle} value={row.color || ''} placeholder="颜色" onChange={e => set('color', e.target.value)} />
+      </td>
+      <td style={{ padding: 6, width: 80 }}>
+        <SmartSelect className="tbl-ss" style={{ width: '100%' }} allowCustom={false} value={row.unit || ''} onChange={v => set('unit', v)} options={UNITS} placeholder="单位" />
+      </td>
+      <td style={{ padding: 6, width: 80 }}>
+        <input style={cellStyle} type="number" step="0.001" value={row.usage ?? ''} placeholder="单耗" onChange={e => set('usage', e.target.value)} />
+      </td>
+      <td style={{ padding: 6, width: 120 }}>
+        <input style={cellStyle} value={row.supplier || ''} placeholder="供应商" onChange={e => set('supplier', e.target.value)} />
+      </td>
+      <td style={{ padding: 6, width: 90 }}>
+        <input style={cellStyle} type="number" step="0.01" value={row.price ?? ''} placeholder="单价" onChange={e => set('price', e.target.value)} />
+      </td>
+      <td style={{ padding: '6px 8px', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap' }}>
+        {subtotal ? `¥${subtotal.toFixed(2)}` : '—'}
+      </td>
+      <td style={{ padding: 6, width: 140 }}>
+        <input style={cellStyle} value={row.note || ''} placeholder="备注" onChange={e => set('note', e.target.value)} />
+      </td>
+      <td style={{ padding: 6, textAlign: 'center' }}>
+        <button className="icon-btn-danger" onClick={() => onField(row.id, '__delete')} title="删除">
+          <Trash2 size={14} />
+        </button>
+      </td>
+    </tr>
+  );
+});
 
 /** BOM 物料清单：一表多行，挂靠在打样单下 */
 const BomEditor = ({ taskId }) => {
@@ -32,20 +77,19 @@ const BomEditor = ({ taskId }) => {
 
   useEffect(() => { load(); }, [load]);
 
-  const setField = (id, field, value) => {
-    setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
-  };
-
-  // 防抖自动保存：输入停顿后提交最新值，避免快速连续编辑丢字段
   const timersRef = useRef({});
-  const scheduleCommit = (id, field, value) => {
+  // 稳定引用：行级 memo 依赖它不变，否则每行都会重渲染
+  const handleField = useCallback((id, field, value) => {
+    setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+    if (field === '__delete') { setConfirmDelId(id); return; }
     const key = `${id}-${field}`;
     if (timersRef.current[key]) clearTimeout(timersRef.current[key]);
     timersRef.current[key] = setTimeout(async () => {
       try { await updateBomItem(id, { [field]: value }); }
       catch (e) { alert('保存失败: ' + e.message); }
     }, 400);
-  };
+  }, []);
+
 
   const handleAdd = async () => {
     setBusy(true);
@@ -86,63 +130,18 @@ const BomEditor = ({ taskId }) => {
         </div>
       ) : (
         <div style={{ overflow: 'auto' }}>
-          <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
+          <table className="data-table bom-grid" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>
             <thead>
               <tr>
                 {['序号', '类别', '名称', '规格/成分', '颜色', '单位', '单耗', '供应商', '单价', '小计', '备注', ''].map((h, i) => (
-                  <th key={i} style={{ padding: '10px 8px', textAlign: 'left', fontSize: 12, color: 'var(--text-3)', background: 'var(--bg-elev)', borderBottom: '2px solid rgba(56,189,248,0.15)', whiteSpace: 'nowrap' }}>{h}</th>
+                  <th key={i} style={{ padding: '10px 8px', textAlign: 'left', fontSize: 12, color: 'var(--text-3)', background: 'var(--bg-elev)', borderBottom: '2px solid var(--accent-soft-2)', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, idx) => {
-                const subtotal = (parseFloat(row.usage) || 0) * (parseFloat(row.price) || 0);
-                return (
-                  <tr key={row.id} style={{ borderBottom: '1px solid var(--bg-hover)' }}>
-                    <td style={{ padding: '8px 8px', color: 'var(--text-2)', textAlign: 'center' }}>{idx + 1}</td>
-                    <td style={{ padding: 6, width: 90 }}>
-                      <select style={cellStyle} value={row.category || '主料'} onChange={e => { setField(row.id, 'category', e.target.value); scheduleCommit(row.id, 'category', e.target.value); }}>
-                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    </td>
-                    <td style={{ padding: 6, width: 140 }}>
-                      <input style={cellStyle} value={row.name || ''} placeholder="物料名称" onChange={e => { setField(row.id, 'name', e.target.value); scheduleCommit(row.id, 'name', e.target.value); }} />
-                    </td>
-                    <td style={{ padding: 6, width: 170 }}>
-                      <input style={cellStyle} value={row.spec || ''} placeholder="规格/成分" onChange={e => { setField(row.id, 'spec', e.target.value); scheduleCommit(row.id, 'spec', e.target.value); }} />
-                    </td>
-                    <td style={{ padding: 6, width: 90 }}>
-                      <input style={cellStyle} value={row.color || ''} placeholder="颜色" onChange={e => { setField(row.id, 'color', e.target.value); scheduleCommit(row.id, 'color', e.target.value); }} />
-                    </td>
-                    <td style={{ padding: 6, width: 80 }}>
-                      <select style={cellStyle} value={row.unit || ''} onChange={e => { setField(row.id, 'unit', e.target.value); scheduleCommit(row.id, 'unit', e.target.value); }}>
-                        <option value="">—</option>
-                        {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                      </select>
-                    </td>
-                    <td style={{ padding: 6, width: 80 }}>
-                      <input style={cellStyle} type="number" step="0.001" value={row.usage ?? ''} placeholder="单耗" onChange={e => { setField(row.id, 'usage', e.target.value); scheduleCommit(row.id, 'usage', e.target.value); }} />
-                    </td>
-                    <td style={{ padding: 6, width: 120 }}>
-                      <input style={cellStyle} value={row.supplier || ''} placeholder="供应商" onChange={e => { setField(row.id, 'supplier', e.target.value); scheduleCommit(row.id, 'supplier', e.target.value); }} />
-                    </td>
-                    <td style={{ padding: 6, width: 90 }}>
-                      <input style={cellStyle} type="number" step="0.01" value={row.price ?? ''} placeholder="单价" onChange={e => { setField(row.id, 'price', e.target.value); scheduleCommit(row.id, 'price', e.target.value); }} />
-                    </td>
-                    <td style={{ padding: '6px 8px', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                      {subtotal ? `¥${subtotal.toFixed(2)}` : '—'}
-                    </td>
-                    <td style={{ padding: 6, width: 140 }}>
-                      <input style={cellStyle} value={row.note || ''} placeholder="备注" onChange={e => { setField(row.id, 'note', e.target.value); scheduleCommit(row.id, 'note', e.target.value); }} />
-                    </td>
-                    <td style={{ padding: 6, textAlign: 'center' }}>
-                      <button className="icon-btn-danger" onClick={() => setConfirmDelId(row.id)} title="删除">
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {rows.map((row, idx) => (
+                <BomRow key={row.id} row={row} idx={idx} onField={handleField} />
+              ))}
             </tbody>
             <tfoot>
               <tr>

@@ -45,10 +45,12 @@ function create(b) {
  */
 function update(id, b) {
   const keys = FIELDS.filter(k => k in b && b[k] !== undefined);
+  // REQ-028 行拖拽排序：sort_order 单独支持（数字，不走字符串化）
+  if (b.sort_order !== undefined) keys.push('sort_order');
   if (keys.length === 0) return { success: true };
   const params = {};
   for (const k of keys) {
-    params[k] = (b[k] ?? '').toString();
+    params[k] = k === 'sort_order' ? (Number(b[k]) || 0) : (b[k] ?? '').toString();
   }
   const setParts = keys.map(k => `${k} = @${k}`).join(', ');
   const result = getDb().prepare(

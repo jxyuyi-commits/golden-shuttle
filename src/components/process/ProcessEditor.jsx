@@ -1,18 +1,18 @@
 // 工艺指示编辑器：行内编辑 + 防抖自动保存（输入停顿约 400ms 自动提交）
 // REQ-014：长文本列（工艺要求/做法、标准/参数、备注）改自动撑高 textarea；表头支持拖拽调列宽（localStorage 记忆）
+// REQ-028：行拖拽排序——拖序号列手柄自由上下移行，松手即按新顺序自动保存 sort_order
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, GripVertical } from 'lucide-react';
 import {
   fetchProcessItems, createProcessItem, updateProcessItem, deleteProcessItem
 } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
+import SmartSelect from '../common/SmartSelect';
 
 const SECTIONS = ['部位工艺', '缝制工艺', '后整理', '特殊工艺', '其他'];
 
 const cellStyle = {
-  background: 'var(--input-bg)',
-  border: '1px solid var(--border)',
-  padding: '7px 10px', borderRadius: 6, color: 'var(--text)',
+  padding: '7px 10px', borderRadius: 6, color: 'var(--text-2)',
   fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box'
 };
 
@@ -23,6 +23,80 @@ const textareaStyle = {
   resize: 'none', overflowY: 'auto', overflowX: 'hidden',
   lineHeight: 1.5, fontFamily: 'inherit', display: 'block'
 };
+
+/** 单行工艺：React.memo 隔离——输入时仅本行重渲染，不重建整表（卡顿根治） */
+const ProcessRow = React.memo(({ row, idx, onField, widths, dragIdx, onDragStartRow, onDropRow }) => {
+  const set = (field, value) => onField(row.id, field, value);
+  const tdStyle = (w) => ({ padding: 6, width: w, minWidth: w });
+  const isDragging = dragIdx === idx;
+  return (
+    <tr
+      style={{
+        borderBottom: '1px solid var(--bg-hover)',
+        background: isDragging ? 'var(--accent-soft)' : 'transparent',
+        opacity: isDragging ? 0.7 : 1
+      }}
+      onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+      onDrop={e => { e.preventDefault(); onDropRow(idx); }}
+    >
+      <td style={{ padding: '8px 4px', color: 'var(--text-2)', textAlign: 'center', width: 44, minWidth: 44 }}>
+        <span
+          draggable
+          onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(idx)); onDragStartRow(idx); }}
+          title="按住拖动调整顺序"
+          style={{ cursor: 'grab', color: 'var(--text-3)', display: 'inline-flex', alignItems: 'center', padding: '2px 3px', borderRadius: 4 }}
+        >
+          <GripVertical size={14} />
+        </span>
+        <span style={{ marginLeft: 3, fontSize: 12 }}>{idx + 1}</span>
+      </td>
+      <td style={tdStyle(widths.section)}>
+        <SmartSelect className="tbl-ss" style={{ width: '100%' }} allowCustom={false} value={row.section || ''} onChange={v => set('section', v)} options={SECTIONS} placeholder="部位工艺" />
+      </td>
+      <td style={tdStyle(widths.name)}>
+        <input style={cellStyle} value={row.name || ''} placeholder="工艺项目（如：领口罗纹）" onChange={e => set('name', e.target.value)} />
+      </td>
+      <td style={tdStyle(widths.requirement)}>
+        <textarea
+          style={textareaStyle}
+          rows={1}
+          ref={el => { if (el) autoGrow(el); }}
+          value={row.requirement || ''}
+          placeholder="工艺要求 / 做法（可多行）"
+          onChange={e => set('requirement', e.target.value)}
+          onInput={e => autoGrow(e.target)}
+        />
+      </td>
+      <td style={tdStyle(widths.standard)}>
+        <textarea
+          style={textareaStyle}
+          rows={1}
+          ref={el => { if (el) autoGrow(el); }}
+          value={row.standard || ''}
+          placeholder="标准 / 参数（如：针距3针/cm）"
+          onChange={e => set('standard', e.target.value)}
+          onInput={e => autoGrow(e.target)}
+        />
+      </td>
+      <td style={tdStyle(widths.note)}>
+        <textarea
+          style={textareaStyle}
+          rows={1}
+          ref={el => { if (el) autoGrow(el); }}
+          value={row.note || ''}
+          placeholder="备注"
+          onChange={e => set('note', e.target.value)}
+          onInput={e => autoGrow(e.target)}
+        />
+      </td>
+      <td style={{ padding: 6, textAlign: 'center', width: widths.action }}>
+        <button className="icon-btn-danger" onClick={() => onField(row.id, '__delete')} title="删除">
+          <Trash2 size={14} />
+        </button>
+      </td>
+    </tr>
+  );
+});
 
 const autoGrow = (el) => {
   if (!el) return;
@@ -73,6 +147,9 @@ const ProcessEditor = ({ taskId }) => {
   const [busy, setBusy] = useState(false);
   const [confirmDelId, setConfirmDelId] = useState(null); // REQ-006② 待删除工艺 id
   const [colWidths, setColWidths] = useState(loadCols);
+  const [dragIdx, setDragIdx] = useState(null); // REQ-028 当前拖拽行下标
+  const rowsRef = useRef([]); // REQ-028 拖拽排序时读最新 rows（避免闭包过期）
+  useEffect(() => { rowsRef.current = rows; }, [rows]);
 
   // REQ-014 拖拽列宽：更新 state 并记忆到 localStorage
   const setColWidth = useCallback((key, w) => {
@@ -85,32 +162,52 @@ const ProcessEditor = ({ taskId }) => {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setRows(await fetchProcessItems(taskId)); }
+    try {
+      const data = await fetchProcessItems(taskId);
+      // REQ-028 按 sort_order 升序渲染（后端若已排序也兼容）
+      setRows([...data].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)));
+    }
     catch (e) { alert('加载工艺指示失败: ' + e.message); }
     finally { setLoading(false); }
   }, [taskId]);
 
   useEffect(() => { load(); }, [load]);
 
-  const setField = (id, field, value) => {
-    setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
-  };
-
-  // 防抖自动保存：输入停顿后提交最新值，避免快速连续编辑丢字段
   const timersRef = useRef({});
-  const scheduleCommit = (id, field, value) => {
+  // 稳定引用：行级 memo 依赖它不变，否则每行都会重渲染
+  const handleField = useCallback((id, field, value) => {
+    setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+    if (field === '__delete') { setConfirmDelId(id); return; }
     const key = `${id}-${field}`;
     if (timersRef.current[key]) clearTimeout(timersRef.current[key]);
     timersRef.current[key] = setTimeout(async () => {
       try { await updateProcessItem(id, { [field]: value }); }
       catch (e) { alert('保存失败: ' + e.message); }
     }, 400);
-  };
+  }, []);
+
+  // REQ-028 行拖拽排序：松手后重排并逐行持久化新 sort_order
+  const onDragStartRow = useCallback((idx) => { setDragIdx(idx); }, []);
+  const onDropRow = useCallback((targetIdx) => {
+    if (dragIdx == null || dragIdx === targetIdx) { setDragIdx(null); return; }
+    const from = dragIdx;
+    setDragIdx(null);
+    const next = [...rowsRef.current];
+    const [moved] = next.splice(from, 1);
+    next.splice(targetIdx, 0, moved);
+    next.forEach((r, i) => {
+      if (r.sort_order !== i) {
+        updateProcessItem(r.id, { sort_order: i }).catch(e => alert('排序保存失败: ' + e.message));
+      }
+    });
+    setRows(next.map((r, i) => ({ ...r, sort_order: i })));
+  }, [dragIdx]);
+
 
   const handleAdd = async () => {
     setBusy(true);
     try {
-      await createProcessItem({ task_id: taskId, section: '部位工艺' });
+      await createProcessItem({ task_id: taskId, section: '部位工艺', sort_order: rows.length });
       await load();
     } catch (e) { alert('添加失败: ' + e.message); }
     finally { setBusy(false); }
@@ -136,7 +233,7 @@ const ProcessEditor = ({ taskId }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div className="section-title" style={{ borderLeftColor: '#f59e0b' }}>
           <div>工艺指示</div>
-          <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项 · 拖动表头右侧竖线可调列宽</span>
+          <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项 · 拖动行首手柄可排序 · 拖动表头右侧竖线可调列宽</span>
         </div>
         <button className="btn-blue-sm" onClick={handleAdd} disabled={busy}>
           {busy ? <Loader2 size={14} className="spin" /> : <Plus size={14} />} 添加工艺
@@ -189,55 +286,7 @@ const ProcessEditor = ({ taskId }) => {
             </thead>
             <tbody>
               {rows.map((row, idx) => (
-                <tr key={row.id} style={{ borderBottom: '1px solid var(--bg-hover)' }}>
-                  <td style={{ padding: '8px 8px', color: 'var(--text-2)', textAlign: 'center', width: 44 }}>{idx + 1}</td>
-                  <td style={tdStyle(colWidths.section)}>
-                    <select style={cellStyle} value={row.section || '部位工艺'} onChange={e => { setField(row.id, 'section', e.target.value); scheduleCommit(row.id, 'section', e.target.value); }}>
-                      {SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </td>
-                  <td style={tdStyle(colWidths.name)}>
-                    <input style={cellStyle} value={row.name || ''} placeholder="工艺项目（如：领口罗纹）" onChange={e => { setField(row.id, 'name', e.target.value); scheduleCommit(row.id, 'name', e.target.value); }} />
-                  </td>
-                  <td style={tdStyle(colWidths.requirement)}>
-                    <textarea
-                      style={textareaStyle}
-                      rows={1}
-                      ref={el => { if (el) autoGrow(el); }}
-                      value={row.requirement || ''}
-                      placeholder="工艺要求 / 做法（可多行）"
-                      onChange={e => { setField(row.id, 'requirement', e.target.value); scheduleCommit(row.id, 'requirement', e.target.value); }}
-                      onInput={e => autoGrow(e.target)}
-                    />
-                  </td>
-                  <td style={tdStyle(colWidths.standard)}>
-                    <textarea
-                      style={textareaStyle}
-                      rows={1}
-                      ref={el => { if (el) autoGrow(el); }}
-                      value={row.standard || ''}
-                      placeholder="标准 / 参数（如：针距3针/cm）"
-                      onChange={e => { setField(row.id, 'standard', e.target.value); scheduleCommit(row.id, 'standard', e.target.value); }}
-                      onInput={e => autoGrow(e.target)}
-                    />
-                  </td>
-                  <td style={tdStyle(colWidths.note)}>
-                    <textarea
-                      style={textareaStyle}
-                      rows={1}
-                      ref={el => { if (el) autoGrow(el); }}
-                      value={row.note || ''}
-                      placeholder="备注"
-                      onChange={e => { setField(row.id, 'note', e.target.value); scheduleCommit(row.id, 'note', e.target.value); }}
-                      onInput={e => autoGrow(e.target)}
-                    />
-                  </td>
-                  <td style={{ padding: 6, textAlign: 'center', width: colWidths.action }}>
-                    <button className="icon-btn-danger" onClick={() => setConfirmDelId(row.id)} title="删除">
-                      <Trash2 size={14} />
-                    </button>
-                  </td>
-                </tr>
+                <ProcessRow key={row.id} row={row} idx={idx} onField={handleField} widths={colWidths} dragIdx={dragIdx} onDragStartRow={onDragStartRow} onDropRow={onDropRow} />
               ))}
             </tbody>
           </table>

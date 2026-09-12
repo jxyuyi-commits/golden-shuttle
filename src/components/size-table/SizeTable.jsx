@@ -1,12 +1,176 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, CheckCircle2, Calculator, AlertCircle, ChevronUp, ChevronDown, Trash2, Database, Download, Info } from 'lucide-react';
 import { autoSign, formatTime } from '../../utils/format';
 import { fetchMeasurementTemplates, saveMeasurementTemplate } from '../../api';
 import MeasurementModal from '../measurement/MeasurementModal';
 import ConfirmModal from '../common/ConfirmModal';
+import SmartSelect from '../common/SmartSelect';
 
 /** 尺寸指标表格：排序 + 批量操作 + 预设导入 + 拓码 + 成衣实测公差报警 + 跨版次（批次）同码对比
  *  REQ-005：尺寸表归属版次——data 为当前批次尺寸表；compareRuns 为同款其它批次（同码 M 对 M 对比） */
+/** 单行尺寸指标：React.memo 隔离——输入时仅本行重渲染（卡顿根治）
+ *  pulseField/shakeField 只在命中行传具体字段名，其余行为 null → 其余行跳过重渲染 */
+const SizeRow = React.memo(({
+  row, i, isSelected, pulseField, shakeField,
+  previewCompare, compareRun, isActualMode, isExpanding,
+  allSizes, standardSize, stdIdx, isLast,
+  onUpdateRow, onUpdateSizeVal, onMoveRow, onToggleSelect, onRequestDelete
+}) => {
+  const instrVals = typeof row.size_values === 'string' ? JSON.parse(row.size_values || '{}') : (row.size_values || {});
+  const actualVals = typeof row.actual_values === 'string' ? JSON.parse(row.actual_values || '{}') : (row.actual_values || {});
+  const isPulse = (f) => pulseField === f;
+  const isShake = (f) => shakeField === f;
+
+  const calcGraded = (base, grading, sizeIndex) => {
+    const b = parseFloat(base);
+    const g = parseFloat(grading || 0);
+    if (isNaN(b) || isNaN(g) || stdIdx < 0) return '';
+    const diff = sizeIndex - stdIdx;
+    if (diff === 0) return '';
+    return (b + diff * g).toFixed(1);
+  };
+
+  // REQ-005④ 同码换算：取对比批次在该行"当前批次标准码"下的值
+  const compValOf = (r) => {
+    if (!compareRun) return null;
+    const sVals = typeof r.size_values === 'string' ? JSON.parse(r.size_values || '{}') : (r.size_values || {});
+    const compStdIdx = allSizes.indexOf(compareRun.size || standardSize);
+    const curStdIdx = allSizes.indexOf(standardSize);
+    if (compStdIdx < 0 || curStdIdx < 0) return r.base || '';
+    if (compStdIdx === curStdIdx) return r.base || '';
+    const manual = sVals[standardSize];
+    if (manual !== undefined && manual !== '') return manual;
+    const b = parseFloat(r.base);
+    const g = parseFloat(r.grading || 0);
+    if (isNaN(b) || isNaN(g)) return r.base || '';
+    return (b + (curStdIdx - compStdIdx) * g).toFixed(1);
+  };
+
+  const checkOutLimit = (sizeName, actualVal) => {
+    if (!actualVal) return { out: false, diff: 0 };
+    const sIdx = allSizes.indexOf(sizeName);
+    const isStd = sizeName === standardSize;
+    const sVals = typeof row.size_values === 'string' ? JSON.parse(row.size_values || '{}') : (row.size_values || {});
+    const instructionValStr = isStd ? row.base : (sVals[sizeName] || calcGraded(row.base, row.grading, sIdx));
+    const av = parseFloat(actualVal);
+    const iv = parseFloat(instructionValStr);
+    const tolV = parseFloat(String(row.tolerance || '').match(/\d+(\.\d+)?/)?.[0] || '');
+    if (isNaN(av) || isNaN(iv) || isNaN(tolV)) return { out: false, diff: 0 };
+    const diff = Math.abs(av - iv);
+    return { out: diff > tolV, diff: av - iv };
+  };
+
+  return (
+    <tr className={`${isSelected ? 'row-selected' : ''} ${previewCompare ? 'preview-row' : ''}`}>
+      <td className="sticky-col sticky-col-1">
+        <input type="checkbox" className="table-checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect(i)} />
+      </td>
+      <td className="sticky-col sticky-col-2">
+        <div className="sort-actions">
+          <button className="btn-sort" onClick={() => onMoveRow(i, -1)} disabled={i === 0}><ChevronUp size={13} /></button>
+          <button className="btn-sort" onClick={() => onMoveRow(i, 1)} disabled={isLast}><ChevronDown size={13} /></button>
+        </div>
+      </td>
+      <td className="sticky-col sticky-col-3">
+        <input className={`${isPulse('name') ? 'cell-pulse' : ''} ${isShake('name') ? 'cell-shake' : ''}`}
+          value={row.name || ''} onChange={e => onUpdateRow(i, 'name', e.target.value)} />
+      </td>
+      <td><input className={`${isPulse('method') ? 'cell-pulse' : ''} ${isShake('method') ? 'cell-shake' : ''}`}
+        value={row.method || ''} onChange={e => onUpdateRow(i, 'method', e.target.value)} /></td>
+      <td>
+        <input
+          className={`mono ${isPulse('base') ? 'cell-pulse' : ''} ${isShake('base') ? 'cell-shake' : ''}`}
+          style={{ color: 'var(--accent)', fontWeight: 700 }}
+          value={previewCompare ? '' : (row.base || '')}
+          onChange={e => onUpdateRow(i, 'base', e.target.value)}
+          placeholder={previewCompare ? '待导入' : '0.0'}
+        />
+      </td>
+      {compareRun && (() => {
+        const matched = (compareRun.size_data || []).find(cr => cr.name === row.name);
+        const compVal = matched ? compValOf(matched) : null;
+        const compNum = compVal === null ? NaN : parseFloat(compVal);
+        const currVal = parseFloat(row.base);
+        const diff = (!isNaN(compNum) && !isNaN(currVal)) ? (currVal - compNum) : null;
+        return (
+          <td style={{ textAlign: 'center', background: 'rgba(200, 169, 110, 0.12)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: 13 }}>{compVal === null ? '—' : (compVal || '—')}</span>
+              {diff !== null && diff !== 0 && (
+                <span style={{ fontSize: 10, color: diff > 0 ? '#ef4444' : '#22c55e' }}>
+                  {diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)}
+                </span>
+              )}
+            </div>
+          </td>
+        );
+      })()}
+      {isActualMode && (
+        <>
+          <td style={{ background: 'rgba(200, 169, 110, 0.12)' }}>
+            <input
+              className={`mono ${isPulse(standardSize) ? 'cell-pulse' : ''}`}
+              style={{ textAlign: 'center' }}
+              value={actualVals[standardSize] || ''}
+              onChange={e => onUpdateSizeVal(i, standardSize, e.target.value, true)}
+              placeholder="录入"
+            />
+          </td>
+          <td style={{ textAlign: 'center', background: 'rgba(200, 169, 110, 0.12)' }}>
+            {(() => {
+              const { out, diff } = checkOutLimit(standardSize, actualVals[standardSize]);
+              if (!actualVals[standardSize]) return null;
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                  {out && <AlertCircle size={14} color="#ef4444" />}
+                  <span style={{ fontSize: 11, color: out ? '#ef4444' : 'var(--text-2)', fontWeight: out ? 700 : 400 }}>
+                    {diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)}
+                  </span>
+                </div>
+              );
+            })()}
+          </td>
+        </>
+      )}
+      {isExpanding && allSizes.filter(s => s !== standardSize).map((s) => {
+        const realIdx = allSizes.indexOf(s);
+        const manualVal = instrVals[s];
+        const autoVal = calcGraded(row.base, row.grading, realIdx);
+        const instructionVal = manualVal || autoVal || '';
+        const shouldPulse = isPulse(s);
+        const cellStyle = instructionVal ? {} : { color: 'var(--text-3)', fontStyle: 'italic' };
+        return (
+          <td key={s}>
+            <input className={`mono ${shouldPulse ? 'cell-pulse' : ''}`}
+              style={cellStyle}
+              value={instructionVal}
+              onChange={e => onUpdateSizeVal(i, s, e.target.value, false)}
+              placeholder="0.0"
+            />
+          </td>
+        );
+      })}
+      <td>
+        <input className={`mono ${isPulse('grading') ? 'cell-pulse' : ''} ${isShake('grading') ? 'cell-shake' : ''}`}
+          value={row.grading || ''}
+          onChange={e => onUpdateRow(i, 'grading', e.target.value)}
+          placeholder="±1.0"
+        />
+      </td>
+      <td><input className="mono" value={row.tolerance || ''}
+        onChange={e => onUpdateRow(i, 'tolerance', e.target.value)}
+        onBlur={e => onUpdateRow(i, 'tolerance', autoSign(e.target.value))}
+        placeholder="0.5" /></td>
+      <td><input value={row.note || ''} onChange={e => onUpdateRow(i, 'note', e.target.value)} /></td>
+      <td>
+        <button className="icon-btn-danger" title="删除该部位" onClick={() => onRequestDelete(i)}><Trash2 size={14} /></button>
+      </td>
+    </tr>
+  );
+});
+
 const SizeTable = ({
   data = [],
   onChange,
@@ -25,6 +189,9 @@ const SizeTable = ({
   const [pulse, setPulse] = useState({ row: -1, field: '' });
   const [shake, setShake] = useState({ row: -1, field: '' });
   const [isActualMode, setIsActualMode] = useState(false);
+  // 稳定引用：行级 memo 依赖回调引用不变；data 经 ref 读取最新值
+  const dataRef = useRef(data);
+  dataRef.current = data;
   // REQ-006② 删除确认
   const [confirmIdx, setConfirmIdx] = useState(null); // 单行删除 index
   const [confirmBatch, setConfirmBatch] = useState(false); // 批量删除
@@ -33,7 +200,14 @@ const SizeTable = ({
 
   // -- 核心部位提醒 --
   const [requiredParts, setRequiredParts] = useState([]);
-  const missingParts = requiredParts.filter(p => !data.some(d => d.name === p.name));
+  // 部位名容错：模板中的旧称与尺寸表已更名的部位视为同一部位（如 衣长 → 后中长）
+  const PART_ALIASES = { '衣长': ['衣长', '后中长'] };
+  const partNameMatches = (rowName, reqName) => {
+    if (rowName === reqName) return true;
+    const aliases = PART_ALIASES[reqName];
+    return !!aliases && aliases.includes(rowName);
+  };
+  const missingParts = requiredParts.filter(p => !data.some(d => partNameMatches(d.name, p.name)));
 
   useEffect(() => {
     if (category) {
@@ -77,60 +251,33 @@ const SizeTable = ({
     return (b + diff * g).toFixed(1);
   };
 
-  // REQ-005④ 同码换算：取对比批次在该行"当前批次标准码"下的值（对比批次标准码不同时按放码规则换算）
-  const compValOf = (row) => {
-    if (!compareRun) return null;
-    const sVals = typeof row.size_values === 'string' ? JSON.parse(row.size_values || '{}') : (row.size_values || {});
-    const compStdIdx = allSizes.indexOf(compareRun.size || standardSize);
-    const curStdIdx = allSizes.indexOf(standardSize);
-    if (compStdIdx < 0 || curStdIdx < 0) return row.base || '';
-    if (compStdIdx === curStdIdx) return row.base || ''; // 同码：直接比 base
-    // 异码：优先对比批次手动值，否则按放码规则换算
-    const manual = sVals[standardSize];
-    if (manual !== undefined && manual !== '') return manual;
-    const b = parseFloat(row.base);
-    const g = parseFloat(row.grading || 0);
-    if (isNaN(b) || isNaN(g)) return row.base || '';
-    return (b + (curStdIdx - compStdIdx) * g).toFixed(1);
-  };
+
 
   // REQ-005 修订6：当前版次尺寸表为空时，选中对比版次则以该版次数据为「预览行」供查看，确认后导入
   // 注意：预览行为浅拷贝，避免编辑/排序污染对比版次原始数据（输入框经 .preview-row 禁编辑）
   const previewCompare = data.length === 0 && compareRun && Array.isArray(compareRun.size_data) && compareRun.size_data.length > 0;
   const displayRows = previewCompare ? compareRun.size_data.map(r => ({ ...r })) : data;
 
-  const checkOutLimit = (row, sizeName, actualVal) => {
-    if (!actualVal) return { out: false, diff: 0 };
-    const sIdx = allSizes.indexOf(sizeName);
-    const isStd = sizeName === standardSize;
-    const sVals = typeof row.size_values === 'string' ? JSON.parse(row.size_values || '{}') : (row.size_values || {});
-    const instructionValStr = isStd ? row.base : (sVals[sizeName] || calcGraded(row.base, row.grading, sIdx));
-    const av = parseFloat(actualVal);
-    const iv = parseFloat(instructionValStr);
-    const tolV = parseFloat(String(row.tolerance || '').match(/\d+(\.\d+)?/)?.[0] || '');
-    if (isNaN(av) || isNaN(iv) || isNaN(tolV)) return { out: false, diff: 0 };
-    const diff = Math.abs(av - iv);
-    return { out: diff > tolV, diff: av - iv };
-  };
 
-  const updateRow = (idx, field, val) => {
+
+  const updateRow = useCallback((idx, field, val) => {
     if (['base', 'grading', 'tolerance'].includes(field) && val && /[^0-9.\-±]/.test(val)) {
       setShake({ row: idx, field });
     }
     const finalVal = val.replace(/[^0-9.\-±]/g, '');
-    const list = [...data];
+    const list = [...dataRef.current];
     list[idx] = { ...list[idx], [field]: finalVal };
     onChange(list);
     if (field === 'base' || field === 'grading') setPulse({ row: idx, field });
-  };
+  }, [onChange]);
 
-  const updateSizeVal = (rowIdx, sizeName, val, isActual = false) => {
+  const updateSizeVal = useCallback((rowIdx, sizeName, val, isActual = false) => {
     const fieldKey = isActual ? 'actual_values' : 'size_values';
     if (val && /[^0-9.\-±]/.test(val)) {
       setShake({ row: rowIdx, field: sizeName });
     }
     const finalVal = val.replace(/[^0-9.\-±]/g, '');
-    const list = [...data];
+    const list = [...dataRef.current];
     const row = { ...list[rowIdx] };
     const vals = typeof row[fieldKey] === 'string' ? JSON.parse(row[fieldKey] || '{}') : (row[fieldKey] || {});
     vals[sizeName] = finalVal;
@@ -138,12 +285,12 @@ const SizeTable = ({
     list[rowIdx] = row;
     onChange(list);
     setPulse({ row: rowIdx, field: sizeName });
-  };
+  }, [onChange]);
 
-  const removeRow = (idx) => {
-    onChange(data.filter((_, i) => i !== idx));
+  const removeRow = useCallback((idx) => {
+    onChange(dataRef.current.filter((_, i) => i !== idx));
     setSelectedIndices(prev => prev.filter(i => i !== idx).map(i => i > idx ? i - 1 : i));
-  };
+  }, [onChange]);
 
   const doRemoveRow = () => {
     if (confirmIdx === null) return;
@@ -162,12 +309,18 @@ const SizeTable = ({
     onChange([]);
   };
 
-  const moveRow = (idx, dir) => {
-    if ((idx === 0 && dir === -1) || (idx === data.length - 1 && dir === 1)) return;
-    const list = [...data];
+  const moveRow = useCallback((idx, dir) => {
+    if ((idx === 0 && dir === -1) || (idx === dataRef.current.length - 1 && dir === 1)) return;
+    const list = [...dataRef.current];
     [list[idx], list[idx + dir]] = [list[idx + dir], list[idx]];
     onChange(list);
-  };
+  }, [onChange]);
+
+  const toggleSelect = useCallback((idx) => {
+    setSelectedIndices(prev =>
+      prev.includes(idx) ? prev.filter(x => x !== idx) : [...prev, idx]
+    );
+  }, []);
 
   const addPoints = (points) => {
     const newRows = points.map(p => ({
@@ -201,7 +354,7 @@ const SizeTable = ({
             <span>拓码模式</span>
           </div>
           {selectedIndices.length > 0 && (
-            <button className="btn-ghost" style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.25)' }} onClick={() => setConfirmBatch(true)}>
+            <button className="btn-ghost btn-del-ghost" style={{ borderColor: 'var(--border-weak)' }} onClick={() => setConfirmBatch(true)}>
               批量删除 ({selectedIndices.length})
             </button>
           )}
@@ -240,24 +393,19 @@ const SizeTable = ({
       )}
 
       {compareRuns.length > 0 && (
-        <div className="compare-bar glass" style={{ margin: '0 24px 16px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, borderRadius: 8, background: 'rgba(129, 140, 248, 0.05)', border: '1px solid rgba(129, 140, 248, 0.1)' }}>
-          <span style={{ fontSize: 13, color: '#818cf8', fontWeight: 600 }}>跨版次对比：</span>
-          <select
-            className="glass-select"
-            style={{ padding: '4px 12px', borderRadius: 6, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontSize: 13 }}
-            value={compareRunId || ''}
-            onChange={e => setCompareRunId(e.target.value)}
-          >
-            <option value="">不对比（隐藏对比列）</option>
-            {compareRuns.map(r => (
-              <option key={r.id} value={r.id}>
-                {r.order_no || '未编号批次'} · {r.sample_type || '未知版次'}（{r.size || '无码'}）
-              </option>
-            ))}
-          </select>
+        <div className="compare-bar glass" style={{ margin: '0 24px 16px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, borderRadius: 8, background: 'rgba(200, 169, 110, 0.08)', border: '1px solid rgba(200, 169, 110, 0.2)' }}>
+          <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>跨版次对比：</span>
+          <SmartSelect
+            className="compare-run-ss"
+            placeholder="不对比（隐藏对比列）"
+            allowCustom={false}
+            options={[{ key: '', label: '不对比（隐藏对比列）' }, ...compareRuns.map(r => ({ key: String(r.id), label: `${r.order_no || '未编号批次'} · ${r.sample_type || '未知版次'}（${r.size || '无码'}）` }))]}
+            value={compareRunId ? String(compareRunId) : ''}
+            onChange={v => setCompareRunId(v)}
+          />
           {compareRun && (
             <span style={{ fontSize: 12, color: 'var(--text-2)' }}>
-              💡 同码对比（当前 {standardSize} vs {compareRun.size || standardSize}）——表格「比对值」列为 {compareRun.order_no || '对比版次'} 尺寸数据，紫色高亮差异（增减量）；查看确认合适后点「导入该版次数据到当前版次」。
+              💡 同码对比（当前 {standardSize} vs {compareRun.size || standardSize}）——表格「比对值」列为 {compareRun.order_no || '对比版次'} 尺寸数据，金色高亮差异（增减量）；查看确认合适后点「导入该版次数据到当前版次」。
             </span>
           )}
           {compareRun && onImportCompare && (
@@ -276,10 +424,10 @@ const SizeTable = ({
 
       {/* REQ-005 修订6：空表 + 对比版次 → 预览提示（表格暂显示参考版次数据，查看后决定导入） */}
       {previewCompare && (
-        <div style={{ margin: '0 24px 12px', padding: '10px 14px', borderRadius: 8, border: '1px dashed rgba(129,140,248,0.5)', background: 'rgba(129,140,248,0.08)', fontSize: 12.5, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ margin: '0 24px 12px', padding: '10px 14px', borderRadius: 8, border: '1px dashed rgba(200,169,110,0.5)', background: 'rgba(200,169,110,0.08)', fontSize: 12.5, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <Info size={14} />
           <span>
-            当前版次尺寸表为空，表格暂显示「{compareRun.order_no || '未编号'} · {compareRun.sample_type || ''}」的{compareRun.size_data.length} 行数据预览（标准码留空、紫色「比对值」列为该版次数值）。查看确认合适后，点「导入该版次数据到当前版次」整体复制。
+            当前版次尺寸表为空，表格暂显示「{compareRun.order_no || '未编号'} · {compareRun.sample_type || ''}」的{compareRun.size_data.length} 行数据预览（标准码留空、金色「比对值」列为该版次数值）。查看确认合适后，点「导入该版次数据到当前版次」整体复制。
           </span>
         </div>
       )}
@@ -298,7 +446,7 @@ const SizeTable = ({
               <th style={{ minWidth: 200 }}>测量方法</th>
               <th style={{ width: 110, color: 'var(--accent)', textAlign: 'center' }}>标准码 {standardSize}</th>
               {compareRun && (
-                <th style={{ width: 100, color: '#818cf8', textAlign: 'center' }}>比对值</th>
+                <th style={{ width: 100, color: 'var(--accent)', textAlign: 'center' }}>比对值</th>
               )}
               {isActualMode && (
                 <>
@@ -316,123 +464,29 @@ const SizeTable = ({
             </tr>
           </thead>
           <tbody>
-            {displayRows.map((row, i) => {
-              const instrVals = typeof row.size_values === 'string' ? JSON.parse(row.size_values || '{}') : (row.size_values || {});
-              const actualVals = typeof row.actual_values === 'string' ? JSON.parse(row.actual_values || '{}') : (row.actual_values || {});
-              return (
-                <tr key={i} className={`${selectedIndices.includes(i) ? 'row-selected' : ''} ${previewCompare ? 'preview-row' : ''}`}>
-                  <td className="sticky-col sticky-col-1">
-                    <input type="checkbox" className="table-checkbox"
-                      checked={selectedIndices.includes(i)}
-                      onChange={() => setSelectedIndices(prev =>
-                        prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]
-                      )} />
-                  </td>
-                  <td className="sticky-col sticky-col-2">
-                    <div className="sort-actions">
-                      <button className="btn-sort" onClick={() => moveRow(i, -1)} disabled={i === 0}><ChevronUp size={13} /></button>
-                      <button className="btn-sort" onClick={() => moveRow(i, 1)} disabled={i === data.length - 1}><ChevronDown size={13} /></button>
-                    </div>
-                  </td>
-                  <td className="sticky-col sticky-col-3">
-                    <input className={`${pulse.row === i && pulse.field === 'name' ? 'cell-pulse' : ''} ${shake.row === i && shake.field === 'name' ? 'cell-shake' : ''}`}
-                      value={row.name || ''} onChange={e => updateRow(i, 'name', e.target.value)} />
-                  </td>
-                  <td><input className={`${pulse.row === i && pulse.field === 'method' ? 'cell-pulse' : ''} ${shake.row === i && shake.field === 'method' ? 'cell-shake' : ''}`}
-                    value={row.method || ''} onChange={e => updateRow(i, 'method', e.target.value)} /></td>
-                  <td>
-                    <input
-                      className={`${pulse.row === i && pulse.field === 'base' ? 'cell-pulse' : ''} ${shake.row === i && shake.field === 'base' ? 'cell-shake' : ''}`}
-                      style={{ color: 'var(--accent)', fontWeight: 700 }}
-                      value={previewCompare ? '' : (row.base || '')}
-                      onChange={e => updateRow(i, 'base', e.target.value)}
-                      placeholder={previewCompare ? '待导入' : '0.0'}
-                    />
-                  </td>
-                  {compareRun && (() => {
-                    const matched = (compareRun.size_data || []).find(cr => cr.name === row.name);
-                    const compVal = matched ? compValOf(matched) : null;
-                    const compNum = compVal === null ? NaN : parseFloat(compVal);
-                    const currVal = parseFloat(row.base);
-                    const diff = (!isNaN(compNum) && !isNaN(currVal)) ? (currVal - compNum) : null;
-                    return (
-                      <td style={{ textAlign: 'center', background: 'rgba(129, 140, 248, 0.03)' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <span style={{ color: '#818cf8', fontWeight: 600, fontSize: 13 }}>{compVal === null ? '—' : (compVal || '—')}</span>
-                          {diff !== null && diff !== 0 && (
-                            <span style={{ fontSize: 10, color: diff > 0 ? '#ef4444' : '#22c55e' }}>
-                              {diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    );
-                  })()}
-                  {isActualMode && (
-                    <>
-                      <td style={{ background: 'rgba(251, 113, 133, 0.03)' }}>
-                        <input
-                          className={pulse.row === i && pulse.field === standardSize ? 'cell-pulse' : ''}
-                          style={{ textAlign: 'center' }}
-                          value={actualVals[standardSize] || ''}
-                          onChange={e => updateSizeVal(i, standardSize, e.target.value, true)}
-                          placeholder="录入"
-                        />
-                      </td>
-                      <td style={{ textAlign: 'center', background: 'rgba(251, 113, 133, 0.03)' }}>
-                        {(() => {
-                          const { out, diff } = checkOutLimit(row, standardSize, actualVals[standardSize]);
-                          if (!actualVals[standardSize]) return null;
-                          return (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                              {out && <AlertCircle size={14} color="#ef4444" />}
-                              <span style={{ fontSize: 11, color: out ? '#ef4444' : 'var(--text-2)', fontWeight: out ? 700 : 400 }}>
-                                {diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)}
-                              </span>
-                            </div>
-                          );
-                        })()}
-                      </td>
-                    </>
-                  )}
-                  {isExpanding && allSizes.filter(s => s !== standardSize).map((s) => {
-                    const realIdx = allSizes.indexOf(s);
-                    const manualVal = instrVals[s];
-                    const isManual = !!instrVals[s];
-                    const autoVal = calcGraded(row.base, row.grading, realIdx);
-                    const instructionVal = manualVal || autoVal || '';
-                    const shouldPulse = pulse.row === i && pulse.field === s;
-                    const cellStyle = isManual ? { color: '#f97316', fontWeight: 700, background: 'rgba(249, 115, 22, 0.05)' } : (instructionVal ? {} : { color: 'var(--text-3)', fontStyle: 'italic' });
-                    return (
-                      <td key={s}>
-                        <input className={shouldPulse ? 'cell-pulse' : ''}
-                          style={cellStyle}
-                          value={instructionVal}
-                          onChange={e => updateSizeVal(i, s, e.target.value)}
-                          placeholder="0.0"
-                          title={isManual ? '手动修改' : ''}
-                        />
-                      </td>
-                    );
-                  })}
-                  <td>
-                    <input className={`${pulse.row === i && pulse.field === 'grading' ? 'cell-pulse' : ''} ${shake.row === i && shake.field === 'grading' ? 'cell-shake' : ''}`}
-                      value={row.grading || ''}
-                      onChange={e => updateRow(i, 'grading', e.target.value)}
-                      placeholder="±1.0"
-                    />
-                  </td>
-                  <td><input value={row.tolerance || ''}
-                    onChange={e => updateRow(i, 'tolerance', e.target.value)}
-                    onBlur={e => updateRow(i, 'tolerance', autoSign(e.target.value))}
-                    placeholder="0.5" /></td>
-                  <td><input value={row.note || ''} onChange={e => updateRow(i, 'note', e.target.value)} /></td>
-                  <td>
-                    <button className="icon-btn-danger" title="删除该部位" onClick={() => setConfirmIdx(i)}><Trash2 size={14} /></button>
-                  </td>
-                </tr>
-              );
-            })}
+            {displayRows.map((row, i) => (
+              <SizeRow
+                key={i}
+                row={row}
+                i={i}
+                isSelected={selectedIndices.includes(i)}
+                pulseField={pulse.row === i ? pulse.field : null}
+                shakeField={shake.row === i ? shake.field : null}
+                previewCompare={previewCompare}
+                compareRun={compareRun}
+                isActualMode={isActualMode}
+                isExpanding={isExpanding}
+                allSizes={allSizes}
+                standardSize={standardSize}
+                stdIdx={stdIdx}
+                isLast={i === data.length - 1}
+                onUpdateRow={updateRow}
+                onUpdateSizeVal={updateSizeVal}
+                onMoveRow={moveRow}
+                onToggleSelect={toggleSelect}
+                onRequestDelete={setConfirmIdx}
+              />
+            ))}
             {data.length === 0 && (
               <tr>
                 <td colSpan={isExpanding ? allSizes.length + 6 : 9} style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-4)' }}>
@@ -467,13 +521,13 @@ const SizeTable = ({
             value={quickAdd.method || ''}
             onChange={e => setQuickAdd({ ...quickAdd, method: e.target.value })}
           />
-          <input
+          <input className="mono"
             style={{ width: 70, background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             placeholder="档差"
             value={quickAdd.grading}
             onChange={e => setQuickAdd({ ...quickAdd, grading: e.target.value })}
           />
-          <input
+          <input className="mono"
             style={{ width: 70, background: 'var(--input-bg)', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none' }}
             placeholder="公差"
             value={quickAdd.tolerance}

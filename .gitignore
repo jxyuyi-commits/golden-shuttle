@@ -37,9 +37,12 @@ Thumbs.db
 .vscode/
 .idea/
 
-# ??????
+# 文档 PDF 不入库
 docs/*.pdf
 
 # 临时下载/备份（不入库）
 attachments_download/
 server/backup_empty/
+
+# 迁移前自动备份（G4：与库同目录保留最近 3 份）——备份内含真实业务数据，绝不入库
+server/database.sqlite.bak-*

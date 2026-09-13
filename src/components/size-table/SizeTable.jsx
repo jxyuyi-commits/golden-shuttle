@@ -332,7 +332,7 @@ const SizeTable = ({
       <div className="size-table-actions">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div className="section-title" style={{ margin: 0, border: 'none', padding: 0 }}>尺寸指标表</div>
-          {updatedAt && <span style={{ fontSize: 12, color: 'var(--text-4)' }}>{formatTime(updatedAt)}</span>}
+          {updatedAt && <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{formatTime(updatedAt)}</span>}
           <div className="size-rule-badge">
             规则: {sizeGroup ? sizeGroup.name : '通用(S-XXL)'}
           </div>
@@ -480,7 +480,7 @@ const SizeTable = ({
             ))}
             {data.length === 0 && (
               <tr>
-                <td colSpan={isExpanding ? allSizes.length + 6 : 9} style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-4)' }}>
+                <td colSpan={isExpanding ? allSizes.length + 6 : 9} style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-3)' }}>
                   暂无数据，点击「从预设加入」批量导入部位
                 </td>
               </tr>

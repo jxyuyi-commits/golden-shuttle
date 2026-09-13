@@ -675,3 +675,23 @@ npm run dev:all
 - **验证入口（新增，换机后可直接跑）**：`npm test`（= 单测 + 回滚 + 上传安全）、`npm run lint`、`npm run doc:check`、`npm run build`。
 - **`main` 未动**：两批全部落在 `feature/sample-run-model`（用户明确「当前版本没完善前不推 main」）。
 - **新增踩坑（详见 HANDBOOK §6.5）**：① 同一文件同一回合发多条 `Edit` 只有最后一条落盘；② AI 侧 bash 的 PATH 缺 PortableGit `usr/bin` 会导致 `ls/head/wc` 与 `npm run` 全挂。
+
+### UI 止血轨（U1+U2+U3，批 1 漏做，批 3 前置）
+
+> 背景：路线图 U7「CSS 分层重构」的依赖是 U1/U2，而 U1/U2 原属批 1「UI 止血轨」，该轨当时未执行（批 1 只落了 G1–G8 + D1/D2）。故批 3 先补齐。
+
+- **U1 解除 1280px 硬约束**：`src/App.jsx:258-266` 根容器整块内联样式（含 `minWidth: 1280`、`overflow:'hidden'`）删除，改由 `src/styles/app.css:7 .app` 承担 —— `height:100vh / display:flex / flex-direction:column / background:var(--app-bg) / color:var(--text) / overflow-x:auto / overflow-y:hidden / min-width:0`。**成因**：1366×768@125% 逻辑视口仅 ≈1093px，`overflow:hidden` 下右侧被裁 ≈187px（顶栏「导出工艺单/导出 PDF/历史版本/删除单据」+ 看板最右列）且无滚动条。
+- **U3 找回氛围光**：内联 `background:'var(--bg')` 一直压掉 `.app` 的 `var(--app-bg)`（内联 > 类层级），导致 custom 主题香槟金氛围光从未生效；删内联即恢复。另给 `theme.css:39` 的 custom `--app-bg` 末尾补 `, var(--bg)` 兜底底色。
+- **U2 文字对比度达标 AA**（仅 custom 主题；dark/light 实测已达标故未动）：
+  | 令牌 | 改前 | 改后 |
+  | --- | --- | --- |
+  | `--text-3` | `#6b6560` = **3.34:1** ✕ | `#8c857c` = **5.26:1** ✓ |
+  | `--text-4` | `#4a4540` = **2.02:1** ✕ | `#6b6560` = **3.34:1**（收敛为装饰/分隔线语义）|
+  | placeholder 合成 | `--text-4` + `opacity:.5` = **1.34:1**（≈隐形）| `--text-3` + `opacity:.75` = **3.46:1** ✓ |
+- **placeholder 去二次衰减（口径统一 4 处）**：`app.css:660`（.data-table，唯一叠加了 `opacity` 的一处）、`app.css:215`（.field）、`app.css:226`（.ss-display，不加 opacity）、`app.css:583`（.dp-placeholder / DatePicker，不加 opacity）、`index.css:1422`（.grid-cell）—— 统一 `color: var(--text-3)`，真 placeholder 加 `opacity:.75`。
+- **JSX 内联 `--text-4` 语义收口 7 处 → `--text-3`**（均为正文/标签/元信息/空态）：`App.jsx:385`（侧栏 11px 版本号）、`KanbanView.jsx:416`（分组标签）、`DetailView.jsx:407/458`、`SizeTable.jsx:335/483`、`MeasurementModal.jsx:54`。**保留 `--text-4` 3 处装饰性图标**：`KanbanView.jsx:15/445`、`TaskCard.jsx:8`。
+- **未做（有意留白）**：CSS 文件内其余 `--text-4` 用法（app.css ≈14 处 / index.css ≈6 处）不在本轨范围，归 **U7 分层重构**统一收敛；`app.css:68 .template-manager-v4 {min-width:800px}` 保持不动（由 U1 的根容器 `overflow-x:auto` 兜底，留待 U7/U22 流体化）。
+- **验证**：`npm run lint` 0 problems；`npm test` **9 files / 95 tests 全绿**（含文档防漂移用例，故需 `node scripts/doc-stats.cjs` 回填 HANDBOOK STATS：源码总行数 10587→10579）；`npm run build` 通过；WCAG 对比度由主理人独立复算（Python）确认。
+- **侦察成果落档（只读，未改码）**：
+  - `docs/roadmap/批3-UI治本-锚点侦察-20260914.md`（U1–U12 锚点全景 + 依赖顺序 + 明确否定结论）
+  - `docs/audit/U7-CSS分层重构-施工设计-20260914.md`（U7 分层方案 / 72 组 179 条冲突清单 / `!important` 三分法 7+16+156 / `.col` 单源方案 / S0–S8 施工顺序 / 风险与验证协议）

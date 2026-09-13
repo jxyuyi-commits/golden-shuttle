@@ -51,7 +51,7 @@ const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
                 </div>
               ))}
               {templates.length === 0 && (
-                <div style={{ color: 'var(--text-4)', padding: 32, textAlign: 'center', gridColumn: '1/-1' }}>
+                <div style={{ color: 'var(--text-3)', padding: 32, textAlign: 'center', gridColumn: '1/-1' }}>
                   该分类下暂无预设，请先在「设置」中添加
                 </div>
               )}

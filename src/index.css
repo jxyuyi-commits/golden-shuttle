@@ -1419,7 +1419,7 @@ em.audit-wait {
   color: var(--text); font: inherit; padding: 6px 8px; border-radius: 6px;
   box-sizing: border-box;
 }
-.grid-cell input::placeholder, .grid-cell textarea::placeholder { color: var(--text-4); }
+.grid-cell input::placeholder, .grid-cell textarea::placeholder { color: var(--text-3); opacity: .75; }
 .grid-cell:hover { background: var(--bg-hover); border-radius: 6px; }
 .grid-cell:focus-within { background: var(--bg-hover); box-shadow: 0 1px 0 var(--accent); border-radius: 6px; }
 .grid-cell.row-selected { background: var(--bg-hover); }

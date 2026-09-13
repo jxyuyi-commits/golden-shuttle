@@ -413,7 +413,7 @@ const KanbanView = ({
                       borderRadius: 12, boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
                       padding: 16, zIndex: 10000, maxHeight: 500, overflow: 'auto'
                     }}>
-                      <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-4)', marginBottom: 12, padding: '0 4px', display: 'flex', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-3)', marginBottom: 12, padding: '0 4px', display: 'flex', justifyContent: 'space-between' }}>
                         字段排序与显示
                         <span style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => setActiveDropdown(null)}>关闭</span>
                       </div>

@@ -404,7 +404,7 @@ const DetailView = ({
                 <Plus size={14} /> 添加事件
               </button>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-4)', marginBottom: 8 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 8 }}>
               按项目推进逐条记录，可自由增删改；看板状态单独控制，互不影响
             </div>
             {(task.progress_nodes || []).map((node, i) => (
@@ -455,7 +455,7 @@ const DetailView = ({
               </div>
             ))}
             {(task.progress_nodes || []).length === 0 && (
-              <div style={{ padding: '18px 0', textAlign: 'center', color: 'var(--text-4)', fontSize: 12 }}>
+              <div style={{ padding: '18px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 12 }}>
                 暂无工作动态，点击「添加事件」开始记录项目推进
               </div>
             )}

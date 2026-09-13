@@ -255,15 +255,7 @@ const App = () => {
   }, [editingTask?.id, loadTasks]);
 
   return (
-    <div className="app" style={{
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      background: 'var(--bg)',
-      color: 'var(--text)',
-      overflow: 'hidden',
-      minWidth: 1280 // 设置最小宽度，防止窄屏下控件强行压缩变形导致堆叠
-    }}>
+    <div className="app">
 
       {/* G7：任务加载失败态——明确提示而非空白列表，提供重试 */}
       {tasksError && (
@@ -390,7 +382,7 @@ const App = () => {
                 <div className="menu-item" onClick={() => { setShowLogs(true); setShowSidebar(false); }}>
                   <Clock size={20} /> 操作日志
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-4)', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-3)', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                   <span>PatternMaster v3.1.0</span>
                   <span>HTTP 通道</span>
                 </div>

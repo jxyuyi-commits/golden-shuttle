@@ -18,8 +18,8 @@
   --bg-hover-2: rgba(255, 255, 255, 0.07);
   --text: #f0ece6;
   --text-2: #9d9890;
-  --text-3: #6b6560;
-  --text-4: #4a4540;
+  --text-3: #8c857c;
+  --text-4: #6b6560;
   --border: rgba(255, 255, 255, 0.07);
   --border-weak: rgba(255, 255, 255, 0.04);
   --border-strong: rgba(255, 255, 255, 0.14);
@@ -36,7 +36,7 @@
   --scroll-thumb: rgba(160, 150, 140, 0.2);
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --card-bg: rgba(22, 23, 25, 0.75);
-  --app-bg: radial-gradient(circle at top right, rgba(200,169,110,0.05), transparent 40%), radial-gradient(circle at bottom left, rgba(200,169,110,0.03), transparent 40%);
+  --app-bg: radial-gradient(circle at top right, rgba(200,169,110,0.05), transparent 40%), radial-gradient(circle at bottom left, rgba(200,169,110,0.03), transparent 40%), var(--bg);
   color-scheme: dark;
 }
 

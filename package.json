@@ -7,8 +7,10 @@
     "dev:server": "cross-env ELECTRON_RUN_AS_NODE=1 electron server/index.cjs",
     "dev:client": "vite",
     "dev:all": "node scripts/dev.cjs",
-    "lint": "eslint src server scripts main.js preload.js",
-    "test": "npm run test:rollback && npm run test:security",
+    "lint": "eslint src server scripts tests main.js preload.js vitest.config.mjs",
+    "doc:check": "node scripts/doc-stats.cjs --check",
+    "test": "npm run test:unit && npm run test:rollback && npm run test:security",
+    "test:unit": "cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/vitest/vitest.mjs run",
     "test:rollback": "cross-env ELECTRON_RUN_AS_NODE=1 electron scripts/test-rollback-size.cjs",
     "test:security": "cross-env ELECTRON_RUN_AS_NODE=1 electron scripts/test-upload-security.cjs",
     "build": "vite build",
@@ -45,6 +47,7 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "vite": "^7.3.1",
+    "vitest": "^3.2.7",
     "wait-on": "^9.0.4"
   },
   "build": {

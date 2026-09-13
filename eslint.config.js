@@ -47,4 +47,23 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  // ── 测试（G9）：Node 环境 + ESM ──
+  // tests/** 与 vitest.config.mjs 均为 ESM（import/export）。若不在此声明 files，
+  // 这些文件不会被任何规则检查（与批 1 修掉的 server/** 未覆盖缺陷同源）。
+  // 与 package.json 的 lint 命令参数保持一致（命令里需显式列出 tests 与 vitest.config.mjs）。
+  {
+    files: ['tests/**/*.{js,mjs}', 'vitest.config.mjs'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: globals.node,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
 ])

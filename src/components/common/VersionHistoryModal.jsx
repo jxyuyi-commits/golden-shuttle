@@ -6,7 +6,7 @@ import ConfirmModal from './ConfirmModal';
 
 const STYLE_FIELDS = [
   ['title', '款式名称'], ['category', '款式类别'], ['brand', '品牌'], ['designer', '设计师'],
-  ['year', '年度'], ['season', '季节'], ['month', '波段'], ['priority', '优先级'],
+  ['year', '年度'], ['season', '季节'], ['month', '波段'],
   ['note', '打样说明'], ['fabric_req', '面料要求'], ['trim_req', '辅料要求'], ['process_req', '工艺建议'],
 ];
 

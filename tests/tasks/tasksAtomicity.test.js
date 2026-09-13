@@ -1,17 +1,14 @@
 /**
- * 模块 4／5：tasks.update() 原子性基线（G9 —— 为 G12「update() 包事务」预置验收网）
+ * 模块 4／5：tasks.update() 原子性（G9 建网 → G12 修复后转为验收用例）
  * ------------------------------------------------------------------
- * G12 的目标：把 `tasks.cjs#update()` 里「先改 styles、再改 tasks、再写操作日志、再存版本快照」
- * 的一串写操作包进一个事务，做到**中途失败整体回滚、不留脏数据**。
+ * G12 已把 `tasks.cjs#update()` 的「styles / tasks / 操作日志 / 版本快照」整串写入包进单事务，
+ * `remove()` 亦同。本文件据此验证：
+ *   ① 注入故障让 `UPDATE tasks ...` 抛错，断言 styles 与 tasks 都保持原值（原子性，G12 核心验收）；
+ *   ② 版本快照 capture 抛错仍被 `try/catch` 兜住、不向调用方抛出、不残留脏版本记录；
+ *   ③ 正常路径两处字段各自更新且返回更新标志。
  *
- * 本文件先写「失败时不留脏数据」的测试作为**测试先于修复的基线**：
- *   ① 注入故障让 `UPDATE tasks ...` 抛错，断言 styles 与 tasks 都保持原值（原子性）；
- *   ② 断言版本快照步骤抛错时被 `try/catch` 兜住、不向调用方抛出、不残留脏版本记录（当前已成立）。
- *
- * ⚠️ 基线结论（详见交付报告）：① 当前实现**不满足**原子性——styles 已改而 tasks 未改，属部分写入。
- *    因此 ① 用 vitest 的 `it.fails`（预期失败）承载：它**真实执行**该故障场景、记录已知缺陷、
- *    且不污染整条回归网（G10–G15 仍可把 `npm test` 当绿闸门）。
- *    G12 修复后：把 `it.fails(...)` 改成 `it(...)`，该用例即转正为绿。
+ * 背景（G9 基线）：修复前 update() 无事务，注入故障后 styles 已被改而 tasks 未改（部分写入，
+ * 由一次性探针实证 RESULT=PARTIAL_WRITE_CONFIRMED）。G12 落地后 ① 由 `it.fails` 翻正为 `it`。
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createTempDb, cleanupTempDb } from '../helpers/dbHarness.js';
@@ -61,8 +58,8 @@ describe('模块 4：tasks.update() 原子性基线', () => {
     expect(env.db.prepare('SELECT COUNT(*) AS c FROM operation_logs').get().c).toBe(before);
   });
 
-  // ── ① 已知缺陷基线：当前实现不原子（styles 已改、tasks 未改） ──
-  it.fails('【G12 基线·已知缺陷】tasks 落库步骤抛错时，update() 应整体回滚（styles 不应留下部分写入）', () => {
+  // ── ① G12 验收：update() 已包事务，中途失败必须整体回滚 ──
+  it('【G12 验收】tasks 落库步骤抛错时，update() 整体回滚（styles 不留下部分写入）', () => {
     const { styleId, taskId } = makeTask('原题', '原备注');
     const restore = injectPrepareFailure('UPDATE tasks SET');
     try {
@@ -72,12 +69,12 @@ describe('模块 4：tasks.update() 原子性基线', () => {
       } catch (e) {
         err = e;
       }
-      // 现状：错误确实向上抛出（update 未吞异常）
+      // 错误确实向上抛出（事务回滚后原样抛出）
       expect(err).toBeTruthy();
 
       const styleAfter = env.db.prepare('SELECT title FROM styles WHERE id = ?').get(styleId);
       const taskAfter = env.db.prepare('SELECT note FROM tasks WHERE id = ?').get(taskId);
-      // 原子性要求：失败后两处都必须是原值。当前 styles 已被改成「新题」→ 本断言失败（这正是 G12 要修的）
+      // 原子性：失败后两处都必须是原值（G9 基线时为「新题」/「原备注」，G12 修复后应为「原题」/「原备注」）
       expect(styleAfter.title).toBe('原题');
       expect(taskAfter.note).toBe('原备注');
     } finally {

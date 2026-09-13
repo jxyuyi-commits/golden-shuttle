@@ -32,10 +32,13 @@ const taskRuns = (t) => {
 };
 /** 任务涉及的全部版次 */
 const taskRunTypes = (t) => [...new Set(taskRuns(t).map(r => r.sample_type).filter(Boolean))];
-/** 任务的最高优先级（批次中取最高，兼容顶层字段） */
+/** 任务的最高优先级（批次中取最高，无批次回退顶层 priority）
+ *  G11 优先级单主：权威数据在 sample_runs.priority；后端 attachRuns 已按「批次最高档 S>A>B>C，无批次回退 B」
+ *  投影出 `t.priority`。前端此处规则与之**完全一致**，故看板分组/筛选（走批次）与列表/技术包导出
+ *  （走投影后的 t.priority）结果必然相同，不再出现「看板与导出优先级不一致」。 */
 const taskTopPriority = (t) => {
   const ps = taskRuns(t).map(r => r.priority).filter(Boolean);
-  if (!ps.length) return t.priority || 'B'; // REQ-030 默认 B
+  if (!ps.length) return t.priority || 'B'; // REQ-030 默认 B（后端同口径投影，非旧 tasks 列）
   return ps.sort((a, b) => (PRIO_RANK[b] ?? 1) - (PRIO_RANK[a] ?? 1))[0];
 };
 

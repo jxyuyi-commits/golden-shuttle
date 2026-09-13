@@ -35,16 +35,16 @@
 **机器可验证计数（防漂移）**：
 
 <!-- STATS:BEGIN (由 scripts/doc-stats.cjs 生成，请勿手改) -->
-> 以下计数由 `node scripts/doc-stats.cjs` 从源码实测生成（生成于 2026-09-14 04:14）；手工改动会被 `--check` 判为漂移。
+> 以下计数由 `node scripts/doc-stats.cjs` 从源码实测生成（生成于 2026-09-14 04:43）；手工改动会被 `--check` 判为漂移。
 
 | 计数项 | 值 |
 | --- | --- |
-| 源码文件数（src/ + server/，.js/.jsx/.cjs/.mjs） | 66 |
-| 源码总行数（同上范围） | 10366 |
+| 源码文件数（src/ + server/，.js/.jsx/.cjs/.mjs） | 67 |
+| 源码总行数（同上范围） | 10587 |
 | `server/routes/*.cjs` | 12 |
 | `server/services/*.cjs` | 12 |
-| 迁移最大版本（`server/db.cjs` migrations） | 20 |
-| 迁移条目数 | 20 |
+| 迁移最大版本（`server/db.cjs` migrations） | 21 |
+| 迁移条目数 | 21 |
 | `src/api/index.js` 导出绑定数 | 46 |
 | git 跟踪文件数 | （设 DOC_STATS_GIT=1 后生成） |
 <!-- STATS:END -->
@@ -209,6 +209,17 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
   * 绕过本地引用的推送法（推荐）：`git push origin <sha>:refs/heads/<branch>`，不依赖本地分支引用是否可解析。
   * 换机恢复：新机 `git fetch origin && git checkout -B <branch> origin/<branch>` 即可，引用由远端重建，不受此问题影响。
 
+* **同一文件同一回合发多条 Edit，只有最后一条会落盘（2026-09-14 实锤）**
+  * 现象：一条消息里对**同一文件**连续发多条 `Edit` 时，工具全部回报 "Successfully edited"，但磁盘上**只保留了最后一条**结果，前面的被静默丢弃。
+  * 后果：改完自测"通过"、复核时却 grep 不到 —— 本项目 G10 批曾因此出现「reported 了但没落盘」，被复核抓到。
+  * 规避：**一个文件一次只发一条 Edit**（改动多就整文件 `Write`）；每次改完立即 `Read`/`Grep` **回读验证**再进下一个文件。
+
+* **AI 侧 bash 的 PATH 缺 PortableGit `usr/bin`（2026-09-14）**
+  * 现象：`ls` / `head` / `wc` / `dirname` 一律 `command not found`，`npm run xxx` 直接报 `/usr/bin/env: 'bash': No such file or directory`（因为 `npm` 要通过 `sh -c` 起 bash）。`git`、`node` 却正常（它们分别来自 `/c/Program Files/Git/cmd` 与托管 node 目录）。
+  * 处置：跑命令前先补 PATH，即可全部恢复：
+    `export PATH="/c/Users/Yi Yu/.workbuddy/binaries/PortableGit/versions/1.2.0/usr/bin:$PATH"`
+  * 另注意：该环境下 `| head` / `| grep` 这类管道在补 PATH 前也会失败，排查时先补 PATH 再判断「命令是否真报错」。
+
 
 
 ***
@@ -226,6 +237,19 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 * G5 **请求日志不再序列化 body**（默认只记 method/path/状态码/耗时，`LOG_BODY=1` 才记且按体积预判）。
 * G6+G8 **ESLint 覆盖修复**：补齐 `server/**`、`scripts/**`、`main.js`、`preload.js` 的 Node/CommonJS 块（此前 `server/**` 完全不参与 lint）；85 problems → 0。
 * G7 **ErrorBoundary + 加载失败态**：全局错误边界兜底 + 任务加载失败横幅与重试。
+
+**工程治本批 2（G9–G15，2026-09-14）**
+
+* G9 **Vitest 自动化测试框架**（提交 fc567ed）：ABI 132 下的可行解 = `cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/vitest/vitest.mjs run`；`vitest.config.mjs` 用 pool=forks / isolate / fileParallelism:false；`tests/helpers/dbHarness.js` 提供**只碰临时库、永不触生产库**的夹具；首覆 7 个模块（迁移引擎 / 款级状态聚合 / 文档防漂移 / 图纸版本 / 任务原子性 / 上传安全 / 运行地基 ABI）。
+* G10 **清 5 个僵尸列**：迁移 v21 物理删除 `tasks.order_no / audit_status / audit_comment / size_data / priority`（权威数据早已下沉 `sample_runs`，v14/v16 已清空只是没删列）；同步摘净 `tasks.cjs`（create / TASK_KEYS / versions 死读）、`versions.cjs`（buildSnapshot 死读）、`seed.cjs`、`test-rollback-size.cjs` 的全部引用。
+* G11 **priority 单主**：款级优先级唯一口径 = **批次最高档（S>A>B>C，无批次回退 B，REQ-030）**，由后端 `attachRuns` 投影为 `task.priority`；看板 `KanbanView.taskTopPriority` 与列表/技术包导出口三处同规则，`tasks.priority` 列删除。
+* G12 **update() / remove() 包事务**：styles UPDATE → tasks UPDATE → 操作日志 → 版本快照整串进**单个事务**，杜绝「styles 已改而 tasks 未改」的部分写入；快照 capture 失败在事务内本地消化（不破坏提交）。
+* G13 **删掉启动期全表重算**：原 `recalcAllTaskStatus()` 的启动调用移除，款级状态归位**折进 v21（纯 SQL，与 `syncTaskStatus` 同口径）**；此后由批次写路径增量维护（已逐一核对 `sample_runs.status` 全部写入方）。函数本体保留（仍有测试覆盖）。
+* G14 **砍 IPC 双通道**：`src/api/client.js` 回归**纯 HTTP fetch**（删 26 条 IPC 映射，115→43 行）；`preload.js` / `main.js` 的 IPC 注册按用户决定**原样保留**（仅前端不再调用）。
+* G15 **抽 `techPackModel.js`**：Excel/PDF 导出的共享模型单一来源（379 行 / 27 个导出），`exportTechPack.js` 418→327 行、`exportTechPackPdf.js` 401→321 行；顺手修掉「PDF 尺寸表标题基码」与自身备注口径不一致的缺陷（四处统一走 `deriveBaseSize`）。
+* 本批新增护卫测试：`tests/export/techPackModel.test.js`（48 用例，模型层直测、无外部基线）、`tests/aggregate/prioritySingleSource.test.js`（4 用例，后端投影/看板/导出三处一致）。
+* 本批修掉的**用户可见缺陷**：① 版本详情每次打开都多出一行假的「优先级：中 → X」（根因：快照恒写已废止词表值，详见 G10/G11）；② PDF 尺寸表标题基码与自身备注不一致。
+
 
 **P0 安全三连（全部完成并落地，提交 24d2705）**
 

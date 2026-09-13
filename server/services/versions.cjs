@@ -30,7 +30,9 @@ function buildSnapshot(taskId) {
       month: style?.month || '',
       category: style?.category || '',
       pdf_url: style?.pdf_url || '',
-      priority: task.priority || '中',
+      // G10/G11：款级 priority 已退役（tasks.priority 随迁移 v21 物理删除，权威优先级在批次）。
+      // 不再写入 task 级 priority，避免新快照恒写废止旧词表值、进而在版本详情里产生假差异；
+      // 优先级信息改由下方 runs[].priority 在权威层级记录。
       start_date: task.start_date || '',
       expected_date: task.expected_date || '',
       finish_date: task.finish_date || '',
@@ -40,9 +42,10 @@ function buildSnapshot(taskId) {
       process_req: task.process_req || '',
       note: task.note || '',
     },
-    // legacy 字段：v16 之前旧快照尺寸表存放在 task 级，仅供 rollback 的旧快照分支兼容使用；
-    // 新快照（含 snapVersion）尺寸表已下沉批次，权威数据在各 run.size_data。
-    size_data: parse(task.size_data, []),
+    // legacy 字段：仅 pre-v16 旧快照分支读取（rollback 的 snapVersion 缺失分支）；
+    // v16+ 尺寸表权威数据在各 run.size_data，G10 后 tasks.size_data 列已随迁移 v21 物理删除，
+    // 故新快照此字段恒为空数组（不再读已删列）。
+    size_data: [],
     bom: boms.map(b => ({
       id: b.id, category: b.category, name: b.name, spec: b.spec, color: b.color,
       unit: b.unit, usage: b.usage, supplier: b.supplier, price: b.price, note: b.note,
@@ -50,6 +53,8 @@ function buildSnapshot(taskId) {
     runs: runs.map(r => ({
       id: r.id, order_no: r.order_no, sample_type: r.sample_type, size: r.size,
       sample_color: r.sample_color, sample_count: r.sample_count, status: r.status,
+      // G11 优先级单主：快照在权威层级（批次）记录 priority，避免版本追溯丢失优先级信息
+      priority: r.priority,
       pattern_maker: r.pattern_maker, sample_maker: r.sample_maker,
       audit_status: r.audit_status, audit_comment: r.audit_comment,
       // REQ-005 尺寸表归属版次：批次独立尺寸表随快照记录，回滚时写回批次
@@ -66,7 +71,7 @@ function buildSnapshot(taskId) {
 const FIELD_LABELS = {
   style_no: '款号', title: '款式名称', category: '款式类别', brand: '品牌', designer: '设计师',
   year: '年度', season: '季节', month: '波段', pdf_url: '设计稿',
-  priority: '优先级', start_date: '任务开始', expected_date: '预计完工', finish_date: '实际完工',
+  start_date: '任务开始', expected_date: '预计完工', finish_date: '实际完工',
   progress_nodes: '工作动态', fabric_req: '面料要求', trim_req: '辅料要求', process_req: '工艺建议', note: '打样说明',
   size_data: '尺寸表', bom: '物料清单(BOM)',
 };
@@ -78,7 +83,8 @@ function diffSummary(prev, next) {
     if (hit.length) changed.push(`${label}(${hit.map(k => FIELD_LABELS[k] || k).join('/')})`);
   };
   sec('款式信息', ['style_no', 'title', 'category', 'brand', 'designer', 'year', 'season', 'month', 'pdf_url']);
-  sec('任务字段', ['priority', 'start_date', 'expected_date', 'finish_date', 'progress_nodes', 'fabric_req', 'trim_req', 'process_req', 'note']);
+  // G11：priority 已非款级字段（权威在批次），不再纳入款级「任务字段」差异比较
+  sec('任务字段', ['start_date', 'expected_date', 'finish_date', 'progress_nodes', 'fabric_req', 'trim_req', 'process_req', 'note']);
   // REQ-005 尺寸表归属版次：以 snapVersion 判别快照形态（与 rollback 同一判据，不使用「键是否存在」猜测）——
   //   snapVersion 缺失 → 旧快照：尺寸表在 task 级；snapVersion 存在 → 新快照：尺寸表归属各批次
   const sdOf = (s) => (s.snapVersion === undefined
@@ -153,16 +159,16 @@ function rollback(taskId, versionId) {
     db.prepare(`UPDATE styles SET style_no=@style_no, title=@title, brand=@brand, designer=@designer,
       year=@year, season=@season, month=@month, category=@category, pdf_url=@pdf_url, updated_at=CURRENT_TIMESTAMP WHERE id=@id`)
       .run({ ...s, id: task.style_id });
-    // 2) 任务字段（工作动态/说明；尺寸表已下沉批次 REQ-005，见 2.5）
+    // 2) 任务字段（工作动态/说明；尺寸表已下沉批次 REQ-005，见 2.5）；priority 为批次级字段不在此回滚
     db.prepare(`UPDATE tasks SET progress_nodes=@progress_nodes,
       note=@note, fabric_req=@fabric_req, trim_req=@trim_req, process_req=@process_req,
-      priority=@priority, start_date=@start_date, expected_date=@expected_date, finish_date=@finish_date,
+      start_date=@start_date, expected_date=@expected_date, finish_date=@finish_date,
       updated_at=CURRENT_TIMESTAMP WHERE id=@id`)
       .run({
         id: taskId,
         progress_nodes: JSON.stringify(snap.task?.progress_nodes || []),
         note: s.note || '', fabric_req: s.fabric_req || '', trim_req: s.trim_req || '', process_req: s.process_req || '',
-        priority: s.priority || '中', start_date: s.start_date || '', expected_date: s.expected_date || '', finish_date: s.finish_date || '',
+        start_date: s.start_date || '', expected_date: s.expected_date || '', finish_date: s.finish_date || '',
       });
     // 2.5) 尺寸表回滚（REQ-005 归属版次）：
     //   由快照 snapVersion 做确定性判别，绝不再用「键是否存在」猜测（旧实现导致旧快照分支成死代码）：

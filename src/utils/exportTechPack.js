@@ -1,13 +1,37 @@
 // 工艺单（Tech Pack）导出：单张打样单 → 专业格式多sheet Excel
 // 基于 exceljs，配色/布局严格对照行业标准工艺单
 // Sheet：基本信息 / 尺寸规格 / 物料清单(BOM) / 工艺指示
+//
+// 数据与业务逻辑统一来自 ./techPackModel（与 PDF 版共用同一来源，改动只需改一处）；
+// 本文件只保留**本路径特有的渲染**：exceljs 样式、argb 配色、列宽/行高、斑马纹、边框。
+// ⚠️ 本文件的色值（argb）、斑马纹（C6E0B4）、边框（404040）与 PDF 版**有意不同**，勿与他人「对齐」。
 import ExcelJS from 'exceljs';
-import { timestamp } from './exporter';
+import {
+  BOM_HEADERS,
+  PROCESS_HEADERS,
+  pickColors,
+  val,
+  asList,
+  parseSizeData,
+  downloadBlob,
+  applyRunOverride,
+  buildInfoSections,
+  deriveSizeKeys,
+  deriveBaseSize,
+  buildSizeTitle,
+  buildSizeHeaders,
+  buildSizeRows,
+  buildSizeNote,
+  buildBomRows,
+  buildProcessRows,
+  buildTechPackFileName,
+} from './techPackModel';
 
 /* ──────────────────────────────────────────────
-   配色（墨绿系，行业标准工艺单风格）
+   配色（墨绿系，行业标准工艺单风格）—— Excel argb 取值
+   语义键统一取自 techPackModel.COLOR_ROLES；色值仅本文件持有。
    ────────────────────────────────────────────── */
-const C = {
+const COLOR_VALUES = {
   titleBg:    'FF1F4538',  // 标题栏 深墨绿（接近黑绿）
   titleFont:  'FFFFFFFF',  // 标题白字
   headerBg:   'FF8FB57A',  // 表头 浅绿
@@ -20,6 +44,7 @@ const C = {
   noteFont:   'FFCC0000',  // 备注 红
   dataFont:   'FF262626',  // 正文 深灰
 };
+const C = pickColors(COLOR_VALUES);
 
 const thinBorder = {
   top: { style: 'thin', color: { argb: C.border } },
@@ -27,50 +52,6 @@ const thinBorder = {
   bottom: { style: 'thin', color: { argb: C.border } },
   right: { style: 'thin', color: { argb: C.border } },
 };
-
-const NODE_STATUS_CN = { pending: '待开始', active: '进行中', completed: '已完成', done: '已完成' };
-const STATUS_CN = { done: '已完结', doing: '打版中', pending: '待处理', todo: '待处理' };
-const DASH = '—';
-
-/* ──────────────────────────────────────────────
-   工具函数
-   ────────────────────────────────────────────── */
-function formatDate(d, fallbackYear) {
-  if (!d) return '';
-  const s = String(d).trim();
-  if (!s) return '';
-  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) return s;
-  const m1 = s.match(/^(\d{4})[/.](\d{1,2})[/.](\d{1,2})$/);
-  if (m1) return `${m1[1]}-${m1[2].padStart(2, '0')}-${m1[3].padStart(2, '0')}`;
-  const m2 = s.match(/^(\d{1,2})[/.](\d{1,2})$/);
-  if (m2) {
-    const y = fallbackYear || new Date().getFullYear();
-    return `${y}-${m2[1].padStart(2, '0')}-${m2[2].padStart(2, '0')}`;
-  }
-  return s;
-}
-
-/** 清理公差格式："(±) 0.5" → "0.5"，"±0.5" → "0.5" */
-function cleanTolerance(t) {
-  if (!t) return '';
-  return String(t).replace(/[（(]?\s*[±＋+]\s*[）)]?\s*/g, '').trim();
-}
-
-function parseSizeData(task) {
-  let sd = task?.size_data;
-  if (typeof sd === 'string') { try { sd = JSON.parse(sd || '[]'); } catch { sd = []; } }
-  return Array.isArray(sd) ? sd : [];
-}
-
-function parseSizeValues(v) {
-  if (typeof v === 'string') { try { return JSON.parse(v || '{}'); } catch { return {}; } }
-  return v || {};
-}
-
-function val(v) {
-  if (v === null || v === undefined || v === '') return DASH;
-  return v;
-}
 
 function colLetter(n) {
   let s = '';
@@ -134,45 +115,7 @@ function buildInfoSheet(workbook, task) {
   setTitle(sheet, 'A1:C1', '一、基本信息');
   setHeader(sheet, 2, ['分类', '字段', '内容']);
 
-  const year = task.year || '';
-  let cleanNote = task.note || '';
-  if (cleanNote.startsWith('工作动态：') || cleanNote.startsWith('工作动态:')) cleanNote = '';
-
-  const sections = [
-    { name: '款式基础信息', items: [
-      ['款号', task.style_no], ['款式名称', task.title], ['类别', task.category],
-      ['品牌', task.brand], ['设计师', task.designer],
-      ['时段', [task.year, task.season, task.month].filter(Boolean).join(' ')],
-    ]},
-    { name: '打样信息', items: [
-      ['版单号', task.order_no], ['版次', task.sample_type], ['样衣颜色', task.sample_color],
-      ['尺码', task.size], ['件数', task.sample_count ? `${task.sample_count}件` : ''],
-      ['优先级', task.priority], ['审核状态', task.audit_status],
-      ['看板状态', STATUS_CN[task.status] || task.status || ''],
-    ]},
-    { name: '日期', items: [
-      ['面料到库日期', formatDate(task.fabric_date, year)],
-      ['任务开始日期', formatDate(task.start_date, year)],
-      ['预计完工日期', formatDate(task.expected_date, year)],
-      ['实际完工日期', formatDate(task.finish_date, year)],
-    ]},
-  ];
-
-  const nodes = task.progress_nodes || [];
-  const timelineItems = nodes.length ? nodes.map(n => {
-    const st = NODE_STATUS_CN[n.status] || n.status || '';
-    const date = formatDate(n.date, year);
-    const meta = [st, date].filter(Boolean).join(' ');
-    const extra = [n.by ? `负责人:${n.by}` : '', n.note || ''].filter(Boolean).join('；');
-    return [n.label || '（未命名）', [meta, extra].filter(Boolean).join('｜')];
-  }) : [['无记录', '']];
-  sections.push({ name: '工作动态', items: timelineItems });
-
-  sections.push({ name: '说明与反馈', items: [
-    ['款式说明/打样重点', cleanNote], ['物料要求', task.fabric_req],
-    ['辅料要求', task.trim_req], ['工艺建议/注意事项', task.process_req],
-    ['审版意见/修改反馈', task.audit_comment],
-  ]});
+  const sections = buildInfoSections(task);
 
   let rowNum = 3;
   for (const sec of sections) {
@@ -207,16 +150,8 @@ function buildSizeSheet(workbook, task) {
   const sheet = workbook.addWorksheet('尺寸规格');
   const data = parseSizeData(task);
 
-  const sizeKeys = [];
-  for (const row of data) {
-    for (const k of Object.keys(parseSizeValues(row.size_values))) {
-      if (k.endsWith('_manual')) continue;
-      if (!sizeKeys.includes(k)) sizeKeys.push(k);
-    }
-  }
-
-  const baseSize = task.size || sizeKeys[1] || sizeKeys[0] || 'M';
-  const sizeLabel = sizeKeys.length ? `${sizeKeys.join('/')}三码` : '—';
+  const sizeKeys = deriveSizeKeys(data);
+  const baseSize = deriveBaseSize(task, sizeKeys);
   const colCount = 3 + sizeKeys.length + 2; // 序号+部位+测量方法 + 尺码列 + 档差+公差
 
   // 列宽
@@ -228,10 +163,9 @@ function buildSizeSheet(workbook, task) {
   sheet.getColumn(5 + sizeKeys.length).width = 12;     // 公差
 
   const lastCol = colLetter(colCount);
-  setTitle(sheet, `A1:${lastCol}1`, `二、尺寸规格（基码${baseSize}，${sizeLabel}）`);
+  setTitle(sheet, `A1:${lastCol}1`, buildSizeTitle(task, sizeKeys));
 
-  const headers = ['序号', '部位', '测量方法', ...sizeKeys.map(k => `${k}(cm)`), '档差(cm)', '公差(±cm)'];
-  setHeader(sheet, 2, headers);
+  setHeader(sheet, 2, buildSizeHeaders(sizeKeys));
 
   if (!data.length) {
     const row = sheet.getRow(3);
@@ -244,15 +178,14 @@ function buildSizeSheet(workbook, task) {
 
   // 数据行：斑马纹
   const centerCols = [1, ...sizeKeys.map((_, i) => 4 + i), 4 + sizeKeys.length, 5 + sizeKeys.length];
-  data.forEach((row, i) => {
-    const sv = parseSizeValues(row.size_values);
+  buildSizeRows(data, sizeKeys).forEach((row, i) => {
     const r = sheet.getRow(3 + i);
-    r.getCell(1).value = i + 1;
+    r.getCell(1).value = row.index;
     r.getCell(2).value = val(row.name);
     r.getCell(3).value = val(row.method);
-    sizeKeys.forEach((k, ki) => { r.getCell(4 + ki).value = sv[k] ?? ''; });
-    r.getCell(4 + sizeKeys.length).value = row.grading ?? '';
-    r.getCell(5 + sizeKeys.length).value = cleanTolerance(row.tolerance);
+    sizeKeys.forEach((k, ki) => { r.getCell(4 + ki).value = row.values[ki]; });
+    r.getCell(4 + sizeKeys.length).value = row.grading;
+    r.getCell(5 + sizeKeys.length).value = row.tolerance;
     styleDataRow(r, colCount, { zebra: i % 2 === 1, centerCols });
   });
 
@@ -260,7 +193,7 @@ function buildSizeSheet(workbook, task) {
   const noteRowNum = 3 + data.length;
   const noteRow = sheet.getRow(noteRowNum);
   sheet.mergeCells(`A${noteRowNum}:${lastCol}${noteRowNum}`);
-  noteRow.getCell(1).value = `备注：基码${baseSize}，共${sizeKeys.length}码；公差按品牌基线执行（衣长±0.5／胸围±1／袖长±0.5／其余±0.3），具体以封样确认样衣为准。`;
+  noteRow.getCell(1).value = buildSizeNote(baseSize, sizeKeys.length);
   noteRow.getCell(1).font = { size: 10, name: '微软雅黑', color: { argb: C.noteFont } };
   noteRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true, indent: 1 };
   for (let c = 1; c <= colCount; c++) noteRow.getCell(c).border = thinBorder;
@@ -274,13 +207,13 @@ function buildSizeSheet(workbook, task) {
    ────────────────────────────────────────────── */
 function buildBomSheet(workbook, items) {
   const sheet = workbook.addWorksheet('物料清单');
-  const list = Array.isArray(items) ? items : [];
+  const list = asList(items);
   const colCount = 11;
 
   [7, 11, 22, 16, 10, 8, 8, 14, 10, 10, 30].forEach((w, i) => sheet.getColumn(i + 1).width = w);
 
   setTitle(sheet, 'A1:K1', '三、物料清单（BOM）');
-  setHeader(sheet, 2, ['序号', '类别', '物料名称', '规格', '颜色', '单位', '单耗', '供应商', '单价(元)', '小计(元)', '备注']);
+  setHeader(sheet, 2, BOM_HEADERS);
 
   if (!list.length) {
     const row = sheet.getRow(3);
@@ -291,24 +224,20 @@ function buildBomSheet(workbook, items) {
     return sheet;
   }
 
-  let totalCost = 0;
   const centerCols = [1, 6, 7, 9, 10];
-  list.forEach((b, i) => {
-    const usage = parseFloat(b.usage) || 0;
-    const price = parseFloat(b.price) || 0;
-    const subtotal = usage * price;
-    totalCost += subtotal;
+  const { rows: bomRows, totalCost } = buildBomRows(list);
+  bomRows.forEach((b, i) => {
     const r = sheet.getRow(3 + i);
-    r.getCell(1).value = i + 1;
+    r.getCell(1).value = b.index;
     r.getCell(2).value = val(b.category);
     r.getCell(3).value = val(b.name);
     r.getCell(4).value = val(b.spec);
     r.getCell(5).value = val(b.color);
     r.getCell(6).value = val(b.unit);
-    r.getCell(7).value = usage || '';
+    r.getCell(7).value = b.usage || '';
     r.getCell(8).value = val(b.supplier);
-    r.getCell(9).value = price || '';
-    r.getCell(10).value = subtotal ? Number(subtotal.toFixed(2)) : '';
+    r.getCell(9).value = b.price || '';
+    r.getCell(10).value = b.subtotal;
     r.getCell(11).value = val(b.note);
     styleDataRow(r, colCount, { zebra: i % 2 === 1, centerCols });
   });
@@ -319,7 +248,7 @@ function buildBomSheet(workbook, items) {
   tr.getCell(1).value = '单件成本合计';
   tr.getCell(1).font = { bold: true, size: 12, name: '微软雅黑', color: { argb: C.headerFont } };
   tr.getCell(1).alignment = { horizontal: 'right', vertical: 'middle', indent: 1 };
-  tr.getCell(10).value = Number(totalCost.toFixed(2));
+  tr.getCell(10).value = totalCost;
   tr.getCell(10).font = { bold: true, size: 12, name: '微软雅黑', color: { argb: C.totalFont } };
   tr.getCell(10).alignment = { horizontal: 'center', vertical: 'middle' };
   tr.getCell(11).value = '';
@@ -336,7 +265,7 @@ function buildBomSheet(workbook, items) {
    ────────────────────────────────────────────── */
 function buildProcessSheet(workbook, items) {
   const sheet = workbook.addWorksheet('工艺指示');
-  const list = Array.isArray(items) ? items : [];
+  const list = asList(items);
   const colCount = 6;
 
   sheet.getColumn(1).width = 7;
@@ -347,7 +276,7 @@ function buildProcessSheet(workbook, items) {
   sheet.getColumn(6).width = 24;
 
   setTitle(sheet, 'A1:F1', '四、工艺指示');
-  setHeader(sheet, 2, ['序号', '工艺分类', '工艺名称', '工艺要求', '质量标准', '备注']);
+  setHeader(sheet, 2, PROCESS_HEADERS);
 
   if (!list.length) {
     const row = sheet.getRow(3);
@@ -358,9 +287,9 @@ function buildProcessSheet(workbook, items) {
     return sheet;
   }
 
-  list.forEach((p, i) => {
+  buildProcessRows(list).forEach((p, i) => {
     const r = sheet.getRow(3 + i);
-    r.getCell(1).value = i + 1;
+    r.getCell(1).value = p.index;
     r.getCell(2).value = val(p.section);
     r.getCell(3).value = val(p.name);
     r.getCell(4).value = val(p.requirement);
@@ -376,35 +305,15 @@ function buildProcessSheet(workbook, items) {
 }
 
 /* ──────────────────────────────────────────────
-   下载
+   下载 / 文件名 / 总入口
    ────────────────────────────────────────────── */
-function downloadBlob(blob, fileName) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 export function getTechPackFileName(task) {
-  const styleNo = task?.style_no || 'unknown';
-  const orderNo = task?.order_no || '';
-  return `工艺单_${styleNo}${orderNo ? '_' + orderNo : ''}_${timestamp()}.xlsx`;
+  return buildTechPackFileName(task, 'xlsx');
 }
 
 export async function exportTechPack(task, bomItems, processItems, run) {
   // REQ-005 尺寸表归属版次：run 为当前选中批次，覆盖导出用的尺寸表/尺码/件数（批次级权威）
-  if (run) {
-    task = {
-      ...task,
-      size: run.size || task.size,
-      sample_count: run.sample_count || task.sample_count,
-      size_data: run.size_data || task.size_data,
-    };
-  }
+  task = applyRunOverride(task, run);
   if (!task) return;
   const workbook = new ExcelJS.Workbook();
   buildInfoSheet(workbook, task);

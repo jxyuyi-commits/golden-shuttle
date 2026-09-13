@@ -392,7 +392,7 @@ const App = () => {
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--text-4)', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                   <span>PatternMaster v3.1.0</span>
-                  <span>{typeof window !== 'undefined' && !!window.api ? 'IPC 通道' : 'HTTP 通道'}</span>
+                  <span>HTTP 通道</span>
                 </div>
               </div>
             </div>

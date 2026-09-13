@@ -55,6 +55,18 @@ const DERIVED_STATUS_LABEL = {
   sample_making: '样衣中', pending_confirm: '待确认', done: '已完成',
 };
 
+// G11 款级优先级单主口径：取该款全部批次中的最高档（S>A>B>C），无批次回退 B。
+// 与看板 KanbanView.taskTopPriority 同规则，保证「看板分组/筛选」与「列表/技术包导出」三处一致。
+const PRIO_RANK = { S: 3, A: 2, B: 1, C: 0 };
+/** 从批次列表推导款级优先级（最高档优先；无批次/无有效档位回退 B，REQ-030 默认档） */
+function topPriorityOf(runs) {
+  let top = '';
+  for (const r of runs) {
+    if (r.priority && (PRIO_RANK[r.priority] ?? -1) > (PRIO_RANK[top] ?? -1)) top = r.priority;
+  }
+  return top || 'B';
+}
+
 /**
  * 从批次列表推导款级状态（REQ-027 修正口径：当前进度 = 最新版次）
  * 完成 = 全部批次已完成（done）；任一批次未完成 → 取未完成批次中 sort_order 最大者（最新版次）的状态。
@@ -143,6 +155,9 @@ function attachRuns(rows) {
       // REQ-005 尺寸表归属版次：权威数据在 sample_runs.size_data（迁移 v16），
       // 此处从首个批次投影保持旧消费点（导出兜底/版本对比等）可用
       size_data: safeParse(top?.size_data, []),
+      // G11 priority 单主：tasks.priority 列已随迁移 v21 物理删除，款级优先级改由批次最高档投影
+      // （S>A>B>C，无批次回退 B），与看板 KanbanView.taskTopPriority / 列表导出 / 技术包导出口径统一
+      priority: topPriorityOf(runs),
     };
   });
 }
@@ -175,15 +190,16 @@ function get(id) {
  * @returns {Array<object>}
  */
 function versions(styleId) {
+  // G10：tasks.order_no / tasks.size_data 已随 v21 物理删除，版本对比所需的单号/尺寸表一律从批次投影
   const rows = getDb().prepare(`
-    SELECT id, order_no, size_data, created_at
+    SELECT id, created_at
     FROM tasks WHERE style_id = ? ORDER BY created_at DESC
   `).all(styleId);
   if (!rows.length) return rows;
   const ids = rows.map(r => r.id);
   const placeholders = ids.map(() => '?').join(',');
   const runs = getDb().prepare(
-    `SELECT task_id, sample_type, sample_color, order_no FROM sample_runs
+    `SELECT task_id, sample_type, sample_color, order_no, size_data FROM sample_runs
      WHERE task_id IN (${placeholders}) ORDER BY sort_order ASC, id ASC`
   ).all(...ids);
   const byTask = {};
@@ -236,26 +252,25 @@ function create(b) {
       style_id = styleInfo.lastInsertRowid;
     }
 
+    // G10：tasks 层 priority / size_data 列已随迁移 v21 物理删除（权威数据在 sample_runs），此处不再写入
     const taskInfo = db.prepare(`
       INSERT INTO tasks (
-        style_id, priority,
+        style_id,
         start_date, expected_date, finish_date,
-        status, progress_nodes, size_data, fabric_req, trim_req, process_req, note
+        status, progress_nodes, fabric_req, trim_req, process_req, note
       )
       VALUES (
-        @style_id, @priority,
+        @style_id,
         @start_date, @expected_date, @finish_date,
-        @status, @progress_nodes, @size_data, @fabric_req, @trim_req, @process_req, @note
+        @status, @progress_nodes, @fabric_req, @trim_req, @process_req, @note
       )
     `).run({
       style_id,
-      priority: b.priority || '中',
       start_date: b.start_date || '',
       expected_date: b.expected_date || '',
       finish_date: b.finish_date || '',
       status: b.status || 'todo',
       progress_nodes: JSON.stringify(INITIAL_NODES),
-      size_data: b.size_data || '[]',
       fabric_req: b.fabric_req || '',
       trim_req: b.trim_req || '',
       process_req: b.process_req || '',
@@ -272,7 +287,7 @@ function create(b) {
     `).run(
       newTaskId,
       b.sample_type || '', b.size || '', b.sample_color || '',
-      parseInt(b.sample_count) || 1, b.priority || '中',
+      parseInt(b.sample_count) || 1, b.priority || 'B',
       b.fabric_date || '', b.start_date || '', b.expected_date || '', b.finish_date || ''
     );
 
@@ -289,9 +304,15 @@ function create(b) {
 
 /**
  * 更新打样单（款式字段与任务字段分离更新）
+ *
+ * G12：把「styles UPDATE → tasks UPDATE → 操作日志 → 版本快照」整串写入包进**单个事务**，
+ * 任一步抛错即整体回滚，杜绝「styles 已改而 tasks 未改」的部分写入（此前实测存在，见
+ * tests/tasks/tasksAtomicity.test.js）。唯一例外是版本快照 capture：它原本就用 try/catch
+ * 兜住（快照失败不应影响主写入），该 catch 仍在事务内本地消化、不向上抛出，故不破坏提交。
+ *
  * @param {number|string} id
  * @param {object} b - PATCH 请求体
- * @returns {{success: boolean, styleUpdated: boolean, taskUpdated: boolean}}
+ * @returns {{success: boolean, styleUpdated: boolean, taskUpdated: boolean, logged: number}|null}
  */
 function update(id, b) {
   const db = getDb();
@@ -305,69 +326,85 @@ function update(id, b) {
   for (const key of STYLE_KEYS) {
     if (key in b) styleUpdates[key] = b[key];
   }
-  let styleUpdated = false;
-  if (Object.keys(styleUpdates).length > 0) {
-    const setParts = [...Object.keys(styleUpdates).map(k => `${k} = @${k}`), "updated_at = CURRENT_TIMESTAMP"].join(', ');
-    db.prepare(`UPDATE styles SET ${setParts} WHERE id = @_id`).run({ ...styleUpdates, _id: style_id });
-    styleUpdated = true;
-  }
 
   // 注：status（款单看板状态）由 syncTaskStatus 按最先进批次自动判定，禁止手动覆盖，故不在白名单
+  // G10/G11：tasks.priority 与 tasks.size_data 两列已随 v21 物理删除，其权威数据分别在
+  //   sample_runs.priority（款级按批次最高档投影）与 sample_runs.size_data（首个批次投影），故不在白名单。
   const TASK_KEYS = [
-    'priority',
     'start_date', 'expected_date', 'finish_date',
     'progress_nodes', 'image_url',
-    'fabric_req', 'trim_req', 'process_req', 'note', 'size_data'
+    'fabric_req', 'trim_req', 'process_req', 'note'
   ];
   const taskUpdates = {};
   for (const key of TASK_KEYS) {
     if (key in b) {
-      taskUpdates[key] = (['progress_nodes', 'size_data'].includes(key) && Array.isArray(b[key]))
+      taskUpdates[key] = (key === 'progress_nodes' && Array.isArray(b[key]))
         ? JSON.stringify(b[key])
         : b[key];
     }
   }
-  let taskUpdated = false;
-  if (Object.keys(taskUpdates).length > 0) {
-    const setParts = [...Object.keys(taskUpdates).map(k => `${k} = @${k}`), "updated_at = CURRENT_TIMESTAMP"].join(', ');
-    db.prepare(`UPDATE tasks SET ${setParts} WHERE id = @_id`).run({ ...taskUpdates, _id: id });
-    taskUpdated = true;
-  }
 
-  // 操作日志：关键动作去噪记录（同值不记）
+  // 操作日志：关键动作去噪记录（同值不记）——纯读比较，放在事务外计算，不产生写入
+  // G11：priority 已非款级字段（权威在 sample_runs，按批次最高档投影），故不再记录款级优先级变更日志
   const fmtStatus = (s) => STATUS_LABELS[s] || s || '未设';
   const diffOf = (key) => ('key' in { key }) && (key in b) && String(b[key] ?? '') !== String(oldTask[key] ?? '');
   const logs = [];
   if (diffOf('status')) logs.push(['status', `状态：${fmtStatus(oldTask.status)} → ${fmtStatus(b.status)}`]);
-  if (diffOf('priority')) logs.push(['priority', `优先级：${oldTask.priority || '中'} → ${b.priority || '中'}`]);
   if (diffOf('expected_date')) logs.push(['expected_date', `期望交期：${oldTask.expected_date || '未设'} → ${b.expected_date || '未设'}`]);
   if ('progress_nodes' in b && JSON.stringify(b.progress_nodes) !== JSON.stringify(oldTask.progress_nodes)) {
     logs.push(['node', '工作动态更新']);
   }
-  for (const [action, detail] of logs) logAction(id, action, detail);
 
-  // REQ-011：自动保存落库后记录/合并历史版本快照（尺寸表/BOM 为重点，5 分钟编辑会话合并）
-  if (styleUpdated || taskUpdated) {
-    try { versionSvc.capture(id); } catch (e) { console.error('[versions] capture failed:', e.message); }
-  }
+  // G12 事务边界：从 styles UPDATE 之前，到 tasks UPDATE / 操作日志 / 版本快照之后
+  const applyUpdate = db.transaction(() => {
+    let styleUpdated = false;
+    if (Object.keys(styleUpdates).length > 0) {
+      const setParts = [...Object.keys(styleUpdates).map(k => `${k} = @${k}`), 'updated_at = CURRENT_TIMESTAMP'].join(', ');
+      db.prepare(`UPDATE styles SET ${setParts} WHERE id = @_id`).run({ ...styleUpdates, _id: style_id });
+      styleUpdated = true;
+    }
 
+    let taskUpdated = false;
+    if (Object.keys(taskUpdates).length > 0) {
+      const setParts = [...Object.keys(taskUpdates).map(k => `${k} = @${k}`), 'updated_at = CURRENT_TIMESTAMP'].join(', ');
+      db.prepare(`UPDATE tasks SET ${setParts} WHERE id = @_id`).run({ ...taskUpdates, _id: id });
+      taskUpdated = true;
+    }
+
+    for (const [action, detail] of logs) logAction(id, action, detail);
+
+    // REQ-011：自动保存落库后记录/合并历史版本快照（尺寸表/BOM 为重点，5 分钟编辑会话合并）
+    // 快照失败必须被本地消化（不打断主写入）——由 tests/tasks/tasksAtomicity.test.js 的绿用例守护
+    if (styleUpdated || taskUpdated) {
+      try { versionSvc.capture(id); } catch (e) { console.error('[versions] capture failed:', e.message); }
+    }
+
+    return { styleUpdated, taskUpdated };
+  });
+
+  const { styleUpdated, taskUpdated } = applyUpdate();
   return { success: true, styleUpdated, taskUpdated, logged: logs.length };
 }
 
 /**
  * 删除打样单
+ *
+ * G12：删单 + 清孤儿款式两条语句包成原子单元，避免删单成功但孤儿款式未清理（或反之）。
  * @param {number|string} id
  * @returns {{success: boolean}}
  */
 function remove(id) {
   const db = getDb();
   const row = db.prepare('SELECT style_id FROM tasks WHERE id = ?').get(id);
-  db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
-  // 一款一单模型下，删单即删款：若该款式下已无任何单据，清理孤儿款式行（上传文件不物理删除）
-  if (row && row.style_id) {
-    const left = db.prepare('SELECT COUNT(*) AS c FROM tasks WHERE style_id = ?').get(row.style_id);
-    if (left.c === 0) db.prepare('DELETE FROM styles WHERE id = ?').run(row.style_id);
-  }
+  const doRemove = db.transaction(() => {
+    db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+    // 一款一单模型下，删单即删款：若该款式下已无任何单据，清理孤儿款式行（上传文件不物理删除）
+    if (row && row.style_id) {
+      const left = db.prepare('SELECT COUNT(*) AS c FROM tasks WHERE style_id = ?').get(row.style_id);
+      if (left.c === 0) db.prepare('DELETE FROM styles WHERE id = ?').run(row.style_id);
+    }
+  });
+  doRemove();
   return { success: true };
 }
 

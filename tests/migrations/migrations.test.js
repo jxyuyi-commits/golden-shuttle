@@ -69,9 +69,10 @@ describe('模块 1：迁移引擎 · 空库直建路径', () => {
       expect(tableExists(db, t), `表 ${t} 应存在`).toBe(true);
     }
 
-    // 死列清理：tasks 不得再有旧批次列；styles 不得再有 size_group_id（v4/v12）
+    // 死列清理：tasks 不得再有旧批次列（v4/v12），也不得有 v21 删除的 5 个死列；styles 不得再有 size_group_id
     const taskCols = columnsOf(db, 'tasks');
-    for (const dead of ['standard_size', 'sample_type', 'sample_color', 'size', 'sample_count', 'fabric_date']) {
+    for (const dead of ['standard_size', 'sample_type', 'sample_color', 'size', 'sample_count', 'fabric_date',
+      'order_no', 'audit_status', 'audit_comment', 'size_data', 'priority']) {
       expect(taskCols, `tasks.${dead} 应已被清理`).not.toContain(dead);
     }
     expect(columnsOf(db, 'styles')).not.toContain('size_group_id');
@@ -189,13 +190,16 @@ describe('模块 1：迁移引擎 · 脱敏老库升级回归', () => {
     expect(runs.length).toBe(1);
     expect(runs[0].order_no).toBe('PO-LEGACY-001-V0');
 
-    // A5 v16：任务级尺寸表已下沉到首个批次，tasks.size_data 清空
+    // A5 v16：任务级尺寸表已下沉到首个批次；v21 后 tasks.size_data 连列一并物理删除
     expect(JSON.parse(runs[0].size_data)).toEqual(SD);
-    expect(task.size_data).toBe('[]');
+    expect(taskCols).not.toContain('size_data');
 
-    // A6 v20：旧优先级中文 → 新档位（高→A）
-    expect(task.priority).toBe('A');
+    // A6 v20：旧优先级中文 → 新档位（高→A，权威数据在批次）
     expect(runs[0].priority).toBe('A');
+    // A6' v21：tasks 的 order_no/audit_status/audit_comment/priority 亦已随列一并删除
+    for (const dead of ['order_no', 'audit_status', 'audit_comment', 'priority']) {
+      expect(taskCols, `tasks.${dead} 应被 v21 物理删除`).not.toContain(dead);
+    }
 
     // A7 v2/v17 结构性补列
     expect(columnsOf(db, 'measurement_templates')).toContain('is_required');
@@ -203,32 +207,60 @@ describe('模块 1：迁移引擎 · 脱敏老库升级回归', () => {
     expect(db.prepare('SELECT name FROM measurement_templates').get().name).toBe('胸围');
   });
 
-  it('只跑到 v19 的库升级到 v20：存量优先级 C/B/A/S 迁移到位，其它数据不受影响', () => {
-    const env = createTempDb('gs-mig-v19');
+  it('只跑到 v20 的库升级到 v21：款级状态按批次归位、tasks 5 个死列被物理删除、批次数据不丢', () => {
+    const env = createTempDb('gs-mig-v20');
     envs.push(env);
     let db = env.db;
 
-    // 造数：一个款式 + 一张单 + 一条批次
-    const styleId = db.prepare("INSERT INTO styles (style_no, title) VALUES ('V19-001', 'v19 库款')").run().lastInsertRowid;
-    const taskId = db.prepare('INSERT INTO tasks (style_id, priority, note) VALUES (?, ?, ?)').run(styleId, '紧急', '留存').lastInsertRowid;
-    db.prepare(`INSERT INTO sample_runs (task_id, priority, status, sort_order) VALUES (?, '低', 'waiting_material', 0)`).run(taskId);
+    // ── 造数：一个款式 + 三张单，覆盖「doing / done / todo」三种归位结果 ──
+    const styleId = db.prepare("INSERT INTO styles (style_no, title) VALUES ('V20-001', 'v20 库款')").run().lastInsertRowid;
+    // 单①：两批次（V0 done + V1 pattern_making）→ 最新未完成批次=打版中 → doing
+    const taskDoing = db.prepare("INSERT INTO tasks (style_id, status, note) VALUES (?, 'done', '留存')").run(styleId).lastInsertRowid;
+    db.prepare("INSERT INTO sample_runs (task_id, priority, status, sort_order, order_no) VALUES (?, 'C', 'done', 0, 'PO-V20-001-V0')").run(taskDoing);
+    db.prepare("INSERT INTO sample_runs (task_id, priority, status, sort_order, order_no) VALUES (?, 'S', 'pattern_making', 1, 'PO-V20-001-V1')").run(taskDoing);
+    // 单②：单批次 done → 全部完成 → done
+    const taskDone = db.prepare("INSERT INTO tasks (style_id, status, note) VALUES (?, 'todo', '完成单')").run(styleId).lastInsertRowid;
+    db.prepare("INSERT INTO sample_runs (task_id, priority, status, sort_order, order_no) VALUES (?, 'B', 'done', 0, 'PO-V20-001-V2')").run(taskDone);
+    // 单③：无批次 → 未开始 → todo
+    const taskTodo = db.prepare("INSERT INTO tasks (style_id, status, note) VALUES (?, 'done', '空单')").run(styleId).lastInsertRowid;
 
-    // 回退到 v19 状态：删掉 v20 登记、把优先级还原为旧中文档位
-    db.prepare('DELETE FROM _migrations WHERE version = 20').run();
-    db.prepare("UPDATE tasks SET priority = '紧急' WHERE id = ?").run(taskId);
-    db.prepare("UPDATE sample_runs SET priority = '低' WHERE task_id = ?").run(taskId);
-    expect(recordedVersions(db)).not.toContain(20);
+    // ── 模拟 v20 库：把 v21 将删除的 5 列加回（等价于 v20 时代的 tasks schema）──
+    db.exec(`
+      ALTER TABLE tasks ADD COLUMN order_no TEXT DEFAULT '';
+      ALTER TABLE tasks ADD COLUMN audit_status TEXT DEFAULT '';
+      ALTER TABLE tasks ADD COLUMN audit_comment TEXT DEFAULT '';
+      ALTER TABLE tasks ADD COLUMN size_data TEXT DEFAULT '[]';
+      ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT '中';
+    `);
+    db.prepare("UPDATE tasks SET order_no='PO-V20-001-V0', audit_status='已通过', audit_comment='通过', size_data=?, priority='S' WHERE id=?")
+      .run(JSON.stringify([{ name: '胸围' }]), taskDoing);
+    // 回退到 v20：仅删除 v21 登记（v20 已执行过，无需重跑）
+    db.prepare('DELETE FROM _migrations WHERE version = 21').run();
+    expect(recordedVersions(db)).not.toContain(21);
 
-    // 升级
+    // ── 升级到 v21 ──
     reinit(env);
     db = env.db;
 
-    expect(recordedVersions(db)).toContain(20);
-    expect(db.prepare('SELECT priority FROM tasks WHERE id = ?').get(taskId).priority).toBe('S'); // 紧急→S
-    expect(db.prepare('SELECT priority FROM sample_runs WHERE task_id = ?').get(taskId).priority).toBe('C'); // 低→C
-    // 数据未丢
-    expect(db.prepare('SELECT note FROM tasks WHERE id = ?').get(taskId).note).toBe('留存');
-    expect(db.prepare('SELECT title FROM styles WHERE id = ?').get(styleId).title).toBe('v19 库款');
+    expect(recordedVersions(db)).toContain(21);
+    // 5 列已物理删除
+    const taskCols = columnsOf(db, 'tasks');
+    for (const dead of ['order_no', 'audit_status', 'audit_comment', 'size_data', 'priority']) {
+      expect(taskCols, `tasks.${dead} 应被 v21 物理删除`).not.toContain(dead);
+    }
+    // 款级状态归位（纯 SQL，与 syncTaskStatus 同口径）
+    const statusOf = (id) => db.prepare('SELECT status FROM tasks WHERE id = ?').get(id).status;
+    expect(statusOf(taskDoing)).toBe('doing'); // 最新未完成批次=打版中
+    expect(statusOf(taskDone)).toBe('done');   // 全部批次已完成
+    expect(statusOf(taskTodo)).toBe('todo');   // 无批次
+    // 批次数据未丢（权威优先级/单号仍在批次）
+    const runs = db.prepare('SELECT * FROM sample_runs WHERE task_id = ? ORDER BY sort_order ASC').all(taskDoing);
+    expect(runs.length).toBe(2);
+    expect(runs[1].priority).toBe('S');
+    expect(runs[1].order_no).toBe('PO-V20-001-V1');
+    // 其它数据不受影响
+    expect(db.prepare('SELECT note FROM tasks WHERE id = ?').get(taskDoing).note).toBe('留存');
+    expect(db.prepare('SELECT title FROM styles WHERE id = ?').get(styleId).title).toBe('v20 库款');
   });
 
   it('只跑到 v15 的库升级到 v16+：task 级尺寸表迁移到首个批次，后续迁移幂等重入', () => {
@@ -242,7 +274,11 @@ describe('模块 1：迁移引擎 · 脱敏老库升级回归', () => {
     const run1 = db.prepare("INSERT INTO sample_runs (task_id, size, status, sort_order) VALUES (?, 'S', 'waiting_material', 0)").run(taskId).lastInsertRowid;
     const run2 = db.prepare("INSERT INTO sample_runs (task_id, size, status, sort_order) VALUES (?, 'M', 'waiting_material', 1)").run(taskId).lastInsertRowid;
 
-    // 回退到 v15：尺寸表放回 task 级、批次尺寸表清空、删除 v16+ 登记
+    // 回退到 v15：把 v16/v21 会删除的 task 级列加回、尺寸表放回 task 级、批次尺寸表清空、删除 v16+ 登记
+    db.exec(`
+      ALTER TABLE tasks ADD COLUMN size_data TEXT DEFAULT '[]';
+      ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT '中';
+    `);
     db.prepare('UPDATE tasks SET size_data = ? WHERE id = ?').run(JSON.stringify(SD), taskId);
     db.prepare("UPDATE sample_runs SET size_data = '[]' WHERE task_id = ?").run(taskId);
     db.prepare('DELETE FROM _migrations WHERE version >= 16').run();
@@ -258,7 +294,7 @@ describe('模块 1：迁移引擎 · 脱敏老库升级回归', () => {
     expect(JSON.parse(first.size_data)).toEqual(SD);
     // 非首批次不被写入
     expect(db.prepare('SELECT size_data FROM sample_runs WHERE id = ?').get(run2).size_data).toBe('[]');
-    // tasks.size_data 清空
-    expect(db.prepare('SELECT size_data FROM tasks WHERE id = ?').get(taskId).size_data).toBe('[]');
+    // v16 迁移后清空 + v21 再删列：tasks.size_data 列已不存在
+    expect(columnsOf(db, 'tasks')).not.toContain('size_data');
   });
 });

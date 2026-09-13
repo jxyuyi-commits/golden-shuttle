@@ -46,7 +46,7 @@ const SD_A = [{ name: '胸围', tol: '±1', S: 88, M: 92 }];
 const SD_B = [{ name: '腰围', tol: '±1', S: 70, M: 74 }];
 
 const styleId = db.prepare("INSERT INTO styles (style_no, title, category) VALUES ('TEST-SD-001', '尺寸表回归测试款', '裙')").run().lastInsertRowid;
-const taskId = db.prepare("INSERT INTO tasks (style_id, note, size_data) VALUES (?, '回归测试', '[]')").run(styleId).lastInsertRowid;
+const taskId = db.prepare("INSERT INTO tasks (style_id, note) VALUES (?, '回归测试')").run(styleId).lastInsertRowid;
 const run1 = db.prepare('INSERT INTO sample_runs (task_id, size, sort_order, size_data) VALUES (?, ?, ?, ?)').run(taskId, 'S', 1, j(SD_A)).lastInsertRowid;
 const run2 = db.prepare('INSERT INTO sample_runs (task_id, size, sort_order, size_data) VALUES (?, ?, ?, ?)').run(taskId, 'M', 2, j(SD_B)).lastInsertRowid;
 

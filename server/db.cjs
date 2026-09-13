@@ -527,6 +527,45 @@ const migrations = [
       db.exec(`UPDATE sample_runs SET priority = ${map} WHERE priority IN ('紧急','高','中','低')`);
       db.exec(`UPDATE tasks SET priority = ${map} WHERE priority IN ('紧急','高','中','低')`);
     }
+  },
+  {
+    version: 21,
+    description: 'G10+G13 款级状态一次性归位（纯 SQL）+ 物理删除 tasks 5 个死列（order_no/audit_status/audit_comment/size_data/priority，权威数据已下沉 sample_runs）',
+    up: () => {
+      // 1) 款级状态归位：与 syncTaskStatus（REQ-027 口径）逐字对齐，纯 SQL 一次性落位，
+      //    替代原「每次启动全表 recalcAllTaskStatus」的重算（G13）。
+      //    口径：无批次→todo（未开始）；全部批次 done→done；否则取「未完成批次中 sort_order 最大者」
+      //    （同 sort_order 时取 id 最小，与 JS 首遇即最新版次的实现一致）的状态，再映射看板列：
+      //    waiting_material→todo / pattern_making·sample_making·pending_confirm→doing / done→done。
+      db.exec(`
+        UPDATE tasks SET status = (
+          CASE
+            WHEN (SELECT COUNT(*) FROM sample_runs r WHERE r.task_id = tasks.id) = 0 THEN 'todo'
+            WHEN (SELECT COUNT(*) FROM sample_runs r WHERE r.task_id = tasks.id AND r.status != 'done') = 0 THEN 'done'
+            ELSE COALESCE((
+              CASE (
+                SELECT r.status FROM sample_runs r
+                WHERE r.task_id = tasks.id AND r.status != 'done'
+                ORDER BY r.sort_order DESC, r.id ASC LIMIT 1
+              )
+                WHEN 'waiting_material' THEN 'todo'
+                WHEN 'pattern_making' THEN 'doing'
+                WHEN 'sample_making' THEN 'doing'
+                WHEN 'pending_confirm' THEN 'doing'
+                ELSE 'todo'
+              END
+            ), 'todo')
+          END
+        )
+      `);
+
+      // 2) 物理删除 5 个死列（权威数据均已下沉 sample_runs，删除后代码不再有任何引用）：
+      //    order_no / audit_status / audit_comment → v14 已下沉批次；size_data → v16 已下沉批次；
+      //    priority → 款级优先级改由批次最高档投影（G11，attachRuns）。老库升级/空库直建两条路径同此落位。
+      for (const col of ['order_no', 'audit_status', 'audit_comment', 'size_data', 'priority']) {
+        dropColumnIfExists('tasks', col);
+      }
+    }
   }
 ];
 

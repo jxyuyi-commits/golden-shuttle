@@ -16,7 +16,6 @@ const { registerDrawingRoutes } = require('./routes/drawings.cjs');
 const { registerThumbRoutes } = require('./routes/thumbs.cjs');
 const { registerSampleRunRoutes } = require('./routes/sampleRuns.cjs');
 const { registerVersionRoutes } = require('./routes/versions.cjs');
-const { recalcAllTaskStatus } = require('./services/tasks.cjs');
 
 const app = express();
 const port = 3001;
@@ -69,8 +68,8 @@ function startServer(overridePort, dbPath, uploadsPath) {
   // 初始化数据库和文件目录
   initDatabase(dbPath, uploadsPath);
 
-  // REQ-025：存量款级状态按新口径（完成=全部批次已完成）重算归位，幂等
-  try { recalcAllTaskStatus(); console.log('[REQ-025] 款级状态已按新口径重算'); } catch (e) { console.log('[REQ-025] 重算跳过: ' + e.message); }
+  // G13：款级状态归位改为一次性迁移（db.cjs v21 纯 SQL），不再每次启动全表重算。
+  // 存量老库升级到 v21 时已按新口径落位；此后由 sampleRuns 的写路径 syncTaskStatus 增量维护。
 
   // 注册所有路由
   registerStyleRoutes(app);

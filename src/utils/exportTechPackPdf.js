@@ -1,12 +1,35 @@
 // 工艺单（Tech Pack）PDF 导出：基于 pdfmake + 思源黑体（中文 vfs 动态加载）
-// 与 Excel 版 exportTechPack.js 共用同一套业务字段逻辑（工具函数保持一致，勿单独改造成漂移）
 // 版式：A4；基本信息 + 尺寸规格竖版，物料清单(BOM) + 工艺指示横向
-import { timestamp } from './exporter';
+//
+// 数据与业务逻辑统一来自 ./techPackModel（与 Excel 版共用同一来源，改动只需改一处）；
+// 本文件只保留**本路径特有的渲染**：pdfmake 文档定义、hex 配色、列宽、字号、斑马纹、边框。
+// ⚠️ 本文件的色值（hex）、斑马纹（EDF4E7）、边框（8A8A8A）与 Excel 版**有意不同**，勿与他人「对齐」。
+import {
+  DASH,
+  pickColors,
+  val,
+  asList,
+  parseSizeData,
+  downloadBlob,
+  applyRunOverride,
+  buildInfoSections,
+  deriveSizeKeys,
+  deriveBaseSize,
+  buildSizeTitle,
+  buildSizeRows,
+  buildSizeNote,
+  buildBomRows,
+  buildProcessRows,
+  BOM_HEADERS,
+  PROCESS_HEADERS,
+  buildTechPackFileName,
+} from './techPackModel';
 
 /* ──────────────────────────────────────────────
-   配色（墨绿系，与 Excel 版一致）
+   配色（墨绿系，与 Excel 版语义一致，但取值格式为 hex）
+   语义键统一取自 techPackModel.COLOR_ROLES；色值仅本文件持有。
    ────────────────────────────────────────────── */
-const C = {
+const COLOR_VALUES = {
   titleBg:   '#1F4538',  // 标题栏 深墨绿
   headerBg:  '#8FB57A',  // 表头 浅绿
   headerFont:'#1A3328',
@@ -18,49 +41,7 @@ const C = {
   noteFont:  '#CC0000',  // 备注 红
   dataFont:  '#262626',
 };
-
-/* ──────────────────────────────────────────────
-   工具函数（与 exportTechPack.js 保持一致）
-   ────────────────────────────────────────────── */
-const NODE_STATUS_CN = { pending: '待开始', active: '进行中', completed: '已完成', done: '已完成' };
-const STATUS_CN = { done: '已完结', doing: '打版中', pending: '待处理', todo: '待处理' };
-const DASH = '—';
-
-function formatDate(d, fallbackYear) {
-  if (!d) return '';
-  const s = String(d).trim();
-  if (!s) return '';
-  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) return s;
-  const m1 = s.match(/^(\d{4})[/.](\d{1,2})[/.](\d{1,2})$/);
-  if (m1) return `${m1[1]}-${m1[2].padStart(2, '0')}-${m1[3].padStart(2, '0')}`;
-  const m2 = s.match(/^(\d{1,2})[/.](\d{1,2})$/);
-  if (m2) {
-    const y = fallbackYear || new Date().getFullYear();
-    return `${y}-${m2[1].padStart(2, '0')}-${m2[2].padStart(2, '0')}`;
-  }
-  return s;
-}
-
-function cleanTolerance(t) {
-  if (!t) return '';
-  return String(t).replace(/[（(]?\s*[±＋+]\s*[）)]?\s*/g, '').trim();
-}
-
-function parseSizeData(task) {
-  let sd = task?.size_data;
-  if (typeof sd === 'string') { try { sd = JSON.parse(sd || '[]'); } catch { sd = []; } }
-  return Array.isArray(sd) ? sd : [];
-}
-
-function parseSizeValues(v) {
-  if (typeof v === 'string') { try { return JSON.parse(v || '{}'); } catch { return {}; } }
-  return v || {};
-}
-
-function val(v) {
-  if (v === null || v === undefined || v === '') return DASH;
-  return v;
-}
+const C = pickColors(COLOR_VALUES);
 
 /* ──────────────────────────────────────────────
    pdfmake 动态加载（字体 vfs 较大，Vite 自动拆独立 chunk）
@@ -120,45 +101,7 @@ const cell = (text, opts = {}) => ({
    一、基本信息（分类 | 字段 | 内容）
    ────────────────────────────────────────────── */
 function buildInfoContent(task) {
-  const year = task.year || '';
-  let cleanNote = task.note || '';
-  if (cleanNote.startsWith('工作动态：') || cleanNote.startsWith('工作动态:')) cleanNote = '';
-
-  const sections = [
-    { name: '款式基础信息', items: [
-      ['款号', task.style_no], ['款式名称', task.title], ['类别', task.category],
-      ['品牌', task.brand], ['设计师', task.designer],
-      ['时段', [task.year, task.season, task.month].filter(Boolean).join(' ')],
-    ]},
-    { name: '打样信息', items: [
-      ['版单号', task.order_no], ['版次', task.sample_type], ['样衣颜色', task.sample_color],
-      ['尺码', task.size], ['件数', task.sample_count ? `${task.sample_count}件` : ''],
-      ['优先级', task.priority], ['审核状态', task.audit_status],
-      ['看板状态', STATUS_CN[task.status] || task.status || ''],
-    ]},
-    { name: '日期', items: [
-      ['面料到库日期', formatDate(task.fabric_date, year)],
-      ['任务开始日期', formatDate(task.start_date, year)],
-      ['预计完工日期', formatDate(task.expected_date, year)],
-      ['实际完工日期', formatDate(task.finish_date, year)],
-    ]},
-  ];
-
-  const nodes = task.progress_nodes || [];
-  const timelineItems = nodes.length ? nodes.map(n => {
-    const st = NODE_STATUS_CN[n.status] || n.status || '';
-    const date = formatDate(n.date, year);
-    const meta = [st, date].filter(Boolean).join(' ');
-    const extra = [n.by ? `负责人:${n.by}` : '', n.note || ''].filter(Boolean).join('；');
-    return [n.label || '（未命名）', [meta, extra].filter(Boolean).join('｜')];
-  }) : [['无记录', '']];
-  sections.push({ name: '工作动态', items: timelineItems });
-
-  sections.push({ name: '说明与反馈', items: [
-    ['款式说明/打样重点', cleanNote], ['物料要求', task.fabric_req],
-    ['辅料要求', task.trim_req], ['工艺建议/注意事项', task.process_req],
-    ['审版意见/修改反馈', task.audit_comment],
-  ]});
+  const sections = buildInfoSections(task);
 
   const body = [
     [th('分类'), th('字段', 'left'), th('内容', 'left')],
@@ -190,31 +133,24 @@ function buildInfoContent(task) {
    ────────────────────────────────────────────── */
 function buildSizeContent(task) {
   const data = parseSizeData(task);
-  const sizeKeys = [];
-  for (const row of data) {
-    for (const k of Object.keys(parseSizeValues(row.size_values))) {
-      if (k.endsWith('_manual')) continue;
-      if (!sizeKeys.includes(k)) sizeKeys.push(k);
-    }
-  }
-  const baseSize = task.size || sizeKeys[1] || sizeKeys[0] || 'M';
+  const sizeKeys = deriveSizeKeys(data);
+  const baseSize = deriveBaseSize(task, sizeKeys);
 
   const widths = [20, 66, '*', ...sizeKeys.map(() => 36), 34, 38];
-  const headers = ['序号', '部位', '测量方法', ...sizeKeys.map(k => `${k}(cm)`), '档差(cm)', '公差(±cm)'];
-  const body = [headers.map(h => th(h, h === '部位' || h === '测量方法' ? 'left' : 'center'))];
+  const body = [buildSizeHeaderRow(sizeKeys)];
 
   if (!data.length) {
     body.push([{ text: '（暂无尺寸数据）', colSpan: widths.length, style: 'td', alignment: 'center', fillColor: C.zebraBg }, ...Array(widths.length - 1).fill({})]);
   } else {
-    data.forEach((row, i) => {
-      const sv = parseSizeValues(row.size_values);
+    buildSizeRows(data, sizeKeys).forEach((row, i) => {
+      const fill = i % 2 === 1 ? C.zebraBg : null;
       const line = [
-        cell(i + 1, { align: 'center', fill: i % 2 === 1 ? C.zebraBg : null }),
-        cell(row.name, { fill: i % 2 === 1 ? C.zebraBg : null }),
-        cell(row.method, { fill: i % 2 === 1 ? C.zebraBg : null }),
-        ...sizeKeys.map(k => cell(sv[k] ?? '', { align: 'center', fill: i % 2 === 1 ? C.zebraBg : null })),
-        cell(row.grading ?? '', { align: 'center', fill: i % 2 === 1 ? C.zebraBg : null }),
-        cell(cleanTolerance(row.tolerance), { align: 'center', fill: i % 2 === 1 ? C.zebraBg : null }),
+        cell(row.index, { align: 'center', fill }),
+        cell(row.name, { fill }),
+        cell(row.method, { fill }),
+        ...row.values.map((v) => cell(v, { align: 'center', fill })),
+        cell(row.grading, { align: 'center', fill }),
+        cell(row.tolerance, { align: 'center', fill }),
       ];
       body.push(line);
     });
@@ -222,7 +158,7 @@ function buildSizeContent(task) {
 
   // 底部红色备注
   body.push([{
-    text: `备注：基码${baseSize}，共${sizeKeys.length}码；公差按品牌基线执行（衣长±0.5／胸围±1／袖长±0.5／其余±0.3），具体以封样确认样衣为准。`,
+    text: buildSizeNote(baseSize, sizeKeys.length),
     colSpan: widths.length, style: 'td', color: C.noteFont, fontSize: 8,
   }, ...Array(widths.length - 1).fill({})]);
 
@@ -233,36 +169,37 @@ function buildSizeContent(task) {
   };
 }
 
+/** 尺寸表表头行（部位/测量方法左对齐，其余居中） */
+function buildSizeHeaderRow(sizeKeys) {
+  const headers = ['序号', '部位', '测量方法', ...sizeKeys.map((k) => `${k}(cm)`), '档差(cm)', '公差(±cm)'];
+  return headers.map((h) => th(h, h === '部位' || h === '测量方法' ? 'left' : 'center'));
+}
+
 /* ──────────────────────────────────────────────
    三、物料清单 BOM（横向）
    ────────────────────────────────────────────── */
 function buildBomContent(items) {
-  const list = Array.isArray(items) ? items : [];
+  const list = asList(items);
   const widths = [22, 52, 92, 62, 48, 30, 38, 72, 42, 42, '*'];
-  const headers = ['序号', '类别', '物料名称', '规格', '颜色', '单位', '单耗', '供应商', '单价(元)', '小计(元)', '备注'];
-  const body = [headers.map(h => th(h, [0, 5, 6, 8, 9].includes(headers.indexOf(h)) ? 'center' : 'left'))];
+  const body = [BOM_HEADERS.map((h, i) => th(h, [0, 5, 6, 8, 9].includes(i) ? 'center' : 'left'))];
 
   if (!list.length) {
     body.push([{ text: '（暂无物料数据）', colSpan: widths.length, style: 'td', alignment: 'center' }, ...Array(widths.length - 1).fill({})]);
   } else {
-    let totalCost = 0;
-    list.forEach((b, i) => {
-      const usage = parseFloat(b.usage) || 0;
-      const price = parseFloat(b.price) || 0;
-      const subtotal = usage * price;
-      totalCost += subtotal;
+    const { rows, totalCost } = buildBomRows(list);
+    rows.forEach((b, i) => {
       const fill = i % 2 === 1 ? C.zebraBg : null;
       body.push([
-        cell(i + 1, { align: 'center', fill }),
+        cell(b.index, { align: 'center', fill }),
         cell(b.category, { fill }),
         cell(b.name, { fill }),
         cell(b.spec, { fill }),
         cell(b.color, { fill }),
         cell(b.unit, { align: 'center', fill }),
-        cell(usage || '', { align: 'center', fill }),
+        cell(b.usage || '', { align: 'center', fill }),
         cell(b.supplier, { fill }),
-        cell(price || '', { align: 'center', fill }),
-        cell(subtotal ? Number(subtotal.toFixed(2)) : '', { align: 'center', fill }),
+        cell(b.price || '', { align: 'center', fill }),
+        cell(b.subtotal, { align: 'center', fill }),
         cell(b.note, { fill }),
       ]);
     });
@@ -271,7 +208,7 @@ function buildBomContent(items) {
       // colSpan=9 的 cell 后必须提供 8 个占位 cell（pdfmake 规则：colSpan N 需跟 N-1 个占位）
       { text: '单件成本合计', colSpan: 9, style: 'td', alignment: 'right', bold: true, color: C.headerFont, fillColor: C.totalBg, fontSize: 10 },
       {}, {}, {}, {}, {}, {}, {}, {},
-      { text: Number(totalCost.toFixed(2)), style: 'td', alignment: 'center', bold: true, color: C.totalFont, fillColor: C.totalBg, fontSize: 10 },
+      { text: totalCost, style: 'td', alignment: 'center', bold: true, color: C.totalFont, fillColor: C.totalBg, fontSize: 10 },
       {},
     ]);
   }
@@ -287,18 +224,17 @@ function buildBomContent(items) {
    四、工艺指示（横向）
    ────────────────────────────────────────────── */
 function buildProcessContent(items) {
-  const list = Array.isArray(items) ? items : [];
+  const list = asList(items);
   const widths = [22, 78, 120, '*', 180, 120];
-  const headers = ['序号', '工艺分类', '工艺名称', '工艺要求', '质量标准', '备注'];
-  const body = [headers.map(h => th(h, h === '序号' ? 'center' : 'left'))];
+  const body = [PROCESS_HEADERS.map((h) => th(h, h === '序号' ? 'center' : 'left'))];
 
   if (!list.length) {
     body.push([{ text: '（暂无工艺数据）', colSpan: widths.length, style: 'td', alignment: 'center' }, ...Array(widths.length - 1).fill({})]);
   } else {
-    list.forEach((p, i) => {
+    buildProcessRows(list).forEach((p, i) => {
       const fill = i % 2 === 1 ? C.zebraBg : null;
       body.push([
-        cell(i + 1, { align: 'center', fill }),
+        cell(p.index, { align: 'center', fill }),
         cell(p.section, { fill }),
         cell(p.name, { fill }),
         cell(p.requirement, { fill }),
@@ -316,23 +252,10 @@ function buildProcessContent(items) {
 }
 
 /* ──────────────────────────────────────────────
-   下载
+   下载 / 文件名 / 文档定义 / 总入口
    ────────────────────────────────────────────── */
-function downloadBlob(blob, fileName) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 export function getTechPackPdfFileName(task) {
-  const styleNo = task?.style_no || 'unknown';
-  const orderNo = task?.order_no || '';
-  return `工艺单_${styleNo}${orderNo ? '_' + orderNo : ''}_${timestamp()}.pdf`;
+  return buildTechPackFileName(task, 'pdf');
 }
 
 const sectionTitle = (text) => ({
@@ -348,18 +271,15 @@ const sectionTitle = (text) => ({
 
 export async function exportTechPackPdf(task, bomItems, processItems, run) {
   // REQ-005 尺寸表归属版次：run 为当前选中批次，覆盖导出用的尺寸表/尺码/件数（批次级权威）
-  if (run) {
-    task = {
-      ...task,
-      size: run.size || task.size,
-      sample_count: run.sample_count || task.sample_count,
-      size_data: run.size_data || task.size_data,
-    };
-  }
+  task = applyRunOverride(task, run);
   if (!task) return;
   const pdfMake = await getPdfMake();
   const now = new Date();
   const ts = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  // 尺寸表章节标题的基码与下方表格/备注、以及 Excel 版统一走 deriveBaseSize（见 buildSizeTitle），
+  // 避免「标题写 'M'、自己的备注写 'S'」这类自相矛盾。
+  const sizeKeys = deriveSizeKeys(parseSizeData(task));
 
   const dd = {
     pageSize: 'A4',
@@ -384,7 +304,7 @@ export async function exportTechPackPdf(task, bomItems, processItems, run) {
         style: 'subTitle' },
       sectionTitle('一、基本信息'),
       buildInfoContent(task),
-      sectionTitle(`二、尺寸规格（基码${task.size || 'M'}，${(() => { const keys = []; for (const r of parseSizeData(task)) { for (const k of Object.keys(parseSizeValues(r.size_values))) { if (k.endsWith('_manual')) continue; if (!keys.includes(k)) keys.push(k); } } return keys.length ? `${keys.join('/')}三码` : '—'; })()}）`),
+      sectionTitle(buildSizeTitle(task, sizeKeys)),
       buildSizeContent(task),
       { text: '三、物料清单（BOM）', style: 'sectionTitle', background: C.titleBg, color: '#fff', bold: true, fontSize: 12.5, lineHeight: 1.9, margin: [0, 12, 0, 5], pageBreak: 'before', pageOrientation: 'landscape' },
       buildBomContent(bomItems),

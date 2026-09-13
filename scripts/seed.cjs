@@ -1,10 +1,13 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const DB_PATH = path.join(__dirname, '../server/database.sqlite');
+// G10/G13：tasks 的 order_no / priority / audit_status / audit_comment / size_data 已随迁移 v21 物理删除，
+// 本脚本不再向 tasks 写入这些列（权威数据一律落在 sample_runs）。
+// 支持 SEED_DB 覆盖库路径：便于在临时库上自测，绝不误清 dev 库。
+const DB_PATH = process.env.SEED_DB || path.join(__dirname, '../server/database.sqlite');
 const db = new Database(DB_PATH);
 
-console.log('正在清空旧数据以避免重复...');
+console.log(`正在清空旧数据以避免重复... (${DB_PATH})`);
 
 db.exec(`
   DELETE FROM sample_runs;
@@ -26,15 +29,16 @@ const insertStyle = db.prepare(`
   VALUES (@style_no, @title, @brand, @designer, @year, @season, @month, @category, @pdf_url)
 `);
 
+// G10：tasks 不再保留 order_no / priority / audit_status / audit_comment / size_data（迁移 v21 已删列）
 const insertTask = db.prepare(`
   INSERT INTO tasks (
-    style_id, order_no, priority,
-    start_date, expected_date, finish_date, audit_status, audit_comment,
+    style_id,
+    start_date, expected_date, finish_date,
     status, progress_nodes, fabric_req, trim_req, process_req, note
   )
   VALUES (
-    @style_id, @order_no, @priority,
-    @start_date, @expected_date, @finish_date, @audit_status, @audit_comment,
+    @style_id,
+    @start_date, @expected_date, @finish_date,
     @status, @progress_nodes, @fabric_req, @trim_req, @process_req, @note
   )
 `);
@@ -42,21 +46,45 @@ const insertTask = db.prepare(`
 // 新模型：每张单自动建首个版次批次（批次字段权威存于 sample_runs，tasks 不再保留）
 const insertRun = db.prepare(`
   INSERT INTO sample_runs
-    (task_id, sample_type, size, sample_color, sample_count, priority, status,
+    (task_id, order_no, sample_type, size, sample_color, sample_count, priority, status,
      fabric_date, start_date, expected_date, finish_date, sort_order)
-  VALUES (@task_id, @sample_type, @size, @sample_color, @sample_count, @priority, @status,
+  VALUES (@task_id, @order_no, @sample_type, @size, @sample_color, @sample_count, @priority, @status,
           @fabric_date, @start_date, @expected_date, @finish_date, @sort_order)
 `);
+
+// 单号生成：PO-{款号}-V{n}（与迁移 v14 口径一致），并保证**跨全库唯一**——
+// v19 建立了全局唯一部分索引 idx_sample_runs_order_no(order_no) WHERE order_no != ''；
+// seed 对 index 0/2 会各建 2 张单，若逐单从 V0 起会撞索引，故序号逐款自增 + 全库去重，冲突即 fail（不静默）。
+const orderNoSeq = new Map(); // style_no -> 下一个序号 n
+const usedOrderNos = new Set();
+function nextOrderNo(styleNo) {
+  const n = orderNoSeq.get(styleNo) || 0;
+  const candidate = `PO-${styleNo}-V${n}`;
+  if (usedOrderNos.has(candidate)) {
+    throw new Error(`[seed] 单号冲突，违反 v19 全局唯一约束：${candidate}`);
+  }
+  usedOrderNos.add(candidate);
+  orderNoSeq.set(styleNo, n + 1);
+  return candidate;
+}
+
+/** 批次状态映射（与后端 sampleRuns.mapStatus 同口径）：旧看板输入 → 批次状态枚举 */
+const RUN_STATUS_OF = (s) => (s === 'done' ? 'done' : (s === 'doing' || s === 'in_progress' ? 'pattern_making' : 'waiting_material'));
+/** 批次状态 → 款级看板列（与后端 sampleRuns.TASK_STATUS_MAP 同口径）：
+ *  保证 seed 造的 tasks.status 恒为合法看板列值（todo/doing/done），且与随附批次推导结果一致。
+ *  （G13 已删除启动期 recalcAllTaskStatus 兜底，故 seed 必须自己写合法值。） */
+const TASK_STATUS_OF = (runStatus) => (runStatus === 'done' ? 'done' : (runStatus === 'waiting_material' ? 'todo' : 'doing'));
 
 function makeRun(taskId, b, sortOrder) {
   insertRun.run({
     task_id: taskId,
+    order_no: b.order_no || '',
     sample_type: b.sample_type || '',
     size: b.size || '',
     sample_color: b.sample_color || '',
     sample_count: b.sample_count || 1,
-    priority: b.priority || '中',
-    status: b.status === 'done' ? 'done' : (b.status === 'doing' || b.status === 'in_progress' ? 'pattern_making' : 'waiting_material'),
+    priority: b.priority || 'B', // REQ-030 默认档 B
+    status: RUN_STATUS_OF(b.status),
     fabric_date: b.fabric_date || '',
     start_date: b.start_date || '',
     expected_date: b.expected_date || '',
@@ -75,16 +103,13 @@ db.transaction(() => {
     console.log(`正在注入打样单数据 (款号: ${style.style_no})...`);
 
     // 初版
+    const runStatus1 = index === 0 ? 'in_progress' : (index === 1 ? 'done' : 'todo');
     const taskId1 = insertTask.run({
       style_id: styleId,
-      order_no: `PO-${style.style_no}-01`,
-      priority: index === 0 ? '高' : '中', // 第一个款设为高优先级
       start_date: '2026-03-02',
       expected_date: '2026-03-10',
       finish_date: '',
-      audit_status: index === 1 ? '已通过' : '待审核',
-      audit_comment: '',
-      status: index === 0 ? 'in_progress' : (index === 1 ? 'done' : 'todo'),
+      status: TASK_STATUS_OF(RUN_STATUS_OF(runStatus1)), // 合法看板列，且与批次推导一致
       progress_nodes: JSON.stringify([
         { label: '配料', status: 'done', date: '03/01' },
         { label: '跟版', status: 'done', date: '03/02' },
@@ -98,23 +123,20 @@ db.transaction(() => {
       note: '请务必注意充绒量的均匀度'
     });
     makeRun(taskId1.lastInsertRowid, {
+      order_no: nextOrderNo(style.style_no),
       sample_type: '初版', sample_color: '深灰', size: 'M', sample_count: 1,
       fabric_date: '2026-03-01', start_date: '2026-03-02', expected_date: '2026-03-10',
-      priority: index === 0 ? '高' : '中', status: index === 0 ? 'in_progress' : (index === 1 ? 'done' : 'todo')
+      priority: index === 0 ? 'A' : 'B', status: runStatus1 // REQ-030 档位（高→A / 中→B）
     }, 0);
 
     // 部分款式追加复版
     if (index === 0 || index === 2) {
       const taskId2 = insertTask.run({
         style_id: styleId,
-        order_no: `PO-${style.style_no}-02`,
-        priority: '低',
         start_date: '',
         expected_date: '2026-03-25',
         finish_date: '',
-        audit_status: '未提交',
-        audit_comment: '',
-        status: 'todo',
+        status: TASK_STATUS_OF('waiting_material'), // 合法看板列（todo）
         progress_nodes: JSON.stringify([
           { label: '配料', status: 'pending', date: '' },
           { label: '跟版', status: 'pending', date: '' },
@@ -128,9 +150,10 @@ db.transaction(() => {
         note: '等初版完成后再启动'
       });
       makeRun(taskId2.lastInsertRowid, {
+        order_no: nextOrderNo(style.style_no),
         sample_type: '复版', sample_color: '军绿', size: 'L', sample_count: 2,
         fabric_date: '', start_date: '', expected_date: '2026-03-25',
-        priority: '低', status: 'todo'
+        priority: 'C', status: 'todo' // REQ-030 档位（低→C）
       }, 0);
     }
   });

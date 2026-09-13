@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PatternMaster Pro · UI/UX 深度审计与优化建议</title>
+<style>
+  :root {
+    --bg:#0e0f11; --bg-elev:#161719; --bg-elev-2:#1e2023;
+    --panel:rgba(255,255,255,.025); --hover:rgba(255,255,255,.05);
+    --text:#f0ece6; --text-2:#9d9890; --text-3:#6b6560; --text-4:#4a4540;
+    --border:rgba(255,255,255,.07); --border-2:rgba(255,255,255,.13);
+    --gold:#c8a96e; --gold-soft:rgba(200,169,110,.12); --gold-soft2:rgba(200,169,110,.22);
+    --p0:#ef4444; --p1:#f59e0b; --p2:#60a5fa; --ok:#4ade80;
+    --mono:'DM Mono',ui-monospace,'Cascadia Mono',Consolas,'Courier New',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text); line-height:1.75;
+    font-family:'Inter','Segoe UI',-apple-system,'Microsoft YaHei',sans-serif;
+    font-size:15px; padding:0 0 80px;
+    background-image:
+      radial-gradient(circle at 88% -4%, rgba(200,169,110,.07), transparent 42%),
+      radial-gradient(circle at 4% 100%, rgba(200,169,110,.045), transparent 40%);
+    background-attachment:fixed;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+
+  /* ── Header ── */
+  header.top{padding:64px 0 40px;border-bottom:1px solid var(--border)}
+  .eyebrow{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-size:38px;font-weight:800;letter-spacing:-1px;margin:14px 0 10px;line-height:1.22}
+  h1 em{font-style:normal;color:var(--gold)}
+  .sub{color:var(--text-2);font-size:15px;max-width:760px}
+  .meta{display:flex;flex-wrap:wrap;gap:28px;margin-top:28px;padding-top:22px;border-top:1px solid var(--border)}
+  .meta div{font-size:12.5px;color:var(--text-3)}
+  .meta b{display:block;color:var(--text);font-size:14px;font-weight:600;margin-top:3px;letter-spacing:.2px}
+
+  /* ── Verdict bar ── */
+  .verdict{margin-top:34px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .vc{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 20px}
+  .vc .n{font-size:30px;font-weight:800;line-height:1.1;font-family:var(--mono)}
+  .vc .l{font-size:12.5px;color:var(--text-2);margin-top:6px}
+  .vc.p0 .n{color:var(--p0)} .vc.p1 .n{color:var(--p1)} .vc.p2 .n{color:var(--p2)} .vc.ok .n{color:var(--ok)}
+
+  /* ── Sections ── */
+  section{padding-top:64px}
+  h2{font-size:13px;letter-spacing:2.2px;text-transform:uppercase;color:var(--gold);font-weight:700;
+     display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-soft2),transparent)}
+  h2 + .h2sub{font-size:26px;font-weight:800;letter-spacing:-.6px;margin:10px 0 26px;line-height:1.3}
+  h3{font-size:19px;font-weight:700;margin:0 0 12px;letter-spacing:-.3px}
+  h4{font-size:14px;font-weight:700;color:var(--text-2);margin:22px 0 10px;letter-spacing:.3px}
+  p{margin-bottom:14px;color:var(--text-2)}
+  p strong,li strong{color:var(--text);font-weight:600}
+  ul,ol{margin:0 0 16px 20px;color:var(--text-2)}
+  li{margin-bottom:7px}
+  code{font-family:var(--mono);font-size:12.5px;background:rgba(255,255,255,.055);
+       border:1px solid var(--border);border-radius:5px;padding:1.5px 6px;color:#e8d9b8;white-space:nowrap}
+  a{color:var(--gold)}
+
+  /* ── Cards ── */
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:26px 28px;margin-bottom:18px}
+  .issue{position:relative;padding-left:30px}
+  .issue::before{content:'';position:absolute;left:14px;top:30px;bottom:26px;width:2px;border-radius:2px}
+  .issue.p0::before{background:linear-gradient(180deg,var(--p0),transparent)}
+  .issue.p1::before{background:linear-gradient(180deg,var(--p1),transparent)}
+  .issue.p2::before{background:linear-gradient(180deg,var(--p2),transparent)}
+  .tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:700;
+       letter-spacing:.8px;padding:3px 9px;border-radius:6px;border:1px solid;margin-right:10px;vertical-align:2px}
+  .tag.p0{color:var(--p0);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
+  .tag.p1{color:var(--p1);border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1)}
+  .tag.p2{color:var(--p2);border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.1)}
+  .tag.ok{color:var(--ok);border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.1)}
+  .issue h3{display:flex;align-items:flex-start;flex-wrap:wrap;gap:4px}
+
+  .blk{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border)}
+  .blk:first-of-type{border-top:none;padding-top:8px}
+  .blk .k{font-size:11.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold);
+          font-weight:700;margin-bottom:7px}
+  .blk.ev .k{color:#e8a0a0}
+  .blk.fix .k{color:var(--ok)}
+  .blk p:last-child,.blk ul:last-child{margin-bottom:0}
+
+  /* ── Code ── */
+  pre{background:#0a0b0d;border:1px solid var(--border);border-radius:11px;padding:16px 18px;
+      overflow-x:auto;margin:12px 0;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:#c9c4bb}
+  pre .c{color:#5f5a54} pre .g{color:#c8a96e} pre .r{color:#f08a8a} pre .gn{color:#7fd6a0}
+  pre .del{color:#f08a8a;text-decoration:line-through;opacity:.65}
+  pre .add{color:#7fd6a0}
+
+  /* ── Tables ── */
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+  th{text-align:left;font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-3);
+     font-weight:700;padding:10px 12px;border-bottom:1px solid var(--border-2)}
+  td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text-2);vertical-align:top}
+  td:first-child{color:var(--text)}
+  tbody tr:hover{background:var(--hover)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  /* ── Contrast bars ── */
+  .bars{margin:8px 0 4px}
+  .bar-row{display:grid;grid-template-columns:150px 1fr 92px 78px;align-items:center;gap:14px;
+           padding:9px 0;border-bottom:1px solid var(--border)}
+  .bar-row:last-child{border-bottom:none}
+  .bar-name{font-family:var(--mono);font-size:12px;color:var(--text)}
+  .bar-name small{display:block;font-family:'Inter',sans-serif;color:var(--text-3);font-size:11px}
+  .track{height:14px;background:rgba(255,255,255,.05);border-radius:4px;position:relative;overflow:hidden}
+  .fill{height:100%;border-radius:4px}
+  .track .thr{position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,.45)}
+  .ratio{font-family:var(--mono);font-size:13px;text-align:right;font-weight:700}
+  .pass{font-size:11px;font-weight:700;text-align:right;letter-spacing:.5px}
+
+  /* ── Pipeline (root cause) ── */
+  .flow{display:flex;align-items:stretch;gap:0;margin:22px 0;flex-wrap:wrap}
+  .fnode{flex:1;min-width:150px;background:var(--panel);border:1px solid var(--border);
+         border-radius:12px;padding:15px 16px;font-size:12.5px;color:var(--text-2);position:relative}
+  .fnode b{display:block;color:var(--text);font-size:13px;margin-bottom:5px}
+  .farrow{display:flex;align-items:center;padding:0 8px;color:var(--gold);font-size:17px}
+
+  /* ── Roadmap ── */
+  .sprint{border-left:2px solid var(--border-2);padding:0 0 30px 26px;position:relative}
+  .sprint:last-child{padding-bottom:0}
+  .sprint::before{content:'';position:absolute;left:-8px;top:4px;width:14px;height:14px;border-radius:50%;
+                  background:var(--bg);border:2px solid var(--gold)}
+  .sprint.s1::before{border-color:var(--p0)} .sprint.s2::before{border-color:var(--p1)} .sprint.s3::before{border-color:var(--p2)}
+  .sprint .st{font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:var(--text-3);font-weight:700}
+  .sprint h3{margin:6px 0 8px}
+  .sprint .goal{color:var(--text-2);font-size:14px;margin-bottom:12px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .chip{font-size:12px;padding:4px 11px;border-radius:20px;border:1px solid var(--border-2);
+        background:rgba(255,255,255,.035);color:var(--text-2)}
+
+  /* ── Callouts ── */
+  .callout{border-left:3px solid var(--gold);background:var(--gold-soft);border-radius:0 12px 12px 0;
+           padding:16px 20px;margin:18px 0;font-size:14px;color:var(--text-2)}
+  .callout b{color:var(--gold)}
+  .callout.warn{border-color:var(--p1);background:rgba(245,158,11,.09)}
+  .callout.warn b{color:var(--p1)}
+
+  footer{margin-top:72px;padding-top:28px;border-top:1px solid var(--border);
+         font-size:12.5px;color:var(--text-3);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+  @media (max-width:820px){
+    .verdict{grid-template-columns:repeat(2,1fr)}
+    h1{font-size:28px} h2 + .h2sub{font-size:21px}
+    .wrap{padding:0 20px}
+    .bar-row{grid-template-columns:110px 1fr 74px;row-gap:2px}
+    .pass{display:none}
+    .flow{flex-direction:column} .farrow{transform:rotate(90deg);padding:2px 0;justify-content:center}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="eyebrow">UI/UX Audit · 前端设计体系深度评估</div>
+  <h1>PatternMaster Pro <em>UI/UX 审计与优化建议</em></h1>
+  <p class="sub">
+    审计对象：<code>D:\dev\golden-shuttle</code>（Electron 34 + React 19 + Vite 7 自包含桌面应用）。
+    覆盖 43 个前端源文件、26 个后端模块，从设计令牌、视觉可达性、交互语义、样式架构、响应式与性能六个维度逐项核验，
+    并给出可直接落地的分级修复方案。
+  </p>
+  <div class="meta">
+    <div>审计日期<b>2026-09-14</b></div>
+    <div>前端源文件<b>43 个（25 个组件）</b></div>
+    <div>前端代码量<b>≈ 8,600 行</b></div>
+    <div>后端模块<b>26 个（≈2,600 行）</b></div>
+    <div>数据库迁移<b>v14</b></div>
+  </div>
+
+  <div class="verdict">
+    <div class="vc p0"><div class="n">3</div><div class="l">P0 阻断级<br>影响可用性与正确性</div></div>
+    <div class="vc p1"><div class="n">7</div><div class="l">P1 体系级<br>架构与一致性债务</div></div>
+    <div class="vc p2"><div class="n">7</div><div class="l">P2 打磨级<br>体验与文案</div></div>
+    <div class="vc ok"><div class="n">9</div><div class="l">已达标项<br>值得保留并推广</div></div>
+  </div>
+</header>
+
+<!-- ══════════════ 执行摘要 ══════════════ -->
+<section>
+  <h2>Executive Summary</h2>
+  <div class="h2sub">结论先行：底子很好，问题集中在"三处失守"</div>
+
+  <p>
+    这个项目的<strong>设计意图和令牌体系明显高于同类内部工具的平均水平</strong>——三套主题、30+ 语义 token、
+    为旧内核浏览器显式双写变量、为编号数字单独启用等宽字体、给空单元格占位压暗降噪。
+    这些都说明设计者真正在意过"看起来怎么样"。问题不在于审美，而在于<strong>三处工程失守</strong>，
+    让已经做对的事情大量失效。
+  </p>
+
+  <div class="callout">
+    <b>失守一 · 样式双轨制。</b><code>src/index.css</code>（1,230 行）与 <code>src/styles/app.css</code>（625 行）
+    并行存在且<strong>互相覆盖同一批选择器（≥96 处）</strong>，同一元素同时被三层规则争夺（CSS 类 + 内联 + <code>!important</code>）。
+    这是"改一处、坏一处"的根源，也是历史上反复返工（如看板 hover 重叠修了三轮）的土壤。
+  </div>
+
+  <div class="callout warn">
+    <b>失守二 · 令牌被绕过。</b>全站 <strong>96 处内联 style 对象 + 119 处组件内硬编码色值</strong>，
+    直接绕开了 <code>theme.css</code>。后果已经发生：<code>--app-bg</code>（页面金色氛围光）被 <code>App.jsx</code> 一行内联样式彻底覆盖，
+    <strong>设计稿里的氛围渐变从未在实机上生效过</strong>；同时 5 个与"暖黑金"完全无关的蓝色/靛紫色散落在看板代码里。
+  </div>
+
+  <div class="callout warn">
+    <b>失守三 · 可达性与响应式缺席。</b>全站<strong>只有 1 条媒体查询</strong>，根容器却硬编码 <code>min-width:1280px</code> 且 <code>overflow:hidden</code>；
+    Windows 常见的 125%/150% 显示缩放下视口不足 1280，<strong>右侧内容被裁切且没有任何滚动条可以补救</strong>。
+    键盘可达性方面：全项目仅 2 处 Escape 监听、4 条 <code>:focus-visible</code>、
+    所有弹窗无 <code>role="dialog"</code> / 无焦点陷阱 / 无法用 Esc 关闭。
+  </div>
+
+  <h4>按投入产出排序，最该先做的三件事</h4>
+  <table>
+    <thead><tr><th style="width:38px">#</th><th>动作</th><th style="width:120px">投入</th><th style="width:200px">回收</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="num">1</td>
+        <td><strong>解除 1280px 硬约束</strong>——删掉 <code>App.jsx:276</code> 的 <code>minWidth</code>，<code>overflow</code> 改 <code>auto</code>，补 3 个断点</td>
+        <td>半天</td>
+        <td>所有笔记本 / 缩放屏用户立刻可用</td>
+      </tr>
+      <tr>
+        <td class="num">2</td>
+        <td><strong>修 4 个文字色令牌</strong>——<code>--text-3</code> / <code>--text-4</code> 提到 AA 标准，并去掉 placeholder 的 <code>opacity:.5</code> 二次衰减</td>
+        <td>1 小时</td>
+        <td>全站表头、日期、占位文字从"几乎不可见"变可读</td>
+      </tr>
+      <tr>
+        <td class="num">3</td>
+        <td><strong>合并双轨 CSS</strong>——<code>index.css</code> 并入分层结构，删除死文件 <code>App.css</code>，抽出 <code>.col</code> 等冲突宽度</td>
+        <td>1–2 天（含回归）</td>
+        <td>后续每个视觉改动不再需要"试三次"</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══════════════ 一、项目全景 ══════════════ -->
+<section>
+  <h2>01 · Panorama</h2>
+  <div class="h2sub">项目全景与技术栈盘点</div>
+
+  <p>
+    PatternMaster Pro 是一款<strong>服装打样单全流程管理桌面应用</strong>，采用"单一自包含"架构：
+    Express 打包进 Electron、本地 SQLite（<code>%APPDATA%</code>）、无外部服务依赖。
+    这套约束下做出来的产品，UI 层面的自由度其实比 Web 应用更高（没有多浏览器兼容包袱、可以做深色原生感），
+    但它也意味着<strong>所有体验问题都无法甩锅给"浏览器/网络环境"</strong>。
+  </p>
+
+  <h4>技术栈</h4>
+  <table>
+    <thead><tr><th style="width:170px">层</th><th>选型</th><th>评价</th></tr></thead>
+    <tbody>
+      <tr><td>运行时</td><td>Electron 34 · sandbox:true · contextIsolation:true · nodeIntegration:false</td><td>安全基线正确</td></tr>
+      <tr><td>前端</td><td>React 19 · Vite 7 · 无 UI 组件库（全手写）</td><td>自由度最大，但缺组件基座</td></tr>
+      <tr><td>图标</td><td>lucide-react 0.575</td><td>统一，好</td></tr>
+      <tr><td>数据</td><td>better-sqlite3 12 · 迁移至 v14</td><td>版本化迁移规范</td></tr>
+      <tr><td>导出</td><td>exceljs（样式化 xlsx）· pdfmake + VFS</td><td>双通道齐备</td></tr>
+      <tr><td>渲染</td><td>pdfjs-dist 3.11.174（本地化）· 自研 DXF→SVG / EMF→PNG 缩略图</td><td>专业格式支持罕见且到位</td></tr>
+    </tbody>
+  </table>
+
+  <h4>信息架构（4 个顶层视图）</h4>
+  <table>
+    <thead><tr><th style="width:150px">视图</th><th>定位</th><th style="width:120px">代码量</th><th>主要承载</th></tr></thead>
+    <tbody>
+      <tr><td>看板主页</td><td>日常操作主战场</td><td class="num">587 行</td><td>筛选（6 项）· 看板/列表双模式 · 5 种分组 · 卡片即改即存</td></tr>
+      <tr><td>单据详情</td><td>单款全生命周期</td><td class="num">482 行</td><td>5 个 Tab：基本信息 / 图纸资料 / 尺寸指标 / 物料清单 / 工艺指示</td></tr>
+      <tr><td>设计师仪表盘</td><td>款级宏观视角</td><td class="num">218 行</td><td>5 张统计卡（可点击筛选）· 品类占比 · 进度分布 · 开发清单</td></tr>
+      <tr><td>系统设置</td><td>主数据维护</td><td class="num">83 行 + 5 子模块</td><td>品牌 / 人员预设 / 版次库 / 号型系列 / 分类 / 尺寸部位 / 外观主题</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <b>架构评价：</b>分层相当克制且正确——<code>api/client.js</code> 做 IPC/HTTP 双通道透明切换，
+    <code>server/services/</code> 纯函数层被 HTTP 与 IPC 共用，这是"同一套逻辑两种传输"的教科书做法。
+    组件拆分、hooks 抽取、迁移版本化、REQ-xxx 编号追踪 + <code>ITERATION_STATE.md</code> 外部记忆，
+    工程治理水平明显高于大多数个人/小团队项目。下面的问题清单，是在这个基础上挑毛病，不是否定底子。
+  </div>
+</section>
+
+<!-- ══════════════ 二、设计系统体检 ══════════════ -->
+<section>
+  <h2>02 · Design System</h2>
+  <div class="h2sub">设计令牌体检：体系完整，但颜色可达性有硬伤</div>
+
+  <p>
+    <code>src/styles/theme.css</code> 定义了三套主题（自定义暖黑金 / 系统深 / 系统浅），
+    共 30+ 语义 token，且<strong>全部显式双写而非依赖 <code>light-dark()</code> / <code>color-mix()</code></strong>——
+    这是为了兼容豆包内置浏览器等旧内核，并在文件头留了原因注释。这种"为边缘环境做设计"的意识很专业。
+    问题出在<strong>中性灰阶的取值</strong>。
+  </p>
+
+  <h4>对比度实测（自定义主题 · 底色 #0e0f11）</h4>
+  <div class="bars">
+    <div class="bar-row">
+      <div class="bar-name">--text<small>#f0ece6 · 正文</small></div>
+      <div class="track"><div class="fill" style="width:100%;background:linear-gradient(90deg,#4ade80,#22c55e)"></div><div class="thr" style="left:27.4%"></div></div>
+      <div class="ratio" style="color:#4ade80">16.4</div><div class="pass" style="color:#4ade80">AAA ✓</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-name">--accent<small>#c8a96e · 香槟金</small></div>
+      <div class="track"><div class="fill" style="width:52.4%;background:linear-gradient(90deg,#c8a96e,#e0c48f)"></div><div class="thr" style="left:27.4%"></div></div>
+      <div class="ratio" style="color:#4ade80">8.6</div><div class="pass" style="color:#4ade80">AAA ✓</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-name">--text-2<small>#9d9890 · 次级文字</small></div>
+      <div class="track"><div class="fill" style="width:40.9%;background:#60a5fa"></div><div class="thr" style="left:27.4%"></div></div>
+      <div class="ratio" style="color:#4ade80">6.7</div><div class="pass" style="color:#4ade80">AA ✓</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-name">--text-3<small>#6b6560 · 表头/标签</small></div>
+      <div class="track"><div class="fill" style="width:20.1%;background:#f59e0b"></div><div class="thr" style="left:27.4%"></div></div>
+      <div class="ratio" style="color:#f59e0b">3.3</div><div class="pass" style="color:#f59e0b">不达标 ✕</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-name">--text-4<small>#4a4540 · 占位/元信息</small></div>
+      <div class="track"><div class="fill" style="width:12.2%;background:#ef4444"></div><div class="thr" style="left:27.4%"></div></div>
+      <div class="ratio" style="color:#ef4444">2.0</div><div class="pass" style="color:#ef4444">严重不足 ✕</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-name">占位符<small>--text-4 + opacity .5</small></div>
+      <div class="track"><div class="fill" style="width:8.2%;background:#ef4444"></div><div class="thr" style="left:27.4%"></div></div>
+      <div class="ratio" style="color:#ef4444">1.35</div><div class="pass" style="color:#ef4444">≈不可见 ✕</div>
+    </div>
+  </div>
+  <p style="font-size:12.5px;color:var(--text-3);margin-top:10px">
+    竖线 = WCAG AA 正常文本阈值 4.5:1（柱长按 16.4 归一，故 AA 线落在 27.4% 处）。最后一行最严重：
+    <code>app.css:660</code> 已经把 placeholder 压到 <code>--text-4</code>，又叠了 <code>opacity:.5</code>，
+    实际渲染出来的灰度相当于 <code>#2c2a28</code>——在暗底上基本等于隐形。
+  </p>
+
+  <table>
+    <thead><tr><th style="width:110px">令牌</th><th style="width:78px">对比度</th><th>实际被用在（节选）</th></tr></thead>
+    <tbody>
+      <tr><td class="num">--text-3</td><td style="color:#f59e0b"><b>3.3 ✕</b></td>
+          <td><code>.data-table th</code> 表头 · <code>.tpl-table-v4 th</code> · <code>.sidebar-title</code> · <code>.card-header-row</code> · <code>.field label</code> 表单标签 · <code>.bc-sub</code> 面包屑 · <code>.dash-table th</code> · <code>.version-time</code></td></tr>
+      <tr><td class="num">--text-4</td><td style="color:#ef4444"><b>2.0 ✕</b></td>
+          <td>全部 input placeholder · <code>.mini-table th</code> · <code>.empty-state-v4</code> 空态 · <code>.bento-node-date</code>（<b>10px</b>）· <code>.bento-node-label</code> 之外的所有元信息 · 侧栏版本号（<code>App.jsx:377</code>，11px）· <code>.ss-divider</code> · <code>.ss-empty</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <b>为什么这条是 P0 而不是"配色微调"：</b>被击穿的恰好是<strong>信息密度最高、字号最小、用户停留最久</strong>的那一层——
+    表格表头、表单标签、单元格占位、日期、版本号。这些内容都在 10–12px 区间，
+    小字号本身要求更高的对比度（而非更低），现在是"字号越小、颜色越淡"，方向完全反了。
+  </div>
+
+  <h4>值得保留并推广的 9 项</h4>
+  <table>
+    <thead><tr><th style="width:34px"></th><th>已达标项</th><th>价值</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--ok)">✓</td><td>三主题令牌体系 + 显式双写（不依赖新 CSS 函数）</td><td>旧内核浏览器不会出现"控件隐形"</td></tr>
+      <tr><td style="color:var(--ok)">✓</td><td><code>@supports not (color: CanvasText)</code> 回退链</td><td>系统语义色缺失时仍有中性色兜底</td></tr>
+      <tr><td style="color:var(--ok)">✓</td><td>编号/款号/日期统一 DM Mono 等宽 + <code>tabular-nums</code> 场景</td><td>数字列对齐，专业感强</td></tr>
+      <tr><td style="color:var(--ok)">✓</td><td>空单元格占位压暗、表头 uppercase + 字距</td><td>削弱"假数据感"，降噪到位</td></tr>
+      <tr><td style="color:var(--ok)">✓</td><td>DesignerDashboard 的 <code>role="button"</code> + <code>tabIndex</code> + <code>onKeyDown</code> + <code>:focus-visible</code></td><td><b>应作为全站范式推广</b></td></tr>
+      <tr><td style="color:var(--ok)">✓</td><td>400ms 防抖自动保存 + <code>React.memo</code> 行级隔离（SizeRow）</td><td>重表格不卡顿</td></tr>
+      <tr><td style="color:var(--ok)">✓</td><td>PDF.js 本地化、DXF→SVG、EMF→PNG 自研缩略图</td><td>离线可用，专业格式支持罕见</td></tr>
+      <tr><td style="color:var(--ok)">✓</td><td>删除按钮"常态同文字色、hover 才变红"统一规范（<code>.btn-del-ghost</code>）</td><td>避免界面处处冒红，克制</td></tr>
+      <tr><td style="color:var(--ok)">✓</td><td>确认弹窗图标底改 <code>--accent-soft</code>、导出按钮主题金化</td><td>说明做过一轮系统的"去杂色"</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══════════════ 三、问题清单 ══════════════ -->
+<section>
+  <h2>03 · Findings</h2>
+  <div class="h2sub">问题清单：17 项，按修复优先级分级</div>
+
+  <!-- ───── P0 ───── -->
+  <h3 style="color:var(--p0);margin:34px 0 16px;font-size:15px;letter-spacing:2px;text-transform:uppercase">P0 · 阻断级（3 项）</h3>
+
+  <div class="card issue p0">
+    <h3><span class="tag p0">P0-1</span>1280px 硬约束 + <code>overflow:hidden</code>：缩放屏用户被裁切且无法补救</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><code>src/App.jsx:269-277</code> 根容器同时设置了 <code>minWidth: 1280</code> 与 <code>overflow: 'hidden'</code>：</p>
+      <pre>&lt;div className="app" style={{ height:'100vh', <span class="r">overflow:'hidden'</span>,
+     <span class="r">minWidth: 1280</span> <span class="c">// 设置最小宽度，防止窄屏下控件强行压缩变形导致堆叠</span>
+}}&gt;</pre>
+      <p>注释里的意图是合理的（防止控件堆叠变形），但手段选错了——用"禁止收缩"解决了"收缩变形"，代价是"不可用"。</p>
+    </div>
+    <div class="blk">
+      <div class="k">影响</div>
+      <p>Windows 常见的显示缩放会让<strong>逻辑视口宽度远低于物理宽度</strong>：</p>
+      <table>
+        <thead><tr><th>物理分辨率</th><th>缩放比</th><th>实际 CSS 视口</th><th>结果</th></tr></thead>
+        <tbody>
+          <tr><td>1366 × 768</td><td>125%</td><td class="num">≈ 1,093 px</td><td style="color:var(--p0)">裁切 ≈187px，无滚动条</td></tr>
+          <tr><td>1920 × 1080</td><td>150%</td><td class="num">≈ 1,280 px</td><td style="color:var(--p1)">正好卡在临界，窗口边框一挤就裁</td></tr>
+          <tr><td>2560 × 1440</td><td>175%</td><td class="num">≈ 1,463 px</td><td style="color:var(--ok)">安全</td></tr>
+        </tbody>
+      </table>
+      <p>被裁掉的正是<strong>顶栏右侧的「导出工艺单 / 导出 PDF / 历史版本 / 删除单据」</strong>和看板最右一列。
+        因为 <code>overflow:hidden</code>，用户连横向滚动条都没有——<strong>没有任何自救手段</strong>，只能改系统缩放或换大屏。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <ol>
+        <li>删除 <code>minWidth</code>（或降为 <code>960</code> 仅作极端兜底）；根容器 <code>overflow</code> 改 <code>'auto'</code>。</li>
+        <li>用<strong>容器自适应 + 断点收缩</strong>替代硬约束：顶栏操作按钮在窄视口折叠成一个「⋯」溢出菜单。</li>
+        <li>看板列宽改流体：<code>clamp(340px, 30vw, 520px)</code>，替代固定的 500px（见 P1-6）。</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card issue p0">
+    <h3><span class="tag p0">P0-2</span>文字对比度不达标：<code>--text-3</code> 3.3:1、<code>--text-4</code> 2.0:1，placeholder 实测 1.35:1</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><code>src/styles/theme.css:21-22</code>：</p>
+      <pre><span class="del">--text-3: #6b6560;   <span class="c">/* 3.3:1 — 低于 AA 4.5:1 */</span>
+--text-4: #4a4540;   <span class="c">/* 2.0:1 — 严重不足 */</span></span></pre>
+      <p><code>src/styles/app.css:660</code> 又给 placeholder 叠了第二层衰减：</p>
+      <pre>.data-table input::placeholder { color: var(--text-4); <span class="r">opacity: .5</span>; }</pre>
+      <p>合成后的实际灰度约 <code>#2c2a28</code>，对比度 <strong>1.35:1</strong>——已低于"可察觉"阈值，接近纯装饰。</p>
+    </div>
+    <div class="blk">
+      <div class="k">影响</div>
+      <p>被击中的是信息密度最高的一层：尺寸表 / BOM / 工艺指示的<strong>表头</strong>、所有<strong>表单标签</strong>、
+        看板卡片的 <code>.bento-node-date</code>（<strong>10px</strong> 的进度节点日期）、侧栏版本号（11px）、
+        所有<strong>输入框占位</strong>、空态提示。用户要么眯眼，要么误判为"这里没数据"。</p>
+      <p>更麻烦的是<strong>方向性错误</strong>：小字号（10–12px）对对比度的要求本应更高，
+        而当前设计是"字号越小、颜色越淡"。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <pre><span class="c">/* theme.css — custom 主题 */</span>
+<span class="del">--text-3: #6b6560;   --text-4: #4a4540;</span>
+<span class="add">--text-3: #8c857c;   <span class="c">/* ≈4.8:1 — 表头/标签达标 AA */</span>
+--text-4: #6b6560;   <span class="c">/* ≈3.3:1 — 仅限装饰/分隔线语义，不再用于正文 */</span></span>
+
+<span class="c">/* app.css — 去掉二次衰减，占位改由 --text-3 承担 */</span>
+<span class="del">.data-table input::placeholder { color: var(--text-4); opacity: .5; }</span>
+<span class="add">.data-table input::placeholder { color: var(--text-3); opacity: .75; }</span></pre>
+      <p>配套：把 <code>--text-4</code> 的用途收敛为"分隔/装饰"，代码层做一次全量替换审计
+        （<code>grep -rn 'text-4' src/</code> 目前命中数十处，其中约 1/3 属于误用）。</p>
+    </div>
+  </div>
+
+  <div class="card issue p0">
+    <h3><span class="tag p0">P0-3</span>弹窗体系无 Esc 关闭、无焦点陷阱、无 ARIA 语义</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p>全项目搜索 <code>Escape</code> 只有 <strong>2 处</strong>命中，且都不是"关闭弹窗"，而是取消行内编辑：</p>
+      <ul>
+        <li><code>PeopleEditor.jsx:109 / :135</code> — 取消姓名/角色编辑态</li>
+        <li><code>SettingListEditor.jsx:40</code> — 取消行内编辑</li>
+      </ul>
+      <p>而所有弹窗都是裸 <code>div</code> + 点击遮罩关闭的结构，例如 <code>NewTaskModal.jsx:76</code>：</p>
+      <pre>&lt;div className="overlay overlay-show" onClick={onClose}&gt;
+  &lt;form className="modal glass" onSubmit={submit}&gt;</pre>
+      <p>涉及组件：<code>ConfirmModal</code> · <code>NewTaskModal</code> · <code>ExportButton</code> 确认框 ·
+        <code>PdfPickerModal</code> · <code>VersionHistoryModal</code> · <code>OperationLogsModal</code> ·
+        <code>MeasurementModal</code> · <code>PdfThumb</code> 大图预览 · <code>DrawingLibrary</code> 上传/版本弹窗。
+        全部<strong>无 <code>role="dialog"</code>、无 <code>aria-modal</code>、无 <code>aria-label</code>、
+        无焦点陷阱、无背景 <code>aria-hidden</code></strong>。</p>
+    </div>
+    <div class="blk">
+      <div class="k">影响</div>
+      <ul>
+        <li>键盘用户<strong>无法关闭弹窗</strong>，只能 Tab 摸索到右上角 ×（若焦点被背景元素截获则永远出不去）。</li>
+        <li>打开弹窗后 <kbd>Tab</kbd> 会跑到背后页面的按钮上——视觉上"在弹窗里"，实际在操作背后的看板。</li>
+        <li>屏幕阅读器不会播报"对话框已打开"，读完弹窗内容会继续读背景。</li>
+        <li><code>PdfThumb</code> 的大图预览层是整屏可点关闭，<strong>极易误触关闭</strong>（想放大看细节，点了一下图片就没了）。</li>
+      </ul>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <p>抽出 <strong><code>&lt;Modal&gt;</code> 基座组件</strong>，把现在 9 处各写一遍的弹窗骨架收敛到一处：</p>
+      <pre><span class="c">// src/components/common/Modal.jsx — 统一承载以下职责</span>
+<span class="g">Esc 关闭</span>            document.addEventListener('keydown', …'Escape')
+<span class="g">焦点陷阱</span>            Tab 循环限制在弹窗内（首/末元素回绕）
+<span class="g">焦点归还</span>            关闭后 focus() 回触发元素
+<span class="g">背景隔离</span>            root 加 aria-hidden + 禁止背后滚动
+<span class="g">语义</span>               role="dialog" aria-modal="true" aria-labelledby={titleId}
+<span class="g">遮罩容错</span>            仅当 mousedown 与 click 都落在遮罩上才关闭（防拖选文本误关）</pre>
+      <p><strong>优先级说明：</strong>如果短期内不做完整基座，至少先补两件事——
+        (1) 全局 Esc 关闭最上层弹窗；(2) <code>PdfThumb</code> 放大层把"点图片即关"改为"仅点空白/× 关闭"。
+      </p>
+    </div>
+  </div>
+
+  <!-- ───── P1 ───── -->
+  <h3 style="color:var(--p1);margin:44px 0 16px;font-size:15px;letter-spacing:2px;text-transform:uppercase">P1 · 体系级（7 项）</h3>
+
+  <div class="card issue p1">
+    <h3><span class="tag p1">P1-1</span>样式双轨制：<code>index.css</code> 与 <code>app.css</code> 互抢 ≥96 处选择器</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><code>src/main.jsx:3-5</code> 按顺序引入三个样式表：</p>
+      <pre>import './index.css'        <span class="c">// 1,230 行</span>
+import './styles/theme.css'  <span class="c">//   129 行 — 令牌</span>
+import './styles/app.css'    <span class="c">//   625 行</span></pre>
+      <p>其中 <code>index.css</code> 有 <strong>96 行</strong>命中了与 <code>app.css</code> 同名的选择器
+        （<code>.data-table</code> · <code>.modal-overlay</code> · <code>.modal-content</code> · <code>.modal-sidebar</code> ·
+        <code>.modal-main</code> · <code>.template-grid</code> · <code>.template-card</code> · <code>.side-nav-item</code> ·
+        <code>.cat-item</code> · <code>.del-btn</code> · <code>.sidebar-v4</code> · <code>.settings-content</code> ·
+        <code>.table-wrapper</code> · <code>.size-table-container</code> · <code>.sort-actions</code> · <code>.btn-sort</code> ·
+        <code>.table-checkbox</code> · <code>.tcard-name</code> · <code>.tpl-table</code> …），且<strong>取值不同</strong>。</p>
+      <p><strong>最典型的冲突</strong>——同一个 <code>.col</code>（看板列）被三层规则同时争夺：</p>
+      <pre><span class="c">/* index.css:1148 (后加载，!important 胜出) */</span>
+.col { min-width:600px <span class="r">!important</span>; max-width:600px <span class="r">!important</span>; flex:0 0 600px <span class="r">!important</span>; }
+
+<span class="c">/* styles/app.css:117 */</span>
+.col { width:400px; flex:0 0 400px; }
+
+<span class="c">/* KanbanView.jsx:480 — 内联，优先级最高 */</span>
+&lt;div className="col" style={{ width:500, flex:'0 0 500px' }}&gt;</pre>
+      <p>另有 <code>.btn-danger</code> 在 <code>app.css</code> 内部被<strong>定义两次</strong>
+        （<code>:548</code> 红底圆角大按钮 / <code>:631</code> 深红底小按钮，padding 与圆角都不同）。</p>
+      <p>此外 <code>src/App.css</code>（37 行）是 Vite 脚手架残留（<code>#root{max-width:1280px}</code> · <code>.logo{height:6em}</code> · logo-spin），
+        <strong>未被任何文件 import 的死文件</strong>；一旦有人顺手引入，会直接摧毁顶栏 logo。</p>
+    </div>
+    <div class="blk">
+      <div class="k">影响</div>
+      <p>这是全部视觉问题的<strong>系统性根因</strong>。表现是：改一处样式不生效 → 加 <code>!important</code> → 别处坏 →
+        再加内联兜底 → 下一轮更不敢动。<code>ITERATION_STATE.md</code> 里"看板卡片 hover 与 sticky 列头重叠"修了三轮才定位到
+        <code>.col-body</code> 缺 <code>padding-top</code>，正是这种环境下"症状当病因治"的典型。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <ol>
+        <li>建立<strong>单一 CSS 入口 + 分层目录</strong>：<code>tokens.css</code>（令牌）→ <code>base.css</code>（reset/全局）→
+            <code>components/</code>（按组件拆）→ <code>views/</code>（按视图拆）。</li>
+        <li>删除 <code>src/App.css</code>；把 <code>index.css</code> 中仍有效的规则迁移后清空。</li>
+        <li>全部 <code>!important</code> 清零（当前散布在 <code>.col</code> · <code>.data-table</code> 系列 · <code>.bento-*</code> 等数十处），
+            改用<strong>更具体的选择器或 CSS 变量</strong>替代。</li>
+        <li>把 <code>.col</code> 宽度从内联收回 CSS：<code>.col{--col-w: clamp(340px,30vw,520px); width:var(--col-w); flex:0 0 var(--col-w);}</code></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card issue p1">
+    <h3><span class="tag p1">P1-2</span>令牌被绕过：96 处内联 style + 119 处硬编码色值，<code>--app-bg</code> 从未生效</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><strong>内联样式分布</strong>（<code>style={{...}}</code> 计数，共 96 处 / 25 个文件）：</p>
+      <pre>SizeTable.jsx <span class="g">46</span>   KanbanView.jsx <span class="g">45</span>   DrawingLibrary.jsx <span class="g">34</span>   DetailView.jsx <span class="g">27</span>
+BomEditor.jsx <span class="g">26</span>   ProcessEditor.jsx <span class="g">23</span>   DesignerDashboard.jsx <span class="g">20</span>   PdfPickerModal.jsx <span class="g">20</span>
+SampleRunList.jsx <span class="g">15</span>  OperationLogsModal.jsx <span class="g">14</span>  ExportButton.jsx <span class="g">13</span>  …</pre>
+      <p><strong>硬编码色值</strong>（hex / rgba 计数，共 119 处）：<code>DrawingLibrary 23</code> · <code>KanbanView 18</code> ·
+        <code>SizeTable 13</code> · <code>PdfThumb 7</code> · <code>DesignerDashboard 7</code> …</p>
+      <h4>已发生的实际后果：氛围光被覆盖</h4>
+      <pre><span class="c">/* theme.css:39 — 设计稿里的金色氛围渐变 */</span>
+--app-bg: radial-gradient(circle at top right, rgba(200,169,110,.05), transparent 40%), …;
+
+<span class="c">/* app.css:7 */</span>
+.app { background: var(--app-bg); }
+
+<span class="c">/* App.jsx:273 — 内联优先级最高，上面两条全部失效 */</span>
+&lt;div className="app" style={{ …  <span class="r">background: 'var(--bg)'</span>  … }}&gt;</pre>
+      <p>结论：<code>--app-bg</code> 在三套主题里都定义了，但<strong>从未在界面上渲染过</strong>。
+        实机界面比设计稿更"平"，缺少那层暖光。</p>
+      <p><strong>另一类后果：主题切换时局部破色。</strong>多处用 <code>color: var(--text)</code> 涂在彩色底上：</p>
+      <pre><span class="c">/* app.css:548 / :127 — 红底 + --text 文字 */</span>
+.btn-danger        { background:#ef4444; color: var(--text); }
+.bento-overdue-badge { background:rgba(239,68,68,.92); color: var(--text); }</pre>
+      <p>自定义 / 深色主题下 <code>--text</code> 是浅色，尚可；但切到<strong>系统浅色主题</strong>时
+        <code>--text</code> 变成近黑（<code>CanvasText</code>），于是<strong>红底黑字</strong>——危险按钮的可读性直接崩掉。</p>
+      <p><strong>第三类：色板越界。</strong>暖黑金体系明确写着"深浅主题零蓝色"，但看板代码里散落着
+        <code>#6366f1</code>（靛蓝，<code>KanbanView:150</code>）、<code>#f43f5e</code> / <code>#fb923c</code> / <code>#f59e0b</code> / <code>#eab308</code>
+        等与体系无关的状态色。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <ol>
+        <li><strong>删掉 <code>App.jsx:273</code> 的内联 <code>background</code></strong>（一行改动，立刻找回设计稿氛围光）。</li>
+        <li>把状态语义色提升为令牌，三套主题各给一套：
+          <pre>--state-run-waiting / pattern / sample / pending / done
+--state-prio-s / a / b / c      --state-audit-pass / wait / reject
+--state-overdue / today / soon  --state-danger / danger-text</pre>
+        </li>
+        <li>确立"<strong>彩色底上一律使用 <code>--on-danger</code> / <code>--on-accent</code> 这类前景令牌</strong>"的规则，禁止在色底上用 <code>--text</code>。</li>
+        <li>ESLint 加 <code>react/forbid-dom-props</code> 或自定义规则：禁止 <code>style</code> 中出现 <code>#</code>/<code>rgba(</code>，
+            存量逐步迁移（先禁新增）。</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card issue p1">
+    <h3><span class="tag p1">P1-3</span>全站仅 1 条媒体查询：没有任何响应式策略</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p>对 <code>src/</code> 全量正则检索 <code>@media</code>，仅命中 <strong>1 处</strong>：</p>
+      <pre><span class="c">/* styles/app.css:504 — 全项目唯一的媒体查询 */</span>
+@media (max-width: 900px) { .dash-two-col { grid-template-columns: 1fr; } }</pre>
+      <p>（<code>App.css:30</code> 另有一条 <code>prefers-reduced-motion</code>，但该文件是未引入的死文件。）</p>
+      <p>同时存在大量固定尺寸：</p>
+      <table>
+        <thead><tr><th>位置</th><th>固定值</th><th>最小所需宽度</th></tr></thead>
+        <tbody>
+          <tr><td>看板三列</td><td><code>.col</code> 500px × 3 + gap 48 + padding 64</td><td class="num" style="color:var(--p1)">≈ 1,612 px</td></tr>
+          <tr><td>详情页</td><td><code>.detail-content</code> <code>1fr 340px</code> + gap 32 + padding 80</td><td class="num" style="color:var(--p1)">≥ 1,256 px</td></tr>
+          <tr><td>基本表单</td><td><code>.field-grid</code> <code>repeat(3,1fr)</code></td><td class="num">随父级</td></tr>
+          <tr><td>设置页顶卡</td><td><code>.top-settings-grid</code> <code>repeat(3,1fr)</code></td><td class="num">随父级</td></tr>
+          <tr><td>尺寸部位管理</td><td><code>.complex-settings-row</code> <code>1fr 1fr</code> + 内层 800px min-width</td><td class="num" style="color:var(--p1)">≈ 1,700 px</td></tr>
+        </tbody>
+      </table>
+      <p>另有 <code>.template-manager-v4 { min-width: 800px }</code>、<code>.modal-content { width: 900px; height: 600px }</code>
+        等硬尺寸。<strong>只有 1920 以上全屏时才不需要横向滚动。</strong></p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <p>由于这是桌面应用，不需要移动端适配，<strong>但必须覆盖笔记本与缩放场景</strong>。建议三个断点：</p>
+      <pre>@media (max-width:1440px) → 收紧 padding（40px→24px）、看板列宽 clamp 收缩
+@media (max-width:1280px) → .field-grid 3列→2列；详情页侧栏 340→300；
+                         顶栏操作按钮折叠进「⋯」溢出菜单
+@media (max-width:1024px) → .field-grid 2列→1列；详情侧栏移至主列下方；
+                         设置页三卡→单列；看板列宽 clamp(300px,88vw,420px)</pre>
+      <p>另建议加一条<strong>最小可用宽度保护</strong>：<code>html{min-width:960px; overflow-x:auto}</code>——
+        用"允许横向滚动"替代"静默裁切"，把 P0-1 的不可救转为可救。</p>
+    </div>
+  </div>
+
+  <div class="card issue p1">
+    <h3><span class="tag p1">P1-4</span>键盘可达性系统性缺失：可点击的是 <code>div</code>，焦点环被 <code>outline:none</code> 抹除</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><strong>以 <code>div</code> 承载点击交互的元素（无 <code>role</code>/<code>tabIndex</code>/<code>onKeyDown</code>）：</strong></p>
+      <table>
+        <thead><tr><th style="width:190px">元素</th><th style="width:110px">位置</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td><code>.menu-item</code></td><td>App.jsx:364-376</td><td>侧栏主导航（看板/仪表盘/设置/日志）</td></tr>
+          <tr><td><code>.tab</code></td><td>DetailView.jsx:218-222</td><td>详情页 5 个 Tab 切换</td></tr>
+          <tr><td><code>.ss-display</code></td><td>SmartSelect.jsx:62</td><td>全站所有下拉选择器</td></tr>
+          <tr><td><code>.card / .bento-card</code></td><td>KanbanView.jsx:176</td><td>打开单据（最高频操作）</td></tr>
+          <tr><td><code>.cat-item</code></td><td>CategoryManager 等</td><td>分类/预设列表选中</td></tr>
+          <tr><td><code>.dash-bar-row</code></td><td>DesignerDashboard.jsx:135</td><td>品类筛选 <span style="color:var(--ok)">（此项已正确加了 role/tabIndex）</span></td></tr>
+          <tr><td><code>.drawing-card</code></td><td>DrawingLibrary</td><td>图纸卡片打开/放大</td></tr>
+          <tr><td><code>.pdf-upload-zone</code></td><td>DetailView.jsx:332</td><td>设计稿上传入口</td></tr>
+        </tbody>
+      </table>
+      <p><strong>焦点可见性被抹除：</strong>全项目 <code>:focus-visible</code> 仅 <strong>4 条</strong>规则
+        （<code>app.css:494/511/555/637</code>，且集中在仪表盘与删除按钮）；同时 <code>outline: none</code> 出现在
+        <code>select</code>（app.css:565）、<code>.field input</code>（app.css:209）、<code>.data-table input</code>、
+        <code>.grid-cell input</code> 以及数十处内联样式中。</p>
+      <p>对照：<code>DesignerDashboard.jsx:109-113</code> 是<strong>全项目唯一正确范例</strong>——</p>
+      <pre>&lt;div className="dash-stat-card"
+     <span class="gn">role="button" tabIndex={0}</span>
+     onKeyDown={(e) =&gt; { if (e.key==='Enter' || e.key===' ') { e.preventDefault(); toggleStatusFilter(…); } }}&gt;</pre>
+    </div>
+    <div class="blk">
+      <div class="k">影响</div>
+      <p>键盘用户（含大量"左手键盘右手鼠标"的老练用户）<strong>无法切换视图、切换 Tab、打开单据</strong>——
+        所有高频操作都不可用。加上没有可见焦点环，即使 Tab 到了也不知道自己在哪，等于盲操。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <ol>
+        <li><strong>全局补一条焦点环</strong>（把 DesignerDashboard 的写法提升为规范），成本极低、收益立竿见影：
+          <pre>:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:inherit; }</pre>
+        </li>
+        <li>语义化替换：导航项 / Tab / 卡片 / 列表项一律改 <code>&lt;button&gt;</code>（或 <code>role="button"</code> + <code>tabIndex</code> +
+            Enter/Space 处理）。<code>.tab</code> 更适合升级为 <code>role="tablist"/"tab"</code> + 左右方向键。</li>
+        <li>把 <code>outline:none</code> 全部改为 <code>outline:none</code> + 自定义 <code>:focus-visible</code> 样式，
+            <strong>不能只删不加</strong>。</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card issue p1">
+    <h3><span class="tag p1">P1-5</span>Google Fonts 远程 <code>@import</code>：离线桌面应用的字体静默回退</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><code>src/index.css:1-2</code>：</p>
+      <pre>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&amp;display=swap');</pre>
+      <p>而项目定位是<strong>"单一自包含桌面应用"</strong>（生产约束明确要求不依赖外部服务）。
+        <code>ITERATION_STATE.md</code> 自己也记了一句"离线回退系统字体"——说明已知问题，但未落地修复。</p>
+    </div>
+    <div class="blk">
+      <div class="k">影响</div>
+      <ul>
+        <li>无网/内网环境下字体拉取失败，静默回退到系统字体。</li>
+        <li>Inter 与"Microsoft YaHei / Segoe UI"的<strong>字宽差异明显</strong>，会改变已排好版的高度敏感区域
+          （看板卡片 <code>.bento-row</code> 是 11px 单行不换行，<code>.bento-title-main</code> 单行省略号截断）——
+          同一份数据在不同网络环境下<strong>截断位置不同</strong>。</li>
+        <li><code>@import</code> 位于 CSS 顶层会<strong>串行阻塞样式解析</strong>，拖慢首屏（渲染进程冷启动本来就要等 Express）。</li>
+      </ul>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <pre><span class="c">/* 1. 下载 woff2 到 src/assets/fonts/（Inter 3 个字重 + DM Mono 3 个字重，共约 6 个文件） */</span>
+<span class="c">/* 2. index.css 顶部替换为本地声明，零外网请求、零阻塞 */</span>
+@font-face { font-family:'Inter'; font-weight:400; font-style:normal;
+             src:url('./assets/fonts/inter-400.woff2') format('woff2');
+             <span class="g">font-display: swap;</span> }   <span class="c">/* 其余字重同理 */</span></pre>
+      <p>顺带把 <code>unicode-range</code> 留给中文（中文仍走系统字体，无需内嵌 CJK 字体包，体积可控）。</p>
+    </div>
+  </div>
+
+  <div class="card issue p1">
+    <h3><span class="tag p1">P1-6</span><code>SmartSelect</code> 打开期间以 rAF 逐帧读取布局：每帧强制重排</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><code>src/components/common/SmartSelect.jsx:39-54</code>：</p>
+      <pre>useEffect(() =&gt; {
+  if (!open) return;
+  const el = ref.current; if (!el) return;
+  let raf;
+  const tick = () =&gt; {
+    const r = el.<span class="r">getBoundingClientRect()</span>;   <span class="c">// ← 每帧强制同步布局</span>
+    setPos(prev =&gt; …);
+    raf = requestAnimationFrame(tick);          <span class="c">// ← 无限循环，直到关闭</span>
+  };
+  tick();
+  return () =&gt; cancelAnimationFrame(raf);
+}, [open]);</pre>
+      <p>注释说明动机是"弹窗/容器布局变化时弹层实时同步，不再跑偏"——需求真实（新建弹窗异步查重会插入提示区块导致弹窗上移）。
+        但用<strong>每帧轮询</strong>解决一个<strong>离散事件</strong>问题，代价过大。
+        注意 <code>setPos</code> 里做了 <code>prev</code> 相等判断避免重渲染，所以问题不在 React，而在
+        <code>getBoundingClientRect()</code> 本身<strong>每帧强制触发一次同步 layout</strong>。</p>
+    </div>
+    <div class="blk">
+      <div class="k">影响</div>
+      <p>下拉展开期间主线程持续被 layout 占用。在尺寸表（数十个受控 input）或图纸库（数十张缩略图）这类重页面上，
+        会与动画/输入竞争主线程 → 掉帧、输入延迟；笔记本上则是持续耗电。
+        用户感受可能是"下拉打开后输入有点跟手不上"。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <p>把"持续轮询"换成"<strong>事件驱动 + 兜底低频</strong>"：</p>
+      <pre><span class="add">// 只在真正会改变锚点位置的事件上重算</span>
+window.addEventListener('scroll', reposition, { capture:true, passive:true });
+window.addEventListener('resize', reposition, { passive:true });
+const ro = new ResizeObserver(reposition); ro.observe(document.body);
+observer.observe(dialogEl, { attributes:true, attributeFilter:['style','class'] });
+
+<span class="c">// 兜底：仅在打开后的前 600ms 内低频轮询（覆盖异步插入提示区块的场景）</span>
+const t = setInterval(reposition, 100); setTimeout(() =&gt; clearInterval(t), 600);</pre>
+      <p>若愿意引依赖，<code>@floating-ui/dom</code> 的 <code>autoUpdate()</code> 正是为这个场景设计的
+        （内部用 ResizeObserver + IntersectionObserver + scroll 监听，且带节流）。</p>
+    </div>
+  </div>
+
+  <div class="card issue p1">
+    <h3><span class="tag p1">P1-7</span>自动保存全程静默：成功无反馈，失败只写 console</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><code>src/App.jsx:171-182</code> <code>commitField</code>——详情页<strong>所有字段</strong>的落库总入口：</p>
+      <pre>const patch = () =&gt; updateTask(editingTask.id, { [key]: value })
+  .then(loadTasks)
+  .catch(err =&gt; <span class="r">console.error(`自动保存 ${key} 失败:`, err)</span>);   <span class="c">// ← 用户不可见</span></pre>
+      <p><code>src/components/task/DetailView.jsx:97</code> 尺寸表落库同样吞错：</p>
+      <pre>updateRun(selectedRun.id, { size_data: val }).catch(() =&gt; {});            <span class="c">// ← 完全静默</span></pre>
+      <p>唯一有反馈的是 <code>pdfSyncState</code>（设计稿同步三态提示条），说明<strong>团队知道怎么做，只是没铺开</strong>。</p>
+    </div>
+    <div class="blk">
+      <div class="k">影响</div>
+      <ul>
+        <li>用户<strong>无法确认"改了到底存没存"</strong>，只能靠反复切 Tab / 刷新来验证——这在 <code>ITERATION_STATE.md</code> 里
+          反复以"用户以为没保存"的沟通形式出现，是真实的协作成本。</li>
+        <li>数据库锁 / 端口占用 / 后端重启（Handbook 里记载的"多后端并存锁库导致查询挂死"）发生时，
+          用户界面<strong>毫无异常</strong>，继续编辑，最后发现数据丢了。</li>
+      </ul>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <ol>
+        <li>顶栏加<strong>轻量保存指示器</strong>（复用 <code>.pdf-sync-tip</code> 的视觉语言）：
+            <code>保存中… / 已保存 14:32 / ⚠ 保存失败，点击重试</code>。</li>
+        <li>失败改为 <strong>toast + 保留本地值 + 重试按钮</strong>，绝不静默。</li>
+        <li>400ms 防抖期间给编辑中的单元格一个极轻的 pending 态（如 <code>--accent-soft</code> 底），
+            与"已落库"区分，让"即改即存"变得可见。</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ───── P2 ───── -->
+  <h3 style="color:var(--p2);margin:44px 0 16px;font-size:15px;letter-spacing:2px;text-transform:uppercase">P2 · 打磨级（7 项）</h3>
+
+  <div class="card issue p2">
+    <h3><span class="tag p2">P2-1</span>看板卡片信息过载 + 一个必然为空的死节点</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><code>KanbanView.jsx:81-91</code> 的 <code>buildRunNodes</code>——卡片底部 5 个进度节点的数据源：</p>
+      <pre>return [
+  mk('配料', top?.fabric_date, ''),
+  mk('跟版', top?.start_date, ''),
+  mk('版师', top?.pattern_date, task.pattern_maker),
+  mk('样衣', top?.finish_date, top?.sample_maker),
+  <span class="r">mk('工艺', '', ''),          // ← 永远为空，永远渲染 "--"</span>
+];</pre>
+      <p>"工艺"节点在代码里写死空值（注释也承认"无对应批次字段"），但卡片仍然为它渲染一个灰色圆点 +
+        <code>--</code> 占位，占掉 1/5 的进度区宽度。同时卡片主体（<code>:197-235</code>）在 500px 宽度内塞了
+        款号 24px + 款名 + 款号 + 类别 + 品牌 + 时段 + 版单 + 最多 3 个批次 + 优先级 + 审核，共 10+ 行信息。</p>
+    </div>
+    <div class="blk">
+      <div class="k">影响</div>
+      <p><code>.bento-style-no</code> 用 <strong>24px / font-weight 950 / 金色</strong>占据最大视觉权重，
+        但设计师/版师每天真正要找的是"<strong>这一款的版次进行到哪 + 交期还剩几天</strong>"。
+        结果是最该突出的信息（版次状态、逾期）反而要在一堆同样字号的小字里找。
+        另外 3 列 × 500px 的列宽让同屏卡片数偏少。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <ol>
+        <li><strong>删掉写死的"工艺"节点</strong>（一行改动），进度区回归 4 个真实节点。</li>
+        <li>卡片做<strong>两层层级</strong>：默认层只留
+            <code>款号 · 款名 · 最新版次状态徽章 · 交期倒计时/逾期 · 缩略图</code>；
+            品牌/时段/审核/全部批次收进 hover 展开或详情页。</li>
+        <li>把款号从 24px 降到 <code>17–19px</code>，腾出的空间给"版次状态"做视觉主位；
+            逾期徽章已有（<code>.bento-overdue-badge</code>），建议提升为常驻的"交期 chip"而非仅异常时出现。</li>
+        <li>列宽从固定 500px 收到 <code>clamp(340px, 30vw, 460px)</code>，同屏卡片数约 +35%。</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card issue p2">
+    <h3><span class="tag p2">P2-2</span>缺少加载态 / 空结果态 / 一致的空态语言</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p>现状是"有一半"：<code>PdfThumb.jsx:94</code> 有"渲染中…"，<code>DesignerDashboard.jsx:130</code> 有"暂无数据"，
+        <code>SizeTable.jsx:492</code> 有"暂无数据，点击「从预设加入」批量导入部位"（<strong>写得很好，带行动指引</strong>）。</p>
+      <p>但缺失：</p>
+      <ul>
+        <li><strong>首屏加载</strong>——<code>useTasks</code> 拉取期间看板直接空白，无骨架屏。</li>
+        <li><strong>筛选无结果</strong>——<code>KanbanView</code> 的 <code>filterTasks(tasks)</code> 返回空数组时，
+            看板区渲染为<strong>一片纯空白</strong>（没有"无匹配结果 / 清除筛选"引导）。这是最容易让用户以为"数据丢了"的场景。</li>
+        <li><strong>列表视图</strong>无空态（表格只剩表头）。</li>
+        <li>空态视觉不统一：有的用 <code>.empty-state-v4</code>（图标 0.3 透明 + 文字），有的是行内 <code>&lt;div style={{color:'var(--text-4)'}}&gt;</code>，
+            而且都用了对比度仅 2.0:1 的 <code>--text-4</code>（见 P0-2）。</li>
+      </ul>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <p>抽 <code>&lt;EmptyState icon title desc action /&gt;</code> 与 <code>&lt;Skeleton variant="card|row|table" /&gt;</code> 两个小组件，
+        统一替换现有散落实现。空结果态务必带<strong>一键清除筛选</strong>（KanbanView 已有"清除筛选"按钮，直接复用其逻辑）。</p>
+    </div>
+  </div>
+
+  <div class="card issue p2">
+    <h3><span class="tag p2">P2-3</span>确认弹窗未分级，且混用原生 <code>prompt()</code> / <code>alert()</code></h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p>全项目 <strong>8 处</strong> <code>ConfirmModal</code>，全部同一视觉权重，但风险等级差异极大：</p>
+      <table>
+        <thead><tr><th>操作</th><th style="width:130px">可逆性</th><th>当前处理</th></tr></thead>
+        <tbody>
+          <tr><td>删除工作动态条目</td><td style="color:var(--ok)">可立即重加</td><td>重量级确认弹窗 <span style="color:var(--p1)">过度</span></td></tr>
+          <tr><td>移除设计稿（文件保留）</td><td style="color:var(--ok)">可重选</td><td>重量级确认弹窗 <span style="color:var(--p1)">过度</span></td></tr>
+          <tr><td>删除尺寸部位 / 批量删除</td><td style="color:var(--p1)">数据结构可重加</td><td>确认弹窗 <span style="color:var(--ok)">恰当</span></td></tr>
+          <tr><td>清空尺寸表 / 导入覆盖当前版次</td><td style="color:var(--p0)">数据不可恢复</td><td>与上面<strong>同一款弹窗</strong> <span style="color:var(--p0)">不足</span></td></tr>
+          <tr><td>删除整张打样单</td><td style="color:var(--p0)">级联删除批次/尺寸表</td><td>确认弹窗 <span style="color:var(--ok)">恰当</span></td></tr>
+        </tbody>
+      </table>
+      <p>另混用原生对话框，与自绘弹窗体系风格断裂（且 Electron 中 <code>prompt()</code> 支持有限）：</p>
+      <pre>KanbanView.jsx:392   const n = <span class="r">prompt</span>('视图名为?');        <span class="c">// 保存自定义视图</span>
+SizeTable.jsx:559     if (!name.trim()) return <span class="r">alert</span>('请先输入部位名称');
+SizeTable.jsx:568     <span class="r">alert</span>(`部位「${name}」…已成功存入「${cat}」预设库`);
+SizeTable.jsx:575     <span class="r">alert</span>('存入预设失败: ' + err.message);</pre>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <ol>
+        <li><strong>降级低价值操作</strong>：删除工作动态条目、移除设计稿 → 改为"操作后 3 秒内可撤销"的 toast，不再弹窗。</li>
+        <li><strong>升级破坏性操作</strong>：清空尺寸表 / 导入覆盖 → 确认弹窗内要求<strong>输入部位数或版次号二次确认</strong>，
+            并把当前数据摘要（行数、来源版次）明确列出（<code>SizeTable.jsx:621</code> 的文案已有雏形，可强化）。</li>
+        <li>用自绘的 <code>&lt;PromptModal&gt;</code> / toast 替换全部 <code>prompt()</code> / <code>alert()</code>。</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card issue p2">
+    <h3><span class="tag p2">P2-4</span>三套主题各自为政：切换后品牌色消失，设置页文案与事实不符</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><strong>(a) 文案过期</strong>——<code>SettingsView.jsx:67</code> 仍写着"自定义 → 深蓝黑自写配色（现有）"，
+        但 <code>theme.css</code> 头部注释已明确"2026-09-12 按新版配色文件调整"为暖黑底 + 香槟金。
+        设置页在向用户描述一个已经不存在的配色。</p>
+      <p><strong>(b) 强调色断链</strong>——三套主题的 <code>--accent</code>：</p>
+      <table>
+        <thead><tr><th>主题</th><th>--accent</th><th>--accent-soft</th><th>色彩性格</th></tr></thead>
+        <tbody>
+          <tr><td>custom</td><td class="num">#c8a96e（香槟金）</td><td class="num">rgba(200,169,110,.12)</td><td>暖金 · 品牌色</td></tr>
+          <tr><td>dark</td><td class="num">#e6e8eb（冷白灰）</td><td class="num">rgba(255,255,255,.1)</td><td style="color:var(--p1)">品牌色消失</td></tr>
+          <tr><td>light</td><td class="num">#1f2329（近黑）</td><td class="num">rgba(0,0,0,.06)</td><td style="color:var(--p1)">品牌色消失</td></tr>
+        </tbody>
+      </table>
+      <p>而 <code>--accent</code> 承担了全站几乎所有"强调"语义：Tab 选中下划线、menu-item 左竖条、
+        分组切换器 <code>.groupby-ss</code>、选中态、聚焦环、<code>.bento-style-no</code> 款号、<code>.bento-order-no</code> 版单……
+        切到系统深/浅主题后，<strong>整个产品的视觉识别归零</strong>，看起来像两个不同的软件。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <p>三套主题<strong>都保留香槟金作为品牌强调色</strong>，只让"底色与文字"跟随系统：</p>
+      <pre>[data-theme="dark"]  --accent: <span class="add">#c8a96e</span>;  --accent-text: #141410;
+[data-theme="light"] --accent: <span class="add">#8a6d2f</span>;  <span class="c">/* 浅底上用深一档金，保证对比度 */</span>
+                     --accent-text: #ffffff;</pre>
+      <p>同时修正 <code>SettingsView.jsx:67</code> 的描述文案为"暖黑底 · 香槟金"。
+        （<code>theme.css:113</code> 的注释"用户拍板：深浅主题零蓝色"只约束了"不要蓝"，并未禁止金色——当前实现是把"不要蓝"误读成了"要中性灰"。）</p>
+    </div>
+  </div>
+
+  <div class="card issue p2">
+    <h3><span class="tag p2">P2-5</span>术语摇摆：同一概念 3–4 种叫法</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <table>
+        <thead><tr><th style="width:150px">概念</th><th>UI 中出现的叫法</th></tr></thead>
+        <tbody>
+          <tr><td>打样批次实体</td><td>"版次"（KanbanView 筛选）· "批次"（详情页"打样批次"）· "版次批次"（代码注释）· "打样版次"（设置页"打样版次库"）</td></tr>
+          <tr><td>doing 状态</td><td>"打版中"（看板列）· "进行中"（仪表盘，口径 = 打版中 + 样衣中）· "样衣中"（批次状态）</td></tr>
+          <tr><td>待审状态</td><td>"待审版"（批次状态）· "待审核"（审核字段）· "待确认"（旧词，<code>REQ-030</code> 刚改过）</td></tr>
+          <tr><td>看板主页</td><td>侧栏"看板主页" · 顶栏"PatternMaster Pro" · 仪表盘副标题"设计师视角 · 款级宏观"</td></tr>
+        </tbody>
+      </table>
+      <p><code>ITERATION_STATE.md</code> 显示团队已经在做词表修订（<code>REQ-030</code>：待确认→待审版），
+        说明这确实是痛点，只是还没形成<strong>单一事实来源</strong>。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <p>建立 <code>src/constants/terms.js</code> 作为<strong>唯一词表</strong>，UI 文案只允许从它取值：</p>
+      <pre><span class="c">// 语义分层：款(style) → 批次(run) → 状态(runStatus)</span>
+export const RUN_STATUS_LABEL = {
+  waiting_material:'待安排', pattern_making:'打版中', sample_making:'样衣中',
+  pending_confirm:'待审版', done:'已完成',
+};
+<span class="c">// 并在 docs/ 落一份术语表：明确「版次」= 业务概念（胚样/头版样）、「批次」= 数据实体（sample_runs 行）</span></pre>
+    </div>
+  </div>
+
+  <div class="card issue p2">
+    <h3><span class="tag p2">P2-6</span>看板重渲染成本：自动保存 → 全量刷新 → 所有卡片重建</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p>链路：<code>commitField</code>（App.jsx:173）→ <code>.then(loadTasks)</code> → <code>tasks</code> 引用变化 →
+        <code>KanbanView</code> 重渲染 → <code>filterTasks(tasks)</code> + <code>getActiveCols()</code> + 每列
+        <code>filterTasks(tasks).filter(...)</code>（<strong>对每列都重新全量过滤一遍</strong>，3 列 = 3 次全量）
+        → <code>renderBentoCard(task)</code> 是<strong>在渲染函数内定义的内联函数</strong>，无 <code>memo</code>，
+        每张卡片都重建整个 bento DOM 树（含 <code>PdfThumb</code>）。</p>
+      <p><code>KanbanView.jsx:471-478</code>：</p>
+      <pre>{getActiveCols().map(col =&gt; {
+  const colTasks = <span class="r">filterTasks(tasks).filter(</span>t =&gt; { … });   <span class="c">// 每列一次全量过滤</span></pre>
+      <p><code>PdfThumb</code> 在卡片里对每个 PDF 走 pdfjs 渲染首页 canvas，
+        <code>loadTasks</code> 后组件重建 → <code>useEffect</code> 依赖 <code>pdfUrl</code> 不变则不会重渲染缩略图（这点做对了），
+        但整棵 DOM 的重建与 diff 成本仍然存在。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <ol>
+        <li>把卡片抽成独立组件 <code>&lt;TaskCard /&gt;</code>（仓库里已有 <code>TaskCard.jsx</code> 但看板未使用它）并加 <code>React.memo</code>。</li>
+        <li><code>useMemo</code> 缓存分组结果：先把 <code>filterTasks(tasks)</code> 算一次，再按列分发：
+          <pre>const filtered = useMemo(() =&gt; filterTasks(tasks), [tasks, filters]);
+const grouped  = useMemo(() =&gt; groupByCol(filtered, kanbanGroupBy), [filtered, kanbanGroupBy]);</pre>
+        </li>
+        <li>自动保存成功后<strong>不必全量 loadTasks</strong>——用返回的新对象只更新对应 task，
+            或改为乐观更新（本地先改，后台静默同步），彻底消除"保存后看板闪一下"。</li>
+        <li>缩略图渲染队列化（并发 ≤2）+ <code>IntersectionObserver</code> 懒渲染，首屏只渲染视口内卡片。</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card issue p2">
+    <h3><span class="tag p2">P2-7</span>细节一致性：kbd 标签无样式、按钮体系有 8 套、圆角 7 种</h3>
+    <div class="blk ev">
+      <div class="k">证据</div>
+      <p><strong>尺寸类（随手可修的"不精致感"来源）：</strong></p>
+      <table>
+        <thead><tr><th style="width:130px">属性</th><th>取值</th></tr></thead>
+        <tbody>
+          <tr><td>圆角</td><td class="num">4 / 6 / 8 / 10 / 12 / 16 / 20 / 24 px（8 档）</td></tr>
+          <tr><td>按钮高度</td><td class="num">28 / 30 / 32 / 36 / 38 px（5 档）</td></tr>
+          <tr><td>卡片 padding</td><td class="num">10 / 12 / 14 / 16 / 18 / 20 / 24 / 26 / 32 / 40 px（10 档）</td></tr>
+          <tr><td>按钮类名</td><td><code>.btn-blue</code> · <code>.btn-blue-sm</code> · <code>.btn-ghost</code> · <code>.btn-ghost-sm</code> · <code>.btn-icon</code> · <code>.btn-icon-xs</code> · <code>.btn-add-mini</code> · <code>.btn-add-circle</code> · <code>.icon-btn</code> · <code>.icon-btn-danger</code> · <code>.btn-del-ghost</code> · <code>.btn-mode-toggle</code>（<strong>12 类</strong>）</td></tr>
+        </tbody>
+      </table>
+      <p><strong>字体栈重复声明：</strong><code>'Inter', -apple-system, sans-serif</code> 在 <code>index.css:16</code> 与
+        <code>app.css:2</code> 各写一遍——改字体要改两处。</p>
+      <p><strong>缩放/过渡不一致：</strong><code>.btn-blue-sm:hover{transform:scale(1.05)}</code>、
+        <code>.btn-add-circle:hover{transform:scale(1.1)}</code>、<code>.card:hover{translateY(-4px)}</code>、
+        <code>.template-card:hover{translateY(-2px)}</code>、<code>.setting-card-compact:hover{translateY(-2px)}</code>
+        ——同一层级元素用不同 hover 语言。</p>
+    </div>
+    <div class="blk fix">
+      <div class="k">建议</div>
+      <p>在 <code>tokens.css</code> 建立<strong>尺度阶梯</strong>并强制取值：</p>
+      <pre>--r-1:6px  --r-2:8px  --r-3:12px  --r-4:16px  --r-5:20px;      <span class="c">/* 5 档，去掉 4/10/24 */</span>
+--h-sm:28px --h-md:32px --h-lg:36px;                            <span class="c">/* 3 档按钮高度 */</span>
+--sp-1:8px --sp-2:12px --sp-3:16px --sp-4:24px --sp-5:32px;      <span class="c">/* 5 档间距 */</span>
+--ease:cubic-bezier(.22,1,.36,1)  --dur:.18s;                   <span class="c">/* 统一动效语言 */</span></pre>
+      <p>按钮收敛为 3 个语义类：<code>btn--primary</code> / <code>btn--ghost</code> / <code>btn--icon</code>，
+        size 用修饰符（<code>btn--sm</code>）而非另起类名。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 四、根因 ══════════════ -->
+<section>
+  <h2>04 · Root Cause</h2>
+  <div class="h2sub">根因链：一个"双轨 CSS"如何生产出 17 个症状</div>
+
+  <p>上面 17 项问题里，至少 <strong>7 项</strong>可以由同一条因果链解释。理解这条链，比逐条修症状更重要。</p>
+
+  <div class="flow">
+    <div class="fnode"><b>历史演进</b>单文件 <code>App.jsx</code> 内嵌 CSS 字符串 → 拆分组件时把 STYLES 抽成 <code>app.css</code>，但更早的 <code>index.css</code> 原样保留</div>
+    <div class="farrow">→</div>
+    <div class="fnode"><b>双轨并行</b>两份样式表同时加载，≥96 处选择器重名、取值不同</div>
+    <div class="farrow">→</div>
+    <div class="fnode"><b>优先级失效</b>改类名不生效 → 加 <code>!important</code> → 又被内联盖过 → 再加内联</div>
+    <div class="farrow">→</div>
+    <div class="fnode"><b>三层争夺</b>同一元素被 CSS 类 / <code>!important</code> / 内联同时定义（<code>.col</code> 是标本）</div>
+  </div>
+  <div class="flow">
+    <div class="fnode"><b>症状 A</b>改动成本高 → 次要问题被搁置（对比度、响应式、焦点环）</div>
+    <div class="farrow">→</div>
+    <div class="fnode"><b>症状 B</b>新需求用内联快改 → 令牌被绕过 → <code>--app-bg</code> 失效、主题切换破色</div>
+    <div class="farrow">→</div>
+    <div class="fnode"><b>症状 C</b>同类问题反复出现 → 历史上"三轮才修对 hover 重叠"</div>
+  </div>
+
+  <div class="callout">
+    <b>关键判断：</b>先做 P1-1（合并双轨 CSS）的<strong>性价比远高于它的工作量</strong>。
+    它本身不产生任何新功能，但它会把后面每一次 UI 迭代的成本砍掉一大截——
+    包括你现在正在推进的每一轮视觉重构。
+    <br><br>
+    <b>建议顺序：</b>P0-1 / P0-2（各 1 小时以内，立竿见影）→ P1-1（合并样式，1–2 天）→ P1-2 + P2-4（令牌收敛）→ 其余按批次推进。
+  </div>
+</section>
+
+<!-- ══════════════ 五、路线图 ══════════════ -->
+<section>
+  <h2>05 · Roadmap</h2>
+  <div class="h2sub">优化路线图：三批次，先止血再治本</div>
+
+  <div class="sprint s1">
+    <div class="st">批次一 · 止血（单次投入，当天见效）</div>
+    <h3>把"用户直接用不了"的问题清掉</h3>
+    <p class="goal">目标：让所有笔记本 / 缩放屏用户能完整使用产品；让表头与占位文字可读。
+      这一批全是小改动，但覆盖了 P0 全部 3 项中最高频的 2 项。</p>
+    <div class="chips">
+      <span class="chip">删 <code>minWidth:1280</code> + <code>overflow:auto</code></span>
+      <span class="chip">--text-3 → #8c857c</span>
+      <span class="chip">--text-4 → #6b6560</span>
+      <span class="chip">placeholder 去 <code>opacity:.5</code></span>
+      <span class="chip">删 <code>App.jsx</code> 内联 background（找回氛围光）</span>
+      <span class="chip">全局 <code>:focus-visible</code></span>
+      <span class="chip">全局 Esc 关闭最上层弹窗</span>
+      <span class="chip">删 <code>App.css</code> 死文件</span>
+      <span class="chip">删"工艺"死节点</span>
+      <span class="chip">修正设置页配色文案</span>
+    </div>
+  </div>
+
+  <div class="sprint s2">
+    <div class="st">批次二 · 治本（架构层，收益最长）</div>
+    <h3>消除样式与令牌的双轨制</h3>
+    <p class="goal">目标：让"改样式"从"试三次"变成"改一次"。这是后续所有视觉迭代的加速器。</p>
+    <div class="chips">
+      <span class="chip">CSS 分层重构（tokens/base/components/views）</span>
+      <span class="chip">合并 <code>index.css</code> → 清空</span>
+      <span class="chip">全部 <code>!important</code> 清零</span>
+      <span class="chip">抽出 <code>.col</code> 等冲突宽度到变量</span>
+      <span class="chip">状态色 token 化（run/prio/audit/overdue/danger）</span>
+      <span class="chip">禁止色底上用 <code>--text</code></span>
+      <span class="chip">尺度阶梯 token（圆角/高度/间距/动效）</span>
+      <span class="chip">按钮体系 12 类 → 3 类</span>
+      <span class="chip">字体本地化（woff2 + @font-face）</span>
+      <span class="chip">三主题保留香槟金</span>
+      <span class="chip">术语常量表 <code>terms.js</code></span>
+    </div>
+  </div>
+
+  <div class="sprint s3">
+    <div class="st">批次三 · 提升（体验与性能）</div>
+    <h3>把"能用"做到"好用、顺滑"</h3>
+    <p class="goal">目标：补齐交互语义与状态反馈，优化高频路径的性能。</p>
+    <div class="chips">
+      <span class="chip"><code>&lt;Modal&gt;</code> 基座（Esc/焦点陷阱/ARIA）</span>
+      <span class="chip">可点击 div → <code>button</code> / <code>role</code></span>
+      <span class="chip"><code>EmptyState</code> + <code>Skeleton</code> 组件</span>
+      <span class="chip">筛选无结果态 + 一键清除</span>
+      <span class="chip">保存指示器（保存中/已保存/失败重试）</span>
+      <span class="chip">消灭 <code>prompt()</code> / <code>alert()</code></span>
+      <span class="chip">确认弹窗分级 + 可撤销 toast</span>
+      <span class="chip">看板卡片两层层级重构</span>
+      <span class="chip"><code>TaskCard</code> memo + 分组 useMemo</span>
+      <span class="chip">缩略图懒渲染 + 队列</span>
+      <span class="chip"><code>SmartSelect</code> 事件驱动定位</span>
+      <span class="chip">3 个响应式断点</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 六、关键修复代码 ══════════════ -->
+<section>
+  <h2>06 · Quick Fixes</h2>
+  <div class="h2sub">可直接落地的关键改动</div>
+
+  <h4>① 解除 1280px 硬约束（<code>src/App.jsx</code> 约 269–277 行）</h4>
+  <pre><span class="del">&lt;div className="app" style={{ height:'100vh', display:'flex', flexDirection:'column',
+     background:'var(--bg)', color:'var(--text)', overflow:'hidden', minWidth:1280 }}&gt;</span>
+
+<span class="add">&lt;div className="app"&gt;   <span class="c">/* 全部移到 app.css，使用令牌与响应式 */</span></span>
+
+<span class="c">/* app.css */</span>
+.app {
+  height:100vh; display:flex; flex-direction:column;
+  background: var(--app-bg);        <span class="g">/* ← 找回设计稿的金色氛围光 */</span>
+  color: var(--text);
+  overflow: hidden;                 <span class="c">/* 各视图内部自滚，保留 */</span>
+  min-width: 0;
+}
+html { min-width: 960px; overflow-x: auto; }   <span class="g">/* 极端窄屏改为可滚动，而非静默裁切 */</span></pre>
+
+  <h4>② 修复文字对比度（<code>src/styles/theme.css</code>）</h4>
+  <pre><span class="c">/* custom 主题 */</span>
+<span class="del">--text-3:#6b6560;  --text-4:#4a4540;</span>
+<span class="add">--text-3:#8c857c;  <span class="c">/* 4.8:1 — 表头/标签/面包屑 达标 AA */</span>
+--text-4:#6b6560;  <span class="c">/* 3.3:1 — 收敛为装饰语义，不再用于正文 */</span></span>
+
+<span class="c">/* 同步调整 dark / light 两套（当前 text-3/text-4 同样偏低） */</span>
+[data-theme="dark"]  { <span class="add">--text-3:#98a2b0; --text-4:#7c8695;</span> }
+[data-theme="light"] { <span class="add">--text-3:#5c6675; --text-4:#7c8494;</span> }</pre>
+
+  <h4>③ 去掉 placeholder 的二次衰减（<code>src/styles/app.css:660</code>）</h4>
+  <pre><span class="del">.data-table input::placeholder { color:var(--text-4); opacity:.5; }   <span class="c">/* 实测 1.35:1，≈隐形 */</span></span>
+<span class="add">.data-table input::placeholder { color:var(--text-3); opacity:.75; }  <span class="c">/* ≈3.6:1，可辨且不抢注意力 */</span></span></pre>
+
+  <h4>④ 全局焦点环（新增到 <code>tokens.css</code> 或 <code>base.css</code>）</h4>
+  <pre><span class="c">/* 把 DesignerDashboard 里已验证的写法提升为全站规范 */</span>
+:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:inherit; }
+:focus:not(:focus-visible) { outline:none; }   <span class="c">/* 保留鼠标点击不显环的观感 */</span>
+
+<span class="c">/* 同时给所有 div 交互元素补语义（以侧栏菜单为例） */</span>
+<span class="del">&lt;div className="menu-item" onClick={…}&gt;&lt;Layout size={20}/&gt; 看板主页&lt;/div&gt;</span>
+<span class="add">&lt;button type="button" className="menu-item" onClick={…} aria-current={view==='kanban'?'page':undefined}&gt;
+  &lt;Layout size={20}/&gt; 看板主页
+&lt;/button&gt;</span></pre>
+
+  <h4>⑤ 看板分组改为单次过滤 + memo（<code>src/components/task/KanbanView.jsx</code>）</h4>
+  <pre><span class="c">// 现状：每列各做一次全量 filter，卡片每次重建整棵 DOM</span>
+<span class="del">getActiveCols().map(col =&gt; { const colTasks = filterTasks(tasks).filter(t =&gt; …) });</span>
+
+<span class="add">const filtered = useMemo(() =&gt; filterTasks(tasks), [tasks, filters]);
+const grouped  = useMemo(() =&gt; {
+  const cols = getActiveCols();
+  const map = Object.fromEntries(cols.map(c =&gt; [c.id, []]));
+  for (const t of filtered) {
+    for (const c of cols) if (matchesCol(t, c, kanbanGroupBy)) map[c.id].push(t);
+  }
+  return map;                       // 全量只遍历 1 次
+}, [filtered, kanbanGroupBy, settings]);</span>
+
+<span class="c">// 卡片抽为独立组件并 memo（仓库已有 TaskCard.jsx 可复用/改造）</span>
+<span class="add">const TaskCard = React.memo(function TaskCard({ task, onClick }) { … });</span></pre>
+
+  <h4>⑥ 保存状态可见化（<code>src/App.jsx</code>）</h4>
+  <pre>const [saveState, setSaveState] = useState('idle');   <span class="c">// idle | saving | saved | error</span>
+
+const patch = () =&gt; {
+  <span class="add">setSaveState('saving');</span>
+  return updateTask(editingTask.id, { [key]: value })
+    .then(() =&gt; { <span class="add">setSaveState('saved'); loadTasks();</span> })
+    .catch(err =&gt; {
+      <span class="add">setSaveState('error');</span>                       <span class="c">// ← 不再只 console.error</span>
+      console.error(`自动保存 ${key} 失败:`, err);
+    });
+};
+
+<span class="c">// 顶栏渲染（复用 .pdf-sync-tip 的视觉语言）</span>
+{saveState === 'saving' &amp;&amp; &lt;span className="save-tip"&gt;保存中…&lt;/span&gt;}
+{saveState === 'saved'  &amp;&amp; &lt;span className="save-tip ok"&gt;已保存&lt;/span&gt;}
+{saveState === 'error'  &amp;&amp; &lt;span className="save-tip err" onClick={retry}&gt;⚠ 保存失败，点击重试&lt;/span&gt;}</pre>
+
+  <h4>⑦ <code>SmartSelect</code> 定位改事件驱动（<code>src/components/common/SmartSelect.jsx:39-54</code>）</h4>
+  <pre><span class="del">const tick = () =&gt; { const r = el.getBoundingClientRect(); setPos(…); raf = requestAnimationFrame(tick); };</span>
+<span class="del">tick();  // 打开期间无限循环，每帧强制 layout</span>
+
+<span class="add">const reposition = () =&gt; {
+  const r = el.getBoundingClientRect();
+  setPos(prev =&gt; (prev &amp;&amp; prev.top===r.bottom+6 &amp;&amp; prev.left===r.left) ? prev : { top:r.bottom+6, left:r.left, width:Math.max(r.width,140) });
+};
+reposition();
+window.addEventListener('scroll', reposition, { capture:true, passive:true });
+window.addEventListener('resize', reposition, { passive:true });
+const ro = new ResizeObserver(reposition);
+ro.observe(document.documentElement); ro.observe(el);
+<span class="c">// 兜底：仅覆盖"异步插入内容导致锚点位移"的窗口期，600ms 后停止</span>
+const iv = setInterval(reposition, 100); const stop = setTimeout(()=&gt;clearInterval(iv), 600);
+return () =&gt; { window.removeEventListener('scroll',reposition,{capture:true});
+               window.removeEventListener('resize',reposition);
+               ro.disconnect(); clearInterval(iv); clearTimeout(stop); };</span></pre>
+</section>
+
+<!-- ══════════════ 附录 ══════════════ -->
+<section>
+  <h2>Appendix</h2>
+  <div class="h2sub">审计方法与覆盖范围</div>
+
+  <h4>审计方法</h4>
+  <ul>
+    <li><strong>全量静态审读</strong>：43 个前端源文件按重要性抽样精读（3 个样式表 + App + 4 大视图 + 8 个公共组件全部通读）。</li>
+    <li><strong>令牌可达性实测</strong>：按 WCAG 相对亮度公式逐 token 计算对比度（非目测），标注 AA / AAA 阈值线。</li>
+    <li><strong>正则量化</strong>：<code>style={{</code> 内联计数（96 处）· hex/rgba 硬编码计数（119 处）· <code>@media</code> 计数（1 处） ·
+        <code>:focus-visible</code> 计数（4 处）· <code>Escape</code> 计数（2 处）· 重名选择器命中行数（96 行）。</li>
+    <li><strong>交叉验证</strong>：对照 <code>ITERATION_STATE.md</code> 的历史修复记录，确认哪些问题属于"反复返工"（作为根因证据）。</li>
+  </ul>
+
+  <h4>本次审计未覆盖</h4>
+  <ul>
+    <li>后端业务逻辑正确性（<code>server/services/*</code> 2600 行）——本次只做 UI/UX 视角。</li>
+    <li>实际运行时的视觉观感（未启动 dev 环境截图比对）——建议按本报告结论逐条实机复核。</li>
+    <li>可访问性的完整 WCAG 2.2 AA 审计（本次覆盖对比度、焦点、语义、键盘路径四项）。</li>
+    <li>备份目录 <code>golden-shuttle_backup_v5_2_stable/</code> 与 <code>golden-shuttle-git-backup/</code> 未纳入分析范围。</li>
+  </ul>
+
+  <h4>核心文件索引</h4>
+  <table>
+    <thead><tr><th style="width:250px">路径</th><th style="width:80px">行数</th><th>本次涉及议题</th></tr></thead>
+    <tbody>
+      <tr><td><code>src/App.jsx</code></td><td class="num">386</td><td>P0-1（minWidth）· P1-2（内联 background）· P1-7（静默保存）· P2-6（重渲染链路）</td></tr>
+      <tr><td><code>src/styles/theme.css</code></td><td class="num">129</td><td>P0-2（对比度）· P1-2（令牌）· P2-4（三主题强调色）</td></tr>
+      <tr><td><code>src/styles/app.css</code></td><td class="num">625</td><td>P0-2（placeholder）· P1-1（双轨冲突）· P1-3（无媒体查询）· P2-7（尺度不一致）</td></tr>
+      <tr><td><code>src/index.css</code></td><td class="num">1230</td><td>P1-1（96 行重名选择器）· P1-5（Google Fonts）</td></tr>
+      <tr><td><code>src/components/task/KanbanView.jsx</code></td><td class="num">587</td><td>P2-1（卡片信息过载/死节点）· P2-6（分组重复过滤）· P2-3（prompt）</td></tr>
+      <tr><td><code>src/components/task/DetailView.jsx</code></td><td class="num">482</td><td>P0-3（弹窗）· P1-4（Tab 为 div）· P1-7（吞错）</td></tr>
+      <tr><td><code>src/components/common/SmartSelect.jsx</code></td><td class="num">89</td><td>P1-6（rAF 逐帧 layout）</td></tr>
+      <tr><td><code>src/components/common/PdfThumb.jsx</code></td><td class="num">175</td><td>P0-3（放大层误关）· P2-2（加载态范例）</td></tr>
+      <tr><td><code>src/components/dashboard/DesignerDashboard.jsx</code></td><td class="num">218</td><td>P1-4（<strong>正确范例</strong>，应推广）</td></tr>
+      <tr><td><code>src/components/size-table/SizeTable.jsx</code></td><td class="num">593</td><td>P1-2（46 处内联）· P2-2（空态范例）· P2-3（alert）</td></tr>
+      <tr><td><code>src/components/settings/SettingsView.jsx</code></td><td class="num">83</td><td>P2-4（配色文案过期）</td></tr>
+      <tr><td><code>src/App.css</code></td><td class="num">37</td><td>P1-1（<strong>死文件，建议删除</strong>）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  <span>PatternMaster Pro · UI/UX 深度审计报告</span>
+  <span>2026-09-14 · 覆盖 43 前端文件 / 26 后端模块 · 共 17 项发现 + 9 项达标</span>
+</footer>
+
+</div>
+</body>
+</html>

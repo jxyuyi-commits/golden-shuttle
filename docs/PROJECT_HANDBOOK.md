@@ -238,7 +238,7 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 * G6+G8 **ESLint 覆盖修复**：补齐 `server/**`、`scripts/**`、`main.js`、`preload.js` 的 Node/CommonJS 块（此前 `server/**` 完全不参与 lint）；85 problems → 0。
 * G7 **ErrorBoundary + 加载失败态**：全局错误边界兜底 + 任务加载失败横幅与重试。
 
-**工程治本批 2（G9–G15，2026-09-14）**
+**工程治本批 2（G9–G15，2026-09-14，提交 2e5d29a）**
 
 * G9 **Vitest 自动化测试框架**（提交 fc567ed）：ABI 132 下的可行解 = `cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/vitest/vitest.mjs run`；`vitest.config.mjs` 用 pool=forks / isolate / fileParallelism:false；`tests/helpers/dbHarness.js` 提供**只碰临时库、永不触生产库**的夹具；首覆 7 个模块（迁移引擎 / 款级状态聚合 / 文档防漂移 / 图纸版本 / 任务原子性 / 上传安全 / 运行地基 ABI）。
 * G10 **清 5 个僵尸列**：迁移 v21 物理删除 `tasks.order_no / audit_status / audit_comment / size_data / priority`（权威数据早已下沉 `sample_runs`，v14/v16 已清空只是没删列）；同步摘净 `tasks.cjs`（create / TASK_KEYS / versions 死读）、`versions.cjs`（buildSnapshot 死读）、`seed.cjs`、`test-rollback-size.cjs` 的全部引用。

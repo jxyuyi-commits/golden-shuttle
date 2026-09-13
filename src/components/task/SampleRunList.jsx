@@ -7,6 +7,9 @@ import { fetchRuns, createRun, updateRun, deleteRun, fetchDrawings } from '../..
 import { peopleByRole } from '../../utils/people';
 
 // 批次状态（板师手动推进）
+// RUN_STATUS 为本文件 UI 与同模块共用的常量；拆分为独立文件会引入无谓的循环/跨文件耦合，
+// 故保留同文件导出并说明：此处禁用 fast-refresh 的「仅导出组件」约束（不影响生产构建/HMR 行为正确性）。
+// eslint-disable-next-line react-refresh/only-export-components
 export const RUN_STATUS = [
   { key: 'waiting_material', label: '待安排', color: 'var(--text-2)' }, // REQ-030 改词
   { key: 'pattern_making', label: '打版中', color: 'var(--accent)' },
@@ -27,7 +30,6 @@ const PRIORITIES = ['C', 'B', 'A', 'S']; // REQ-030 优先级四级（S 最高�
 const prioColor = (v) => v === 'S' ? '#f43f5e' : v === 'A' ? '#fb923c' : v === 'B' ? 'var(--accent)' : 'var(--text)';
 const AUDIT_STATUSES = ['未提交', '待审核', '已通过', '已驳回'];
 const auditColor = (s) => (s === '已通过' ? '#4ade80' : s === '已驳回' ? '#f87171' : s === '待审核' ? '#fbbf24' : 'var(--text-2)');
-const statusLabel = (k) => RUN_STATUS.find(s => s.key === k)?.label || k;
 const statusColor = (k) => RUN_STATUS.find(s => s.key === k)?.color || 'var(--text-2)';
 
 /**
@@ -76,7 +78,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
   };
 
   // 本地即时更新 + PATCH 持久化（select/date 即时；文本由 onBlur 调用）
-  const patch = async (id, patchData, localValue) => {
+  const patch = async (id, patchData) => {
     setRuns(prev => prev.map(r => (r.id === id ? { ...r, ...patchData } : r)));
     setSavingId(id);
     try {

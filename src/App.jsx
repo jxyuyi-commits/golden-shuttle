@@ -1,18 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { Layout, Plus, CheckCircle2, Circle, AlertCircle, ArrowLeft, ArrowUp, ArrowDown, Calculator, Clock, Settings, FileText, Upload, Trash2, ChevronDown, ChevronUp, Edit2, Database, GripVertical, BarChart3 } from 'lucide-react';
 
 import { API } from './api/client';
 import {
-  fetchTasks, fetchTask, createTask, updateTask, deleteTask, updateTaskStatus, fetchTaskVersions,
-  fetchStyles, fetchStyleByNo,
-  fetchSettings, saveSettings,
-  fetchSizeGroups, saveSizeGroups, deleteSizeGroup,
-  fetchMeasurementTemplates, saveMeasurementTemplate, deleteMeasurementTemplate,
-  uploadDesignFile, openFileLocally, createDrawing, fetchDrawings,
+  fetchTask, updateTask, deleteTask,
+  uploadDesignFile, createDrawing,
 } from './api';
-import { loadPdfJs, renderPdfThumb, isImageFile } from './utils/pdf';
-import { autoSign, formatTime } from './utils/format';
 import useTasks from './hooks/useTasks';
 import useSettings from './hooks/useSettings';
 
@@ -46,7 +39,7 @@ const App = () => {
     try {
       if (v === 'kanban' || v === 'dashboard') localStorage.setItem('pm_default_view', v);
       else localStorage.removeItem('pm_default_view');
-    } catch {}
+    } catch { /* 忽略 localStorage 异常 */ }
   };
   const [detailTab, setDetailTab] = useState('base'); // base | size
   const [editingTask, setEditingTask] = useState(null);
@@ -59,7 +52,7 @@ const App = () => {
   const [pdfSyncState, setPdfSyncState] = useState(null); // null | 'syncing' | 'ok' | { error }
 
   // 业务数据 hooks
-  const { tasks, loadTasks } = useTasks();
+  const { tasks, loadTasks, error: tasksError } = useTasks();
   const { settings, loadSettings, saveSetting } = useSettings();
 
   // REQ-010 主题系统：三套配色 custom(自定义深蓝黑) / dark(系统深) / light(系统浅)
@@ -73,7 +66,7 @@ const App = () => {
   });
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', themeMode);
-    try { localStorage.setItem('pm_theme', themeMode); } catch {}
+    try { localStorage.setItem('pm_theme', themeMode); } catch { /* localStorage 不可用时忽略 */ }
   }, [themeMode]);
 
   // 看板/列表增强状态
@@ -168,6 +161,9 @@ const App = () => {
 
   // 自动保存（REQ-006③ 修订）：详情页所有字段即改即存，尺寸表/工作动态防抖 400ms 批量提交
   const commitTimers = useRef({});
+  // 依赖仅 editingTask?.id + 稳定 loadTasks；改依赖为完整 editingTask 会使防抖计时器在每次字段编辑时重建，
+  // 破坏「编辑中引用稳定」的设计。React Compiler 仅跳过该优化，行为正确，故显式禁用并说明。
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const commitField = useCallback((key, value) => {
     if (!editingTask?.id) return;
     const patch = () => updateTask(editingTask.id, { [key]: value })
@@ -240,6 +236,8 @@ const App = () => {
   };
 
   // 批次状态变化后，款级 status 已被后端自动同步——重新拉取当前任务更新详情页显示
+  // 同上：只依赖 editingTask?.id + 稳定的 loadTasks，避免每次字段变化重建回调
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleStatusSync = useCallback(async () => {
     if (!editingTask?.id) return;
     try {
@@ -256,15 +254,6 @@ const App = () => {
     loadTasks();
   }, [editingTask?.id, loadTasks]);
 
-  const years = ['2023', '2024', '2025', '2026', '2027'];
-  const seasons = ['春', '夏', '秋', '冬'];
-  const months = Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
-  const columns = [
-    { id: 'todo', name: '待处理', color: 'var(--text-2)' },
-    { id: 'doing', name: '打版中', color: 'var(--accent)' },
-    { id: 'done', name: '已完结', color: '#4ade80' }
-  ];
-
   return (
     <div className="app" style={{
       height: '100vh',
@@ -275,6 +264,33 @@ const App = () => {
       overflow: 'hidden',
       minWidth: 1280 // 设置最小宽度，防止窄屏下控件强行压缩变形导致堆叠
     }}>
+
+      {/* G7：任务加载失败态——明确提示而非空白列表，提供重试 */}
+      {tasksError && (
+        <div style={{
+          margin: '12px 16px 0',
+          padding: '10px 16px',
+          borderRadius: 10,
+          background: 'rgba(248,113,113,0.12)',
+          border: '1px solid rgba(248,113,113,0.4)',
+          color: 'var(--text)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          fontSize: 13,
+        }}>
+          <AlertCircle size={16} color="#f87171" />
+          <span>加载打样数据失败：{tasksError.message || '未知错误'}（可能是本地服务未启动或数据库被占用）</span>
+          <button
+            type="button"
+            className="btn-ghost-sm"
+            onClick={loadTasks}
+            style={{ marginLeft: 'auto', border: '1px solid var(--border-weak)', borderRadius: 8, padding: '4px 12px', color: 'var(--accent)', cursor: 'pointer', background: 'transparent' }}
+          >
+            重试
+          </button>
+        </div>
+      )}
 
       {/* ═══ 看板与列表 共享布局 ═══════════════════════════════════════════ */}
       {/* ═══ 看板与列表 共享布局 ═══════════════════════════════════════════ */}

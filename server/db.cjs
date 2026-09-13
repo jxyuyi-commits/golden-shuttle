@@ -531,6 +531,45 @@ const migrations = [
 ];
 
 // ── 迁移执行器 ──────────────────────────────────────────────
+// 保留的迁移前备份份数（超出按文件名时间戳倒序删除）
+const MIGRATION_BACKUP_KEEP = 3;
+
+/**
+ * 迁移前备份数据库文件（同目录副本）。
+ * 命名：{db 文件名}.bak-v{升级前版本}-{YYYYMMDD-HHmmss}；仅保留最近 MIGRATION_BACKUP_KEEP 份。
+ * 惰性读取 DB_PATH（不在模块加载期固化路径），兼容测试库 / DB_PATH 覆盖。
+ * @param {number} preVersion - 升级前已执行的最大迁移版本（无则 0）
+ */
+function backupBeforeMigration(preVersion) {
+  try {
+    if (!DB_PATH || !fs.existsSync(DB_PATH)) return;
+    const stat = fs.statSync(DB_PATH);
+    if (!stat.isFile() || stat.size === 0) return; // 空/新库无需备份
+    const dir = path.dirname(DB_PATH);
+    const base = path.basename(DB_PATH);
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const dest = path.join(dir, `${base}.bak-v${preVersion}-${stamp}`);
+    fs.copyFileSync(DB_PATH, dest);
+    console.log(`[DB] 迁移前备份已创建：${dest}`);
+
+    // 仅保留最近 MIGRATION_BACKUP_KEEP 份（按文件名内嵌时间戳倒序）
+    const prefix = `${base}.bak-v`;
+    const tsOf = (f) => { const m = f.match(/(\d{8}-\d{6})$/); return m ? m[1] : ''; };
+    const backups = fs.readdirSync(dir)
+      .filter(f => f.startsWith(prefix))
+      .sort((a, b) => tsOf(b).localeCompare(tsOf(a)));
+    for (const old of backups.slice(MIGRATION_BACKUP_KEEP)) {
+      try { fs.unlinkSync(path.join(dir, old)); console.log(`[DB] 清理旧备份：${old}`); }
+      catch (e) { console.warn('[DB] 清理旧备份失败：' + e.message); }
+    }
+  } catch (e) {
+    // 备份失败不应阻断迁移，但必须醒目告警（告知用户本次升级无回滚副本）
+    console.warn('[DB][警告] 迁移前备份失败，本次升级将无回滚副本：' + e.message);
+  }
+}
+
 function runMigrations() {
   // 创建迁移记录表
   db.exec(`
@@ -545,9 +584,15 @@ function runMigrations() {
     db.prepare('SELECT version FROM _migrations').all().map(r => r.version)
   );
 
-  for (const migration of migrations) {
-    if (executed.has(migration.version)) continue;
+  const pending = migrations.filter(m => !executed.has(m.version));
 
+  // 存在待执行迁移时才备份（避免每次启动都产生备份文件）
+  if (pending.length > 0) {
+    const preVersionRow = db.prepare('SELECT MAX(version) AS m FROM _migrations').get();
+    backupBeforeMigration(preVersionRow.m || 0);
+  }
+
+  for (const migration of pending) {
     console.log(`[DB] Running migration v${migration.version}: ${migration.description}`);
     const run = db.transaction(() => {
       migration.up();
@@ -558,7 +603,17 @@ function runMigrations() {
     console.log(`[DB] Migration v${migration.version} complete.`);
   }
 
-  console.log(`[DB] All migrations up to date (latest: v${migrations[migrations.length - 1].version}).`);
+  // 启动版本断言：库内最大版本 vs 代码定义的最大版本
+  const codeMax = migrations.reduce((mx, m) => Math.max(mx, m.version), 0);
+  const dbMaxRow = db.prepare('SELECT MAX(version) AS m FROM _migrations').get();
+  const dbMax = dbMaxRow.m || 0;
+  if (dbMax > codeMax) {
+    console.warn(`[DB][警告] 数据库版本(v${dbMax})高于当前程序代码版本(v${codeMax})！可能安装了旧版程序，继续写入有数据损坏风险，请尽快升级程序。`);
+  } else if (dbMax < codeMax) {
+    console.warn(`[DB][警告] 数据库版本(v${dbMax})落后于代码版本(v${codeMax})，但缺少对应迁移脚本，升级可能不完整。`);
+  } else {
+    console.log(`[DB] All migrations up to date (latest: v${codeMax}).`);
+  }
 }
 
 /**

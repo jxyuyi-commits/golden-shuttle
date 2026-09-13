@@ -40,12 +40,27 @@ const isAllowedOrigin = (origin, callback) => {
 app.use(cors({ origin: isAllowedOrigin }));
 app.use(express.json({ limit: '100mb' })); // 支持 base64 大文件（含 dxf 等专业格式）
 
-// 请求日志（dev 排查用）：打印 method/path/body 摘要，便于定位前端调用链路
+// 请求日志：仅记录 method + path + 响应状态 + 耗时(ms)，默认不记录 body
+// （body 含备注/设计稿等隐私内容，且 base64 大文件完整 JSON.stringify 会阻塞主线程）。
+// 如需排查 body：显式设置 LOG_BODY=1；序列化前先按体积判断，超出阈值只记字节数，绝不完整序列化超大 body。
+const LOG_BODY = process.env.LOG_BODY === '1';
+const LOG_BODY_MAX_BYTES = 2000; // 超过此体积不序列化 body，仅记 [body omitted]
 app.use((req, res, next) => {
-  const body = req.body && typeof req.body === 'object' && Object.keys(req.body).length
-    ? ' body=' + JSON.stringify(req.body).slice(0, 300)
-    : '';
-  console.log(`[REQ] ${new Date().toISOString().slice(11, 19)} ${req.method} ${req.originalUrl}${body}`);
+  const startedAt = Date.now();
+  res.on('finish', () => {
+    let bodyInfo = '';
+    if (LOG_BODY && req.body && typeof req.body === 'object' && Object.keys(req.body).length) {
+      const approxBytes = Number(req.headers['content-length']) || 0;
+      if (approxBytes > LOG_BODY_MAX_BYTES) {
+        bodyInfo = ` body=[body omitted: ${approxBytes} bytes]`;
+      } else {
+        let json = '';
+        try { json = JSON.stringify(req.body); } catch { json = '[unserializable]'; }
+        bodyInfo = ` body=${json.slice(0, 300)}`;
+      }
+    }
+    console.log(`[REQ] ${new Date().toISOString().slice(11, 19)} ${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - startedAt}ms${bodyInfo}`);
+  });
   next();
 });
 

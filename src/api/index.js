@@ -1,7 +1,7 @@
 // API 层：所有后端请求集中管理
 // 从 App.jsx 提取，保持原有请求行为
 
-import { apiGet, apiPost, apiPatch, apiDelete, apiUrl, API } from './client';
+import { apiGet, apiPost, apiPut, apiPatch, apiDelete, apiUrl, API } from './client';
 
 /* ── 打样单 Tasks ── */
 export const fetchTasks = () => apiGet('/api/tasks');

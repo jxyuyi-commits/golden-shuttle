@@ -5,7 +5,7 @@ export const autoSign = (val) => {
   if (!val || typeof val !== 'string') return val;
   const trimmed = val.trim();
   if (!trimmed) return '';
-  if (/^[±\+\-]/.test(trimmed)) return trimmed;
+  if (/^[±+-]/.test(trimmed)) return trimmed;
   if (/^[0-9.]/.test(trimmed)) return `±${trimmed}`;
   return trimmed;
 };

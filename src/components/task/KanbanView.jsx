@@ -121,9 +121,6 @@ const KanbanView = ({
     return [...set];
   }, [settings.sampleTypes, tasks]);
 
-  // 状态归一：旧数据/脏值（如 in_progress）兜底为 todo，避免看板列匹配不到而消失
-  const normalizeStatus = (s) => ['todo', 'doing', 'done'].includes(s) ? s : 'todo';
-
   const filterTasks = (list) => list.filter(t => {
     if (filters.keyword && !(t.title?.includes(filters.keyword) || t.style_no?.includes(filters.keyword))) return false;
     if (filters.category && t.category !== filters.category) return false;

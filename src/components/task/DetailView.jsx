@@ -73,6 +73,8 @@ const DetailView = ({
       .catch(() => {});
   };
 
+  // reloadRuns 每次渲染重建；纳入依赖会每渲染重跑，语义上仅需 task 变化时重拉（功能正确，避免请求循环）。
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { reloadRuns(); }, [task?.id]);
 
   // 操作反馈提示：3 秒自动消失
@@ -90,12 +92,13 @@ const DetailView = ({
 
   const selectedRun = runs.find(r => r.id == sizeRunId) || runs[0] || null;
 
-  // 稳定引用：SizeTable 行级 memo 依赖 onChange 引用不变，否则每键全表重渲染
+  // 稳定引用：SizeTable 行级 memo 依赖 onChange 引用不变，否则每键全表重渲染。
+  // 因此依赖仅取 selectedRun?.id（仅切换版次时重建）；纳入完整 selectedRun 会破坏该稳定性。
   const handleSizeChange = useCallback((val) => {
     if (!selectedRun) return;
     setRuns(prev => prev.map(r => r.id === selectedRun.id ? { ...r, size_data: val } : r));
     updateRun(selectedRun.id, { size_data: val }).catch(() => {});
-  }, [selectedRun?.id]); // 仅切换版次时重建；编辑过程中引用稳定
+  }, [selectedRun?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- 仅取 id 保持回调引用稳定（切换版次才重建）
 
   // REQ-005 修订2：从批次卡片「尺寸表」入口进入——绑定该版次并打开尺寸页
   const handleOpenSizeTable = (run) => {
@@ -125,7 +128,8 @@ const DetailView = ({
 
   // 自动保存（REQ-006③ 修订）：工作动态条目输入防抖 400ms 提交，镜像最新 progress_nodes
   const progressRef = useRef(task.progress_nodes || []);
-  progressRef.current = task.progress_nodes || [];
+  // 渲染期禁止写 ref（react-hooks/refs）：改在提交后同步，定时回调运行时读到即为最新值
+  useEffect(() => { progressRef.current = task.progress_nodes || []; }, [task.progress_nodes]);
   const nodeCommitTimer = useRef(null);
   const scheduleNodeCommit = () => {
     if (nodeCommitTimer.current) clearTimeout(nodeCommitTimer.current);
@@ -142,11 +146,6 @@ const DetailView = ({
       return settings.sizeGroups.find(g => g.id == catObj.size_group_id);
     }
     return null;
-  };
-
-  const getSizeList = () => {
-    const grp = getSizeGroup();
-    return grp ? grp.size_list.split(',').map(s => s.trim()) : ['S', 'M', 'L', 'XL', 'XXL'];
   };
 
   return (

@@ -5,6 +5,11 @@ const { getDb } = require('../db.cjs');
 // 版本合并窗口（毫秒）：同一款 5 分钟内多次保存合并为一条版本
 const MERGE_WINDOW_MS = 5 * 60 * 1000;
 
+// 快照结构版本号（写入快照 snapVersion 字段，用于 rollback 时确定性判别快照形态，
+// 避免用「键是否存在」猜测）。语义：v16 起尺寸表归属批次（sample_runs.size_data），
+// 快照缺失 snapVersion 字段一律视为 v16 之前的旧结构（尺寸表存放在 task 级）。
+const SNAP_VERSION = 16;
+
 /** 组装单款全量快照（styles + tasks + sample_runs + bom_items） */
 function buildSnapshot(taskId) {
   const db = getDb();
@@ -35,6 +40,8 @@ function buildSnapshot(taskId) {
       process_req: task.process_req || '',
       note: task.note || '',
     },
+    // legacy 字段：v16 之前旧快照尺寸表存放在 task 级，仅供 rollback 的旧快照分支兼容使用；
+    // 新快照（含 snapVersion）尺寸表已下沉批次，权威数据在各 run.size_data。
     size_data: parse(task.size_data, []),
     bom: boms.map(b => ({
       id: b.id, category: b.category, name: b.name, spec: b.spec, color: b.color,
@@ -48,6 +55,9 @@ function buildSnapshot(taskId) {
       // REQ-005 尺寸表归属版次：批次独立尺寸表随快照记录，回滚时写回批次
       size_data: parse(r.size_data, []),
     })),
+    // 快照结构版本（权威判别依据）：rollback / diffSummary 一律以本字段是否存在区分新旧快照形态，
+    // 严禁再用「size_data 键是否存在」猜测——旧实现因此导致旧快照分支成死代码。
+    snapVersion: SNAP_VERSION,
     saved_at: new Date().toISOString(),
   };
 }
@@ -69,11 +79,11 @@ function diffSummary(prev, next) {
   };
   sec('款式信息', ['style_no', 'title', 'category', 'brand', 'designer', 'year', 'season', 'month', 'pdf_url']);
   sec('任务字段', ['priority', 'start_date', 'expected_date', 'finish_date', 'progress_nodes', 'fabric_req', 'trim_req', 'process_req', 'note']);
-  // REQ-005 尺寸表归属版次：优先比较批次级 size_data（新快照），旧快照（task 级）回退比较
-  const sdOf = (s) => {
-    const runSd = JSON.stringify((s.runs || []).map(r => r.size_data).filter(v => v !== undefined));
-    return runSd !== '[]' ? runSd : JSON.stringify(s.size_data);
-  };
+  // REQ-005 尺寸表归属版次：以 snapVersion 判别快照形态（与 rollback 同一判据，不使用「键是否存在」猜测）——
+  //   snapVersion 缺失 → 旧快照：尺寸表在 task 级；snapVersion 存在 → 新快照：尺寸表归属各批次
+  const sdOf = (s) => (s.snapVersion === undefined
+    ? JSON.stringify(s.size_data)
+    : JSON.stringify((s.runs || []).map(r => r.size_data)));
   if (sdOf(prev) !== sdOf(next)) changed.push('尺寸表(尺寸表)');
   sec('物料清单', ['bom']);
   return changed.length ? changed.join('；') : '细节微调';
@@ -154,18 +164,23 @@ function rollback(taskId, versionId) {
         note: s.note || '', fabric_req: s.fabric_req || '', trim_req: s.trim_req || '', process_req: s.process_req || '',
         priority: s.priority || '中', start_date: s.start_date || '', expected_date: s.expected_date || '', finish_date: s.finish_date || '',
       });
-    // 2.5) 批次尺寸表回滚（REQ-005 归属版次：按 run.id 写回快照中的批次尺寸表）
+    // 2.5) 尺寸表回滚（REQ-005 归属版次）：
+    //   由快照 snapVersion 做确定性判别，绝不再用「键是否存在」猜测（旧实现导致旧快照分支成死代码）：
+    //   - snapVersion 缺失 → v16 之前的旧快照：尺寸表存放在 task 级（snap.size_data），
+    //     回退写回该款首个批次（与 v16 迁移口径一致：sort_order 最小）。
+    //   - snapVersion 存在 → 新快照：尺寸表归属各批次，按 run.id 写回各自 size_data。
+    //     写回当前值是正确的，包含用户确实清空过尺寸表的情况（空数组会被如实恢复）。
     const snapRuns = snap.runs || [];
-    const hasRunSd = snapRuns.some(r => r.size_data !== undefined);
-    if (hasRunSd) {
-      const updSd = db.prepare('UPDATE sample_runs SET size_data = ? WHERE id = ?');
-      for (const r of snapRuns) {
-        if (r.id && r.size_data !== undefined) updSd.run(JSON.stringify(r.size_data || []), r.id);
-      }
-    } else {
-      // 兼容旧快照（尺寸表在 task 级）：回退写回该款首个批次
+    if (snap.snapVersion === undefined) {
+      // 旧快照分支（原实现不可达，修复后可达）：尺寸表在 task 级，回退写回该款首个批次
       const first = db.prepare('SELECT id FROM sample_runs WHERE task_id = ? ORDER BY sort_order ASC, id ASC LIMIT 1').get(taskId);
       if (first) db.prepare('UPDATE sample_runs SET size_data = ? WHERE id = ?').run(JSON.stringify(snap.size_data || []), first.id);
+    } else {
+      // 新快照分支：按批次写回各自尺寸表
+      const updSd = db.prepare('UPDATE sample_runs SET size_data = ? WHERE id = ?');
+      for (const r of snapRuns) {
+        if (r.id) updSd.run(JSON.stringify(r.size_data || []), r.id);
+      }
     }
     // 3) BOM 重建（删除现有行，按快照重插）
     db.prepare('DELETE FROM bom_items WHERE task_id = ?').run(taskId);

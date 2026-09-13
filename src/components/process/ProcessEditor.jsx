@@ -111,7 +111,7 @@ const loadCols = () => {
   try {
     const s = localStorage.getItem(COL_KEY);
     if (s) return { ...DEFAULT_COLS, ...JSON.parse(s) };
-  } catch (e) { /* ignore */ }
+  } catch { /* 忽略：localStorage 不可用或数据损坏 */ }
   return DEFAULT_COLS;
 };
 
@@ -155,7 +155,7 @@ const ProcessEditor = ({ taskId }) => {
   const setColWidth = useCallback((key, w) => {
     setColWidths(prev => {
       const next = { ...prev, [key]: w };
-      try { localStorage.setItem(COL_KEY, JSON.stringify(next)); } catch (e) { /* ignore */ }
+      try { localStorage.setItem(COL_KEY, JSON.stringify(next)); } catch { /* 忽略：localStorage 不可用或数据损坏 */ }
       return next;
     });
   }, []);
@@ -226,7 +226,6 @@ const ProcessEditor = ({ taskId }) => {
     background: 'var(--bg-elev)', borderBottom: '2px solid var(--border)',
     whiteSpace: 'nowrap', width: w, position: 'relative', minWidth: w
   });
-  const tdStyle = (w) => ({ padding: 6, width: w, minWidth: w });
 
   return (
     <div className="glass" style={{ gridColumn: '1/-1', padding: 24 }}>

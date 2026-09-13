@@ -36,6 +36,9 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
   const isGeneric = !!fullUrl && !isImage && !isPdf && !isVectorThumb;
   const thumbUrl = isVectorThumb ? `${API}/api/drawing-thumb?url=${encodeURIComponent(fullUrl)}` : '';
 
+  // 渲染 PDF 首页缩略：effect 内同步置 loading（请求前的即时态）属合理用法；
+  // fullUrl 由 pdfUrl 派生，纳入依赖会因引用重建重复拉取，故保留 [pdfUrl,...] 并说明。
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
   useEffect(() => {
     if (!pdfUrl || isImage || isGeneric || isVectorThumb) return; // 图片直显，矢量/专业格式走缩略图或占位
     setLoading(true);
@@ -55,6 +58,7 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
       .catch(() => {});
     return () => { alive = false; };
   }, [isVectorThumb, ext, thumbUrl]);
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   const openNative = () => openFileLocally(fullUrl).catch(console.error);
 

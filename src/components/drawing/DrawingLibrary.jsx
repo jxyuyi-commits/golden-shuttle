@@ -12,6 +12,9 @@ import {
   deleteDrawing, deleteDrawingGroup, uploadDesignFile,
 } from '../../api';
 
+// DRAWING_CATEGORIES 为本组件内部及导出给同模块使用的分类常量；拆分独立文件会引入无谓耦合，
+// 故保留同文件导出并说明：禁用 fast-refresh「仅导出组件」约束（不影响生产构建/HMR 正确性）。
+// eslint-disable-next-line react-refresh/only-export-components
 export const DRAWING_CATEGORIES = ['设计稿', '参考图', '成衣图', '纸样', '唛架图'];
 
 // 各分类徽章配色

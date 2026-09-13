@@ -48,6 +48,9 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
     setLoading(false);
   };
 
+  // 依据「品类 + 号型组」派生默认尺码列表与默认码：属外部 props→本地表单的初始化同步。
+  // 若把 fd.size 纳入依赖，会因 effect 内 setFd 触发循环；属既有限制的合理取舍，故块级禁用并说明。
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
   useEffect(() => {
     if (!fd.category) {
       setCurrentSizeList([]);
@@ -65,6 +68,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
       setCurrentSizeList(['S', 'M', 'L', 'XL', 'XXL']);
     }
   }, [fd.category, settings.categories, settings.sizeGroups]);
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   const submit = (e) => {
     e.preventDefault();

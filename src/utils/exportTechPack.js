@@ -40,9 +40,9 @@ function formatDate(d, fallbackYear) {
   const s = String(d).trim();
   if (!s) return '';
   if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) return s;
-  const m1 = s.match(/^(\d{4})[\/.](\d{1,2})[\/.](\d{1,2})$/);
+  const m1 = s.match(/^(\d{4})[/.](\d{1,2})[/.](\d{1,2})$/);
   if (m1) return `${m1[1]}-${m1[2].padStart(2, '0')}-${m1[3].padStart(2, '0')}`;
-  const m2 = s.match(/^(\d{1,2})[\/.](\d{1,2})$/);
+  const m2 = s.match(/^(\d{1,2})[/.](\d{1,2})$/);
   if (m2) {
     const y = fallbackYear || new Date().getFullYear();
     return `${y}-${m2[1].padStart(2, '0')}-${m2[2].padStart(2, '0')}`;

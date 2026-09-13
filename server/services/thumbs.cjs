@@ -37,7 +37,6 @@ function parseDxf(buffer) {
   const blocks = {};      // 块名 -> 折线数组
   const inserts = [];     // ENTITIES 引用的块名
   const loosePolys = [];  // ENTITIES 段内直接出现的折线
-  let section = null;
   let curBlock = null;
   let curPoly = null;
   let blockOfPoly = null;
@@ -49,11 +48,10 @@ function parseDxf(buffer) {
       if (v === 'SECTION') {
         // 下一对是段名
         if (i + 1 < pairs.length && pairs[i + 1][0] === '2') {
-          section = pairs[i + 1][1].trim();
           i++;
         }
       } else if (v === 'ENDSEC') {
-        section = null; curBlock = null;
+        curBlock = null;
       } else if (v === 'BLOCK') {
         // 下一对 code 2 是块名
         let name = null;
@@ -167,7 +165,7 @@ function emfToPng(emfPath, outPath, maxSide = 1000) {
   return new Promise((resolve, reject) => {
     const dir = getThumbDir();
     const scriptPath = path.join(dir, '_emf2png.ps1');
-    try { fs.mkdirSync(dir, { recursive: true }); } catch (e) {}
+    try { fs.mkdirSync(dir, { recursive: true }); } catch { /* 忽略：目录已存在或无权创建，后续写入会暴露真实错误 */ }
     fs.writeFileSync(scriptPath, PS_SCRIPT);
     const child = spawn('powershell.exe', [
       '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath,
@@ -195,7 +193,7 @@ async function getThumb(url) {
   if (!abs) return null;
   const ext = path.extname(abs).toLowerCase();
   const dir = getThumbDir();
-  try { fs.mkdirSync(dir, { recursive: true }); } catch (e) {}
+  try { fs.mkdirSync(dir, { recursive: true }); } catch { /* 忽略：目录已存在或无权创建，后续写入会暴露真实错误 */ }
   const base = path.basename(abs, path.extname(abs));
   if (ext === '.emf') {
     const out = path.join(dir, `${base}.png`);

@@ -21,17 +21,15 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
 
   useEffect(() => { refresh(); }, [refresh]);
   useEffect(() => {
-    if (!activeCat && categories.length > 0) setActiveCat(categories[0]);
+    // 品类 props 异步就绪后同步默认选中项（外部数据 → 派生默认值），仅在无选中时设置一次，
+    // 无级联风险；改用派生值会牵动 refresh/交互多处，风险更大，故保留 effect 并说明。
+    if (!activeCat && categories.length > 0) setActiveCat(categories[0]); // eslint-disable-line react-hooks/set-state-in-effect
   }, [categories, activeCat]);
 
   const addCategory = () => {
     if (!newCatName.trim()) return;
     onCategoriesChange([...categories, newCatName.trim()]);
     setNewCatName('');
-  };
-
-  const removeCategory = (idx) => {
-    setConfirmCatIdx(idx);
   };
 
   const doRemoveCategory = () => {

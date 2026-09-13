@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Plus, CheckCircle2, Calculator, AlertCircle, ChevronUp, ChevronDown, Trash2, Database, Download, Info } from 'lucide-react';
 import { autoSign, formatTime } from '../../utils/format';
 import { fetchMeasurementTemplates, saveMeasurementTemplate } from '../../api';
@@ -191,7 +191,8 @@ const SizeTable = ({
   const [isActualMode, setIsActualMode] = useState(false);
   // 稳定引用：行级 memo 依赖回调引用不变；data 经 ref 读取最新值
   const dataRef = useRef(data);
-  dataRef.current = data;
+  // 渲染期禁止写 ref（react-hooks/refs）：改在提交后同步，事件回调读取到的即最新 data
+  useEffect(() => { dataRef.current = data; }, [data]);
   // REQ-006② 删除确认
   const [confirmIdx, setConfirmIdx] = useState(null); // 单行删除 index
   const [confirmBatch, setConfirmBatch] = useState(false); // 批量删除
@@ -219,12 +220,11 @@ const SizeTable = ({
 
   // -- 跨版次对比（REQ-005④ 批次级，同码 M 对 M） --
   const [compareRunId, setCompareRunId] = useState(null);
-  const [compareRun, setCompareRun] = useState(null);
-
-  useEffect(() => {
-    const target = compareRuns.find(r => r.id == compareRunId);
-    setCompareRun(target || null);
-  }, [compareRunId, compareRuns]);
+  // compareRun 由 compareRunId + compareRuns 派生（原 effect+state 在渲染后同步 setState 会触发级联渲染）
+  const compareRun = useMemo(
+    () => compareRuns.find(r => r.id == compareRunId) || null,
+    [compareRunId, compareRuns]
+  );
 
   useEffect(() => {
     if (shake.row !== -1) {
@@ -241,15 +241,6 @@ const SizeTable = ({
 
   const allSizes = sizeGroup ? sizeGroup.size_list.split(',').map(s => s.trim()) : ['S', 'M', 'L', 'XL', 'XXL'];
   const stdIdx = allSizes.indexOf(standardSize);
-
-  const calcGraded = (base, grading, sizeIndex) => {
-    const b = parseFloat(base);
-    const g = parseFloat(grading || 0);
-    if (isNaN(b) || isNaN(g) || stdIdx < 0) return '';
-    const diff = sizeIndex - stdIdx;
-    if (diff === 0) return '';
-    return (b + diff * g).toFixed(1);
-  };
 
 
 

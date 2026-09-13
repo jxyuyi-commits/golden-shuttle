@@ -30,7 +30,7 @@ const STAT_FILTERS = {
  * 统计卡点击筛选清单（REQ-001）+ 品类占比点击筛选清单（REQ-003①），两个筛选可叠加
  * 清单展示最先进批次为主进度 + 版师/样衣工（REQ-003②③）
  */
-const DesignerDashboard = ({ tasks, settings, onTaskClick, onOpenSidebar, onNewTask }) => {
+const DesignerDashboard = ({ tasks, onTaskClick, onOpenSidebar, onNewTask }) => {
   // 清单筛选：statusFilter（统计卡）+ categoryFilter（品类占比），null=全部；再次点击各自恢复（REQ-003④ 5 张卡）
   const [statusFilter, setStatusFilter] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState(null);

@@ -15,7 +15,8 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    if (!taskId) { setLoading(false); return; }
+    // 无 taskId 时立即结束加载态（初始化同步），属合理用法，故禁用该规则并说明
+    if (!taskId) { setLoading(false); return; } // eslint-disable-line react-hooks/set-state-in-effect
     fetchDrawings(taskId)
       .then(list => {
         // 按 group_id 聚合：每组取最新版本（无 group_id 的记录独立显示）

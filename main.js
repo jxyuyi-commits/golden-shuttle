@@ -21,7 +21,7 @@ process.on('uncaughtException', (error) => {
     }
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
     console.error('Unhandled Rejection:', reason);
     if (app.isReady()) {
         dialog.showErrorBox('未处理的异步异常 (Unhandled Rejection)', (reason && reason.stack) || String(reason));

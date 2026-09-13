@@ -2,6 +2,8 @@
 
 > 本文件是迭代过程的"外部记忆"，上下文压缩后必须先读本文件再继续。
 > 最后更新：2026-09-12（UI/UX 重构专题上午完成：暖黑金配色换新 + 看板筛选 text-2 + 侧栏参考图样 + Inter/DM Mono 全站字体 + 全站表格无框通透化；下午完成：工艺指示拖拽排序 + 弹窗实底 + SmartSelect 弹层跟随修复 + 跨版次对比退出 + 看板卡片 hover 重叠 + 筛选复位项/清除按钮）
+>
+> **定位（2026-09-14 文档清洗）**：本文件是**追加式变更日志（只增不改）**，**不承担"项目现状"职责**。任何"当前最新迁移版本""当前 x 行 / x 个模块"之类**现状断言一律以 `docs/PROJECT_HANDBOOK.md`（计数由 `scripts/doc-stats.cjs` 生成）为准**；本文件内出现的历史版本号/行数仅是**当次记录**，不代表现状。文内提及的旧路径已迁移（如 `docs/待开发文档.md` → `docs/roadmap/待开发文档.md`，`docs/P2-ABI-迭代方案.md`、`README_DEV.md` 等 → `docs/archive/`），统一索引见 `docs/README.md`。
 
 ---
 
@@ -631,3 +633,18 @@ npm run dev:all
 - **数据**：迁移后 people=[{白洁,设计师},{李飞,设计师}]；E2E 添加/删除测试人员后已恢复原值
 - **验证**：HTTP 迁移确认 + 浏览器 E2E 12/12 PASS（迁移展示/加人/加角色/批次版师下拉联动含新人员且不含他角色人员/删除恢复/零 console 错误）+ 生产构建通过（8.7s）
 - **备注**：已登记 docs/待开发文档.md REQ-008（已完成）；REQ-005（尺寸表体系重构）、REQ-006（交互与确认机制）、REQ-007（控件交互样式统一）仍待开发
+
+---
+
+## 九、文档清洗与防漂移机制（2026-09-14，由架构师执行、主理人统一提交）
+
+> 依据用户 2026-09-14 批准的「文档清洗方案（决策 4）」，重新整理全部开发文档，解决"11 份重叠事实源"问题。**本节为追加记录，未改动本文件既有内容。**
+
+- **结构收敛**：`docs/` 拆为三类子目录 —— `audit/`（审计报告）、`roadmap/`（唯一计划源）、`archive/`（**只归档不删除**）。新建 `docs/README.md` 作**唯一文档索引**。
+- **文件归位（移动 / 不删除）**：
+  - → `docs/audit/`：`UI-UX-审计与优化建议-20260914.html`、`全项目审查与优化方案-20260914.html`
+  - → `docs/roadmap/`：`统一实施路径与任务分解-20260914.md`、`待开发文档.md`（需求池）、`开发工作计划.md`（排期计划）
+  - → `docs/archive/`：根目录 `README_DEV.md`、`OVERVIEW.md`、`ARCHITECTURE_REVIEW.md`；`P2-IPC-完成报告.md`、`P2-ABI-迭代方案.md`、`数据导出模块-使用与问题排查.md`、`配色审计报告.md`、`配色预览.html`、`MANUAL_COPY_MANIFEST.md`（换机清单，HANDBOOK §12 保留指向）、`_req_screenshot_*.png`（23 张，移入 `archive/req-screenshots/`）
+- **保留原位**：`AGENTS.md`、`README.md`、`ITERATION_STATE.md`（本文件）、`docs/BUSINESS_LOGIC.md`（用户指定长期维护）、`docs/PROJECT_HANDBOOK.md`、`docs/TECHNICAL.md`
+- **校正漂移**：`PROJECT_HANDBOOK.md` §1 的计数（66 行 / routes 8 / services 9 / App.jsx 288 行）改为"指向源码"或脚本生成；§11 提交历史改指向 `git log`。本文件头部加"追加式日志不承担现状职责"定位。
+- **防漂移机制**：新增 `scripts/doc-stats.cjs`（纯源码扫描，**不 require better-sqlite3**），生成 `PROJECT_HANDBOOK.md` 的 `<!-- STATS:BEGIN/END -->` 区块；`npm run doc:stats` 回填、`npm run doc:check` 校验（package.json 脚本接线由主理人补入）。

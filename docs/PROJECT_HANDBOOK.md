@@ -9,7 +9,7 @@
 > **先读本文件 +&#x20;**
 > `ITERATION_STATE.md`
 > 即可无缝接续。
-> 更新日期：2026-09-06（操作日志迁移 v9：任务关键动作追踪 + 侧边栏弹窗；此前图纸资料页迭代：版本管控 v8 + EMF/DXF 缩略图 + 统一单击放大/双击打开 + 文件类型标签 + 工作动态修复）
+> 更新日期：2026-09-14（文档清洗：`docs/` 结构收敛为 `audit/`＋`roadmap/`＋`archive/`；本文中所有"计数/版本号"改由 `scripts/doc-stats.cjs` 生成或指向源码，禁止手写）。历史迭代记录见 `ITERATION_STATE.md`。
 
 
 
@@ -25,12 +25,29 @@
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 技术栈  | Electron 34（ABI 132）+ Vite 7 + React 19 + Express 5 + better-sqlite3 12                                                                                                                                              |
 | 数据库  | 本地 SQLite（dev: `server/database.sqlite`；生产: `%APPDATA%/PatternMaster Pro/database.sqlite`，首次启动从 resources 拷示例库）                                                                                                      |
-| 模块   | 看板（Kanban）/ 打样需求单详情（Detail）/ 设置，路由 8 个 + services 9 个（含 drawings.cjs / thumbs.cjs）                                                                                                                                                |
-| 关键文件 | `server/index.cjs`（66 行入口）+ `routes/` + `services/`（含 drawings.cjs / thumbs.cjs）+ `db.cjs`（迁移 v9：drawings 版本管控 4 列 + operation_logs）；`src/App.jsx`（288 行）+ `src/components/**`（含 drawing/DrawingLibrary.jsx）；`src/utils/exportTechPack.js`（Excel 导出）+ `exportTechPackPdf.js`（PDF 导出）+ `pdfTechPackVfs.js`（字体 vfs） |
+| 模块   | 看板（Kanban）/ 打样需求单详情（Detail）/ 设置，路由 12 个 + services 12 个（含 drawings.cjs / thumbs.cjs）；计数由 `scripts/doc-stats.cjs` 生成，见本节末 STATS 区块                                                                                                                                                |
+| 关键文件 | `server/index.cjs`（Express 入口）+ `routes/` + `services/`（含 drawings.cjs / thumbs.cjs）+ `db.cjs`（迁移版本与内容以源码 `migrations` 数组为准）；`src/App.jsx` + `src/components/**`（含 drawing/DrawingLibrary.jsx）；`src/utils/exportTechPack.js`（Excel 导出）+ `exportTechPackPdf.js`（PDF 导出）+ `pdfTechPackVfs.js`（字体 vfs） |
 | 当前版本 | `package.json` version 1.0.0（Electron-builder 用）                                                                                                                                                                     |
-| Git  | main 分支，75 个受管文件；远端 `https://github.com/jxyuyi-commits/golden-shuttle.git`                                                                                                                                           |
+| Git  | 重构分支 `feature/sample-run-model`（`main` 保持稳定待合并）；受管文件数见 git（不手写）；远端 `https://github.com/jxyuyi-commits/golden-shuttle.git`                                                                                                                                           |
 
 **API 路由备忘**：BOM 是 `/api/bom?task_id=N`（不是 /api/bom-items），工艺 `/api/process?task_id=N`，图纸 `/api/drawings?task_id=N`，均需 task\_id 参数。
+
+**机器可验证计数（防漂移）**：
+
+<!-- STATS:BEGIN (由 scripts/doc-stats.cjs 生成，请勿手改) -->
+> 以下计数由 `node scripts/doc-stats.cjs` 从源码实测生成（生成于 2026-09-14 03:34）；手工改动会被 `--check` 判为漂移。
+
+| 计数项 | 值 |
+| --- | --- |
+| 源码文件数（src/ + server/，.js/.jsx/.cjs/.mjs） | 66 |
+| 源码总行数（同上范围） | 10349 |
+| `server/routes/*.cjs` | 12 |
+| `server/services/*.cjs` | 12 |
+| 迁移最大版本（`server/db.cjs` migrations） | 20 |
+| 迁移条目数 | 20 |
+| `src/api/index.js` 导出绑定数 | 46 |
+| git 跟踪文件数 | （设 DOC_STATS_GIT=1 后生成） |
+<!-- STATS:END -->
 
 
 
@@ -56,7 +73,7 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 * 换机后若 better-sqlite3 报 ABI 不匹配 → `npm run rebuild:electron`（方案 D 统一 ABI 132，见 §7）。
 
-* **数据库不随仓库走**（`.gitignore` 排除）→ 空库启动会自动建表（迁移 v8）。要带数据 / 用真实库 → 见 §10。
+* **数据库不随仓库走**（`.gitignore` 排除）→ 空库启动会自动建表（迁移版本见 `server/db.cjs`）。要带数据 / 用真实库 → 见 §10。
 
 
 
@@ -259,7 +276,7 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 
 
-* `server/database.sqlite` 在 `.gitignore`，**不进 git** → clone 后是空库，启动自动建表（迁移 v8），从零开始用真实工作数据即可。
+* `server/database.sqlite` 在 `.gitignore`，**不进 git** → clone 后是空库，启动自动建表（迁移版本见 `server/db.cjs`），从零开始用真实工作数据即可。
 
 * 当前这台机器的 `server/database.sqlite` 是**测试数据**（8 tasks / 6 styles），**不需要**迁到新电脑。
 
@@ -281,7 +298,7 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 * 远端：`https://github.com/jxyuyi-commits/golden-shuttle.git`（HTTPS）
 
-* 提交历史：`5989809 初始` → `e012189` → `c2ae9e2` → `24d2705`（P0）→ `90e7ed5`（清理）→ `6f89b9f`（PDF 导出）
+* 提交历史：以 `git log --oneline` 为准（不手写）。截至 2026-09-14：`feature/sample-run-model` = `5f630c8`，`main` = `c694305`
 
 * 本机 push GitHub 需要**代理环境**（直连 443 不通，用户开代理后成功）
 
@@ -307,10 +324,22 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 
 
-* `ITERATION_STATE.md`（跨对话外部记忆，**会话开始先读**，记录到 08-30 exceljs 重做 + 09-04 校正）
+* **`docs/README.md`**（文档索引与持续维护清单 —— 新会话/换机/新成员**先读这个**）
 
-* `README_DEV.md`（开发说明；头部已加过时校正标注）
+* `ITERATION_STATE.md`（追加式变更日志，**不承担"项目现状"职责**；现状以本手册为准）
 
-* `docs/MANUAL_COPY_MANIFEST.md`（换机手动打包文件清单）
+* `docs/BUSINESS_LOGIC.md`（业务逻辑与决策沉淀，**用户指定长期维护**）
+
+* `docs/TECHNICAL.md`（技术架构与表结构）
+
+* `docs/roadmap/统一实施路径与任务分解-20260914.md`（当前批次路线图，**唯一计划源入口**）
+
+* `docs/roadmap/待开发文档.md`（需求池 / backlog）· `docs/roadmap/开发工作计划.md`（排期与实施要点）
+
+* **换机打包清单 → `docs/archive/MANUAL_COPY_MANIFEST.md`**（换机/换账号需手动拷贝的文件，用户换机必读）
+
+* `docs/archive/README_DEV.md`（开发说明，已归档，仅作历史）
+
+* `docs/工艺单样例_26AWW526.pdf`（PDF 导出样例；被 `.gitignore` 的 `docs/*.pdf` 排除，**不进 git**、仅本机存在）
 
 * 历史细节：`.workbuddy/memory/`（2026-08-22 / 08-24 / 08-25 / 09-04 + MEMORY.md，AI 工作区，不在 git）

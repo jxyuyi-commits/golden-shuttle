@@ -14,11 +14,14 @@ server/database.backup_*.sqlite
 dbtmp_*
 
 # 自测临时产物（Puppeteer userDataDir / 临时脚本与截图）
+# 注意：下面这几条是「自测临时产物」规则，会连带命中同名的需求验收图，
+# 故对归档目录下真正需要随仓库走的需求截图做精准豁免（否则换机会丢失 roadmap 引用的验收参考）。
 _chrome_*/
 _pptr_*/
 _*.cjs
 _*.png
 _*.txt
+!docs/archive/req-screenshots/*.png
 
 # 日志
 *.log

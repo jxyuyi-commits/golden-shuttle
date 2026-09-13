@@ -1,6 +1,7 @@
 # AGENTS.md — PatternMaster Pro（女装打样管理）
 
-Electron + Vite + React + Express + better-sqlite3。根 `D:\dev\golden-shuttle`，git main，
+Electron + Vite + React + Express + better-sqlite3。根 `D:\dev\golden-shuttle`，
+工作分支 `feature/sample-run-model`（`main` 保持稳定待合并），
 远端 github.com/jxyuyi-commits/golden-shuttle.git（推送需用户开代理）。
 
 ## 强制规则（用户明确要求，写死，不可违背）
@@ -40,3 +41,8 @@ Electron + Vite + React + Express + better-sqlite3。根 `D:\dev\golden-shuttle`
 - 图纸资料分五类：设计稿/参考图/成衣图/纸样/唛架图；参考类防冗余、工作成果可追溯（版本）。
 - 设计稿区交互：单击放大（放大图内提供 更换设计稿/从资料库选）、双击本地打开；
   「从资料库选」弹窗内卡片已禁用预览交互，点卡片=选中，底部「确认更换」生效。
+- **文档防漂移（2026-09-14 文档清洗）**：本仓库文档**禁止写死**"文件行数 / 模块（routes·services）数 /
+  数据库迁移版本"等会漂移的数字 —— 一律**指向源码**（如迁移版本见 `server/db.cjs` 的 `migrations` 数组）
+  或由 `scripts/doc-stats.cjs` 从源码生成（见 `docs/PROJECT_HANDBOOK.md` 的 `<!-- STATS:BEGIN/END -->` 区块，
+  `npm run doc:check` 可校验）。**文档索引与持续维护清单见 `docs/README.md`**；`docs/{audit,roadmap,archive}` 为
+  审计 / 计划 / 归档三类，归档只归档不删除。

@@ -1053,7 +1053,7 @@ body {
   z-index: 20 !important;
   background-color: var(--bg-elev) !important;
   /* 确保不透明 */
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 2px 0 14px -4px rgba(200, 169, 110, 0.10);
   /* 右侧阴影增加区分度 */
 }
 
@@ -1161,7 +1161,7 @@ body {
 
 /* 所有便当盒通用物理边界 (匹配红框概念) */
 .bento-box {
-  border: 1px solid var(--border-strong) !important;
+  border: 1px solid var(--border-card) !important;
   border-radius: 6px !important;
   background: var(--card-bg) !important;
 }

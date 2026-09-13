@@ -46,3 +46,8 @@ server/backup_empty/
 
 # 迁移前自动备份（G4：与库同目录保留最近 3 份）——备份内含真实业务数据，绝不入库
 server/database.sqlite.bak-*
+
+# UI 渲染取证脚手架（本机诊断用，不入库）：用项目自带 Electron 真渲染 + 逐像素扫描，
+# 用于无法靠肉眼看图时定位视觉问题（如「黑影」到底由谁绘制）。保留在本地复用。
+uiprobe-*.cjs
+.uiprobe/

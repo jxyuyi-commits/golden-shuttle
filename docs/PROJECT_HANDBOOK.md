@@ -92,6 +92,11 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 | `npm run build`            | Vite 生产构建                                                | 1770 模块 0 错误，仅 pdfjs eval + chunk>500kB 两个老告警 |
 | `npm run rebuild:electron` | 重编 better-sqlite3 为 ABI 132                              | **换机 / 升 Electron 时唯一需要的 rebuild**            |
 | `npm run build:exe`        | rebuild:electron → build → electron-builder 打包           | **打包前须停 dev**（better-sqlite3 文件占用 EPERM）      |
+| `npm run lint`             | ESLint（覆盖 src / server / scripts / main.js / preload.js）  | 2026-09-14 起覆盖 .cjs；**必须保持 0 problems**        |
+| `npm test`                 | 自动化回归测试（回滚尺寸表 + 上传安全）                                     | 走 `ELECTRON_RUN_AS_NODE=1 electron`，ABI 132     |
+| `npm run test:rollback`    | 版本回滚的尺寸表恢复语义（20 项断言）                                      | 断言非首批次也逐批恢复，防"只恢复首批次"回归                        |
+| `npm run test:security`    | 上传白名单 / 路径穿越 / 本机打开策略（43+ 项断言）                            | 用独立临时库，不触碰生产数据                                 |
+| `node scripts/doc-stats.cjs` | 输出源码文件数/行数/路由数/服务数/迁移版本，校验文档数字是否漂移                        | 文档改数字前先跑它                                      |
 
 
 
@@ -193,11 +198,34 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 * 后台 `node scripts/dev.cjs` 在 AI 侧报 `failed` 是包装壳退出，spawn 出的 electron + vite 子进程继续存活供真机访问。
 
+* **`.git/refs/heads/<嵌套分支名>` 写入会静默失败（2026-09-14 精确复现并修正归因）**
+  * 现象：`git commit` 返回 0、`git commit` 后 `git log` 却报 "current branch does not have any commits yet"；`git update-ref refs/heads/x/y <sha>` 返回 0 但 `.git/refs/heads/x/` 目录根本没被创建；`git status` 显示 `[gone]`。
+  * **不是数据丢失**：`git cat-file -t <sha>` 能确认 commit 对象完好，reflog（`.git/logs/HEAD`）里有完整的新旧哈希记录。
+  * **归因修正（推翻此前"core.fscache 导致"的判断）**：已实测 `core.fscache=false` 写入 `.git/config` 成功落盘，**问题照旧复现**。真正的边界是：**bash 直接重定向写入 `.git/refs/heads/` 能持久（含新建子目录），而 git 自己写嵌套引用静默失败**；`.git/config`、`.git/index`、`.git/objects` 的写入均正常。属环境层对 git 引用写入的拦截，与本项目代码无关。
+  * 处置（每次 git 写操作后执行）：
+    1. 从 reflog 取真实哈希：`tail -1 .git/logs/HEAD`（末列即为新哈希）。
+    2. 用 bash 直接落引用：`mkdir -p .git/refs/heads/<dir> && printf '<sha>\n' > .git/refs/heads/<branch>`（remote-tracking 同理写 `refs/remotes/origin/...`）。
+    3. **落完引用后只用只读命令验证**（`git log` / `git status` / `git ls-remote`）——再一次 `git commit` 会把它删掉，需重新补。
+  * 绕过本地引用的推送法（推荐）：`git push origin <sha>:refs/heads/<branch>`，不依赖本地分支引用是否可解析。
+  * 换机恢复：新机 `git fetch origin && git checkout -B <branch> origin/<branch>` 即可，引用由远端重建，不受此问题影响。
+
 
 
 ***
 
 ## 7. 安全与功能完成状态（2026-09-04）
+
+**工程止损批 1（G1–G8，2026-09-14，提交 49a2263）**
+
+
+
+* G1 **回滚静默清空尺寸表（数据损坏级）**：快照新增 `snapVersion` 字段，`rollback` / `diffSummary` 统一按「字段是否存在」判别新旧快照形态。修复前用 `runs[].size_data` 键是否存在猜测，而 `buildSnapshot` 恒写该键 → 旧快照分支成死代码；返工中又发现新分支同样不可达（`snapVersion` 漏写）→ 回滚只写首批次且取 task 级僵尸列为源。现已修复并端到端验证（`npm run test:rollback`）。
+* G2 **上传→本机执行 RCE 链路封堵**：`resolvePath` 路径硬化（拒反斜杠与 `..`、只取 basename、断言落在 uploadsDir 内）；`openLocally` 去掉 `exec` 字符串拼接，Electron 走 `shell.openPath`，非 Electron 回退 `rundll32 url.dll,FileProtocolHandler`（`execFile`+argv，不经 shell）。
+* G3 **上传白名单 + 50MB 上限**：扩展名白名单（含 dxf/psd/ai/cdr 等行业格式），不合法不落盘，错误带 400。
+* G4 **迁移前自动备份 + 版本断言**：同目录备份保留最近 3 份；库版本高于代码版本时醒目告警（防旧程序写新库）。
+* G5 **请求日志不再序列化 body**（默认只记 method/path/状态码/耗时，`LOG_BODY=1` 才记且按体积预判）。
+* G6+G8 **ESLint 覆盖修复**：补齐 `server/**`、`scripts/**`、`main.js`、`preload.js` 的 Node/CommonJS 块（此前 `server/**` 完全不参与 lint）；85 problems → 0。
+* G7 **ErrorBoundary + 加载失败态**：全局错误边界兜底 + 任务加载失败横幅与重试。
 
 **P0 安全三连（全部完成并落地，提交 24d2705）**
 

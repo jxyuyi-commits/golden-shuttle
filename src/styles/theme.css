@@ -34,9 +34,9 @@
   --overlay: rgba(10, 10, 11, 0.65);
   --overlay-strong: rgba(10, 10, 11, 0.88);
   --scroll-thumb: rgba(160, 150, 140, 0.2);
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
   --card-bg: rgba(22, 23, 25, 0.75);
-  --app-bg: radial-gradient(circle at top right, rgba(200,169,110,0.05), transparent 40%), radial-gradient(circle at bottom left, rgba(200,169,110,0.03), transparent 40%), var(--bg);
+  --app-bg: radial-gradient(circle at 22% 0%, rgba(200,169,110,0.10), transparent 52%), radial-gradient(circle at 78% 100%, rgba(200,169,110,0.06), transparent 55%), var(--bg);
   color-scheme: dark;
 }
 

@@ -35,12 +35,12 @@
 **机器可验证计数（防漂移）**：
 
 <!-- STATS:BEGIN (由 scripts/doc-stats.cjs 生成，请勿手改) -->
-> 以下计数由 `node scripts/doc-stats.cjs` 从源码实测生成（生成于 2026-09-14 05:05）；手工改动会被 `--check` 判为漂移。
+> 以下计数由 `node scripts/doc-stats.cjs` 从源码实测生成（生成于 2026-09-14 05:33）；手工改动会被 `--check` 判为漂移。
 
 | 计数项 | 值 |
 | --- | --- |
-| 源码文件数（src/ + server/，.js/.jsx/.cjs/.mjs） | 67 |
-| 源码总行数（同上范围） | 10579 |
+| 源码文件数（src/ + server/，.js/.jsx/.cjs/.mjs） | 66 |
+| 源码总行数（同上范围） | 10506 |
 | `server/routes/*.cjs` | 12 |
 | `server/services/*.cjs` | 12 |
 | 迁移最大版本（`server/db.cjs` migrations） | 21 |

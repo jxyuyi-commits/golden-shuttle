@@ -648,3 +648,30 @@ npm run dev:all
 - **保留原位**：`AGENTS.md`、`README.md`、`ITERATION_STATE.md`（本文件）、`docs/BUSINESS_LOGIC.md`（用户指定长期维护）、`docs/PROJECT_HANDBOOK.md`、`docs/TECHNICAL.md`
 - **校正漂移**：`PROJECT_HANDBOOK.md` §1 的计数（66 行 / routes 8 / services 9 / App.jsx 288 行）改为"指向源码"或脚本生成；§11 提交历史改指向 `git log`。本文件头部加"追加式日志不承担现状职责"定位。
 - **防漂移机制**：新增 `scripts/doc-stats.cjs`（纯源码扫描，**不 require better-sqlite3**），生成 `PROJECT_HANDBOOK.md` 的 `<!-- STATS:BEGIN/END -->` 区块；`npm run doc:stats` 回填、`npm run doc:check` 校验（package.json 脚本接线由主理人补入）。
+
+---
+
+## 十、工程治理两批（止损批 1 / 治本批 2，2026-09-14）
+
+> 追加记录，未改动本文件既有内容。**现状断言（版本号/行数/文件数）一律以 `docs/PROJECT_HANDBOOK.md` 为准**（计数由 `scripts/doc-stats.cjs` 生成）；本节只记当次动作与提交号。
+
+### 工程止损批 1（G1–G8，提交 49a2263）
+
+- G1 **回滚静默清空尺寸表（数据损坏级）**：快照新增 `snapVersion` 字段，`rollback` / `diffSummary` 改按「字段是否存在」判别新旧快照形态（旧实现靠「size_data 键是否存在」猜测 → 旧快照分支成死代码）。
+- G2 **封堵「上传文件 → 本机执行」RCE 链路**：`resolvePath` 路径硬化（拒反斜杠与 `..`、只取 basename、断言落在 uploadsDir 内）+ `openLocally` 改走 `shell.openPath` / 回退 `rundll32 url.dll,FileProtocolHandler`（`execFile` + argv，不经 shell）。
+- G3 上传扩展名白名单（含 dxf/psd/ai/cdr 等行业格式）+ 50MB 上限；G4 迁移前自动备份（同目录保留最近 3 份）+ 版本倒挂告警；G5 请求日志不再序列化 body；G6+G8 ESLint 覆盖补齐 `server/**`、`scripts/**`、`main.js`、`preload.js`（85 → 0 problems）；G7 全局 ErrorBoundary + 加载失败态。
+
+### 工程治本批 2（G9–G15）
+
+- **G9（提交 fc567ed）**：引入 Vitest。**关键**：ABI 132 下必须走 Electron 运行时 —— `cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/vitest/vitest.mjs run`；`vitest.config.mjs` 用 pool=forks + isolate + fileParallelism:false；`tests/helpers/dbHarness.js` 只建临时库（**永不触生产库**）。首覆 7 个模块：迁移引擎 / 款级状态聚合 / 文档防漂移 / 图纸版本 / 任务原子性 / 上传安全 / 运行地基（断言 ABI 132）。
+- **G10–G15（提交 2e5d29a）**：
+  - **G10** 迁移 **v21** 物理删除 `tasks.order_no / audit_status / audit_comment / size_data / priority`（权威数据早已下沉 `sample_runs`，v14/v16 当时只清空未删列）；一并摘净 `tasks.cjs`（create / TASK_KEYS / versions 死读）、`versions.cjs`（buildSnapshot 死读）、`seed.cjs`、`test-rollback-size.cjs`。
+  - **G11 priority 单主**：款级优先级唯一口径 = 批次最高档（S>A>B>C，无批次回退 B，REQ-030），由 `attachRuns` 投影为 `task.priority`；看板 `taskTopPriority` / 列表 / 技术包导出口三处同规则。
+  - **G12** `tasks.update()` / `remove()` 包**单事务**（styles UPDATE → tasks UPDATE → 操作日志 → 版本快照），杜绝「styles 已改而 tasks 未改」的部分写入；快照 capture 失败在事务内本地消化。
+  - **G13** 删掉启动期 `recalcAllTaskStatus()` 调用，款级状态归位折进 v21（纯 SQL，与 `syncTaskStatus` 同口径）；运行时由批次写路径增量维护（已逐一核对 `sample_runs.status` 全部写入方），函数本体保留。
+  - **G14 砍 IPC 双通道**：`src/api/client.js` 回归纯 HTTP fetch（删 26 条 IPC 映射，115→43 行）；`preload.js` / `main.js` 的 IPC 注册**按用户决定原样保留**，仅前端不再调用。
+  - **G15** 抽 `src/utils/techPackModel.js`（379 行 / 27 导出）作为 Excel/PDF 导出的共享单一来源（`exportTechPack.js` 418→327、`exportTechPackPdf.js` 401→321）。
+- **本批修掉的用户可见缺陷**：① 版本详情每次打开都多出假的「优先级：中 → X」行（快照恒写已废止词表值 `'中'`，与 attachRuns 投影值恒不等）；② PDF 尺寸表标题基码与自身备注口径不一致（四处统一走 `deriveBaseSize`）。
+- **验证入口（新增，换机后可直接跑）**：`npm test`（= 单测 + 回滚 + 上传安全）、`npm run lint`、`npm run doc:check`、`npm run build`。
+- **`main` 未动**：两批全部落在 `feature/sample-run-model`（用户明确「当前版本没完善前不推 main」）。
+- **新增踩坑（详见 HANDBOOK §6.5）**：① 同一文件同一回合发多条 `Edit` 只有最后一条落盘；② AI 侧 bash 的 PATH 缺 PortableGit `usr/bin` 会导致 `ls/head/wc` 与 `npm run` 全挂。

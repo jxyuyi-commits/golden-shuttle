@@ -775,3 +775,15 @@ npm run dev:all
 - **关键判定**：看板卡片/SmartSelect/DatePicker/视图下拉走 B 案（嵌套交互禁令或 `.ss-display > span` 元素限定选择器）；tr/td 一律不改标签（11 处元素限定选择器）。
 - **验证（主理人独立复跑）**：grep 残留=6（与清单一致）；eslint 0 / test 95+20+43 全绿 / build 通过；**U17 回归 11/11 + U14 专项 19/19**（真 Chrome CDP）；焦点环截图 `.uiprobe/u14-focus-card.png` 可见、看板零漂移。
 - **遗留（待办池）**：① 侧栏遮罩的键盘关闭路径（Esc 关侧栏）属新行为，待拍板后另做；② 基线说明——改造在基线截图之前已落盘，零漂移以"逐项计算样式断言"替代像素 diff（更精准定位 UA 注入类漂移）。
+
+---
+
+## 批4 U15 统一空态 + 骨架屏 + 筛选无结果态（2026-09-14 深夜）
+
+- **交付**：新增 `src/components/common/EmptyState.jsx`（icon/title/hint/action/compact；基底复用 `.empty-state-v4`/`.empty-icon`，compact 24px/默认 40px）+ `src/components/common/Skeleton.jsx`（list/table/lines 三变体，rows 1~12 截断末行收窄，role=status + aria-busy，shimmer 令牌化 + prefers-reduced-motion 降级）。
+- **替换**：13 处空态 → 15 个 EmptyState 实例（DrawingLibrary 真空态/筛选无结果双分支——全项目唯一筛选无结果场景；MeasurementTemplateManager 双锚点含 action「立即添加第一个」；SampleRunList×2/DesignerDashboard/DetailView/MeasurementModal/OperationLogsModal/PdfPickerModal/SizeTable td 内 compact 等）+ 3 处「加载中…」→ Skeleton（BomEditor table×4 / ProcessEditor table×5 / VersionHistoryModal list×4）。
+- **明确不动**：exportTechPack/Pdf 的导出文件内"（暂无XX数据）"、DetailView toast 消息、SmartSelect `.ss-empty`。
+- **实现细节**：ESLint 核心规则不识别 JSX 使用——icon 参数解构重命名（`icon: Icon`）会误报 unused（varsIgnorePattern 不覆盖 args），改函数体内 `const Icon = icon || Inbox`。
+- **验证（主理人独立复跑）**：eslint 0 / test 全绿 / build 通过（工程师三道门）+ 主理人复核 eslint 关键 6 文件 + npm test exit 0；**uiprobe-u15 真实 Chrome CDP 9/9**（空库态/筛选无结果态/Skeleton 延迟路由 8 占位块/零漂移断言/深浅动效开关/Esc 回归/零 console error）；OperationLogsModal 空态因库中已有日志不可达，软性降级验证（弹窗渲染正常）——如需强验证须 mock 或清库，暂接受。
+- **Git 提交**：`591fdc5`（已推送 feature/sample-run-model；commit 后 ref 丢失缺陷再现，手动重建分支 ref + 远端跟踪 ref 后以显式 refspec 推送）。
+- **下一单元**：U16 保存指示器 → U18-U22 性能与响应式。

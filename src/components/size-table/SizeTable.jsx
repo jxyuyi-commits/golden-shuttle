@@ -69,8 +69,8 @@ const SizeRow = React.memo(({
       </td>
       <td className="sticky-col sticky-col-2">
         <div className="sort-actions">
-          <button className="btn-sort" onClick={() => onMoveRow(i, -1)} disabled={i === 0}><ChevronUp size={13} /></button>
-          <button className="btn-sort" onClick={() => onMoveRow(i, 1)} disabled={isLast}><ChevronDown size={13} /></button>
+          <button className="btn--icon btn--xs btn--sort" onClick={() => onMoveRow(i, -1)} disabled={i === 0}><ChevronUp size={13} /></button>
+          <button className="btn--icon btn--xs btn--sort" onClick={() => onMoveRow(i, 1)} disabled={isLast}><ChevronDown size={13} /></button>
         </div>
       </td>
       <td className="sticky-col sticky-col-3">
@@ -165,7 +165,7 @@ const SizeRow = React.memo(({
         placeholder="0.5" /></td>
       <td><input value={row.note || ''} onChange={e => onUpdateRow(i, 'note', e.target.value)} /></td>
       <td>
-        <button className="icon-btn-danger" title="删除该部位" onClick={() => onRequestDelete(i)}><Trash2 size={14} /></button>
+        <button className="btn--icon-danger" title="删除该部位" onClick={() => onRequestDelete(i)}><Trash2 size={14} /></button>
       </td>
     </tr>
   );
@@ -345,20 +345,20 @@ const SizeTable = ({
             <span>拓码模式</span>
           </div>
           {selectedIndices.length > 0 && (
-            <button className="btn-ghost btn-del-ghost" style={{ borderColor: 'var(--border-weak)' }} onClick={() => setConfirmBatch(true)}>
+            <button className="btn--ghost btn--ghost-danger" style={{ borderColor: 'var(--border-weak)' }} onClick={() => setConfirmBatch(true)}>
               批量删除 ({selectedIndices.length})
             </button>
           )}
-          <button className="btn-ghost" onClick={() => setConfirmClear(true)}>清空</button>
+          <button className="btn--ghost" onClick={() => setConfirmClear(true)}>清空</button>
           <button
-            className={`btn-mode-toggle ${isActualMode ? 'active' : ''}`}
+            className={`btn--ghost btn--toggle ${isActualMode ? 'active' : ''}`}
             onClick={() => setIsActualMode(!isActualMode)}
             title={isActualMode ? '退出成衣尺寸核对模式，返回指令/拓码维护' : '进入成衣尺寸核对模式，录入成衣实测尺寸并与指令值对比'}
           >
             {isActualMode ? <CheckCircle2 size={15} /> : <Calculator size={15} />}
             成衣尺寸核对
           </button>
-          <button className="btn-blue" onClick={() => setIsModalOpen(true)}>
+          <button className="btn--primary" onClick={() => setIsModalOpen(true)}>
             <Plus size={15} /> 从预设加入
           </button>
         </div>
@@ -374,7 +374,7 @@ const SizeTable = ({
             </span>
           </span>
           <button
-            className="btn-ghost-sm"
+            className="btn--ghost btn--sm"
             style={{ marginLeft: 'auto', background: 'rgba(244, 63, 94, 0.1)', color: 'var(--color-rose-400)', border: 'none', padding: '4px 10px' }}
             onClick={() => addPoints(missingParts)}
           >
@@ -402,7 +402,7 @@ const SizeTable = ({
           {compareRun && onImportCompare && (
             <button
               type="button"
-              className="btn-ghost-sm"
+              className="btn--ghost btn--sm"
               style={{ color: 'var(--accent)', border: '1px solid var(--accent-soft-2)', padding: '4px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, marginLeft: 'auto' }}
               onClick={() => setConfirmImportRun(compareRun)}
               title="将对比版次的尺寸数据整体导入到当前版次（已在「比对值」列核对数据与差异后再决定）"
@@ -526,7 +526,7 @@ const SizeTable = ({
             onBlur={e => setQuickAdd({ ...quickAdd, tolerance: autoSign(e.target.value) })}
           />
           <button
-            className="btn-ghost"
+            className="btn--ghost"
             style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}
             onClick={() => {
               if (quickAdd.name.trim()) {
@@ -542,7 +542,7 @@ const SizeTable = ({
             <Plus size={14} /> 添加
           </button>
           <button
-            className="btn-blue"
+            className="btn--primary"
             style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}
             title="一键将该部位及其规则存入系统预设库"
             onClick={async () => {

@@ -41,7 +41,7 @@ const ExportButton = ({ label, title, confirmText, fileName, onExport, style, di
   return (
     <>
       <button
-        className="btn-icon-sm"
+        className="btn--icon btn--xs"
         onClick={() => setShowConfirm(true)}
         disabled={busy || disabled}
         title={title}
@@ -79,10 +79,10 @@ const ExportButton = ({ label, title, confirmText, fileName, onExport, style, di
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
-              <button className="btn-ghost" onClick={() => setShowConfirm(false)} disabled={busy} style={{ padding: '8px 18px', borderRadius: 8 }}>
+              <button className="btn--ghost" onClick={() => setShowConfirm(false)} disabled={busy} style={{ padding: '8px 18px', borderRadius: 8 }}>
                 取消
               </button>
-              <button className="btn-blue" onClick={handleConfirm} disabled={busy} style={{ padding: '8px 18px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button className="btn--primary" onClick={handleConfirm} disabled={busy} style={{ padding: '8px 18px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                 {busy && <Loader2 size={14} className="spin" />} {busy ? '导出中…' : '确认导出'}
               </button>
             </div>

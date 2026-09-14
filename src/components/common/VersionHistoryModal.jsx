@@ -100,7 +100,7 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
         <div className="modal-head">
           {selected ? (
             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <button className="btn-icon" onClick={() => setSelected(null)} title="返回列表"><ArrowLeft size={18} /></button>
+              <button className="btn--icon" onClick={() => setSelected(null)} title="返回列表"><ArrowLeft size={18} /></button>
               <History size={16} color="var(--accent)" /> 历史版本 V{selected.version_no}
             </span>
           ) : (
@@ -108,7 +108,7 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
               <History size={16} color="var(--accent)" /> 历史版本 <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>{task.style_no} {task.title}</span>
             </span>
           )}
-          <button className="btn-icon" onClick={onClose}><X size={20} /></button>
+          <button className="btn--icon" onClick={onClose}><X size={20} /></button>
         </div>
 
         {!selected && (
@@ -141,7 +141,7 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
           <div className="version-body">
             <div className="version-detail-head">
               <span style={{ color: 'var(--text-2)', fontSize: 12 }}>记录于 {fmtTime(selected.created_at)} · {selected.summary}</span>
-              <button className="btn-danger" onClick={() => setConfirmRollback(true)} disabled={busy}>
+              <button className="btn--danger" onClick={() => setConfirmRollback(true)} disabled={busy}>
                 <RotateCcw size={14} /> 回滚到此版本
               </button>
             </div>

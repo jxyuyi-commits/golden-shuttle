@@ -41,7 +41,7 @@ const OperationLogsModal = ({ onClose }) => {
             <span style={{ fontSize: 15, fontWeight: 800 }}>操作日志</span>
             <span style={{ fontSize: 11, color: 'var(--text-3)' }}>关键动作 · 最近 {logs.length} 条</span>
           </div>
-          <button className="btn-icon" onClick={onClose}><X size={18} /></button>
+          <button className="btn--icon" onClick={onClose}><X size={18} /></button>
         </div>
         <div style={{ flex: 1, overflow: 'auto', padding: '8px 0', minHeight: 160 }}>
           {loading && <div style={{ padding: 28, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>}

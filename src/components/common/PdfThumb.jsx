@@ -162,7 +162,7 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
               />
             )}
             <button
-              className="btn-icon"
+              className="btn--icon"
               style={{ position: 'absolute', top: 0, right: 0, background: 'rgba(0,0,0,0.5)', color: 'var(--text)', borderRadius: '50%', padding: '8px', transform: 'translate(50%, -50%)', cursor: 'pointer' }}
               onClick={(e) => { e.stopPropagation(); setEnlarged(false); }}
             >
@@ -173,7 +173,7 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
                 {enlargeActionItems.map(item => (
                   <button
                     key={item.label}
-                    className="pdf-enlarge-btn"
+                    className="btn--ghost btn--pdf-lg"
                     onClick={(e) => { e.stopPropagation(); setEnlarged(false); if (item.onClick) item.onClick(); }}
                   >
                     {item.icon}

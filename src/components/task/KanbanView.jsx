@@ -259,7 +259,7 @@ const KanbanView = ({
           <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="var(--accent)" /></span><span>PatternMaster Pro</span>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <button className="btn-blue" onClick={onNewTask}>
+          <button className="btn--primary" onClick={onNewTask}>
             <Plus size={16} /> 新建打样单
           </button>
         </div>
@@ -341,7 +341,7 @@ const KanbanView = ({
 
             <div style={{ display: 'flex', background: 'var(--bg-hover-2)', borderRadius: 8, padding: 2 }}>
               <button
-                className={`btn-icon-sm ${displayMode === 'kanban' ? 'active-mode' : ''}`}
+                className={`btn--icon btn--xs ${displayMode === 'kanban' ? 'active-mode' : ''}`}
                 onClick={() => setDisplayMode('kanban')}
                 title="看板视图"
                 style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'kanban' ? 'var(--accent)' : 'transparent', color: displayMode === 'kanban' ? 'var(--accent-text)' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
@@ -349,7 +349,7 @@ const KanbanView = ({
                 <Layout size={16} />
               </button>
               <button
-                className={`btn-icon-sm ${displayMode === 'list' ? 'active-mode' : ''}`}
+                className={`btn--icon btn--xs ${displayMode === 'list' ? 'active-mode' : ''}`}
                 onClick={() => setDisplayMode('list')}
                 title="列表视图"
                 style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'list' ? 'var(--accent)' : 'transparent', color: displayMode === 'list' ? 'var(--accent-text)' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
@@ -393,7 +393,7 @@ const KanbanView = ({
                 {/* 字段配置下拉 */}
                 <div style={{ position: 'relative', zIndex: 2000 }}>
                   <div
-                    className="op-btn"
+                    className="btn--ghost btn--op"
                     onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'columns' ? null : 'columns'); }}
                     title="自定义显示列"
                   >
@@ -570,7 +570,7 @@ const KanbanView = ({
                               <PdfThumb pdfUrl={task.pdf_url} objectFit="contain" />
                             </div>
                           ) : col.id === 'action' ? (
-                            <button className="btn-blue-sm" style={{ padding: '6px 16px' }} onClick={(e) => { e.stopPropagation(); onTaskClick(task); }}>详情</button>
+                            <button className="btn--primary btn--sm" style={{ padding: '6px 16px' }} onClick={(e) => { e.stopPropagation(); onTaskClick(task); }}>详情</button>
                           ) : col.id === 'priority' ? (
                             <span className={`prio-${taskTopPriority(task) === 'S' ? 'high' : taskTopPriority(task) === 'A' ? 'mid' : 'low'}`} style={{ fontSize: 11, fontWeight: 700 }}>
                               {taskTopPriority(task)}

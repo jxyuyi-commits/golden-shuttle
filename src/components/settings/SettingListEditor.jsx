@@ -45,7 +45,7 @@ const SettingListEditor = ({ label, items, onChange }) => {
           ) : (
             <span key={item} className="tag-mini" onDoubleClick={() => { setEditIdx(idx); setEditVal(item); }} title="双击编辑" style={{ cursor: 'pointer' }}>
               {item}
-              <button className="tag-del" onClick={() => onChange(items.filter(i => i !== item))}><X size={10} /></button>
+              <button className="btn--icon btn--xs btn--ghost-danger" onClick={() => onChange(items.filter(i => i !== item))}><X size={10} /></button>
             </span>
           )
         ))}
@@ -54,7 +54,7 @@ const SettingListEditor = ({ label, items, onChange }) => {
       <div className="add-row-mini">
         <input value={input} onChange={e => setInput(e.target.value)} placeholder={`添加${label.replace('库', '')}`}
           onKeyDown={e => e.key === 'Enter' && add()} />
-        <button className="btn-add-mini" onClick={add}><Plus size={14} /></button>
+        <button className="btn--primary btn--mini" onClick={add}><Plus size={14} /></button>
       </div>
     </div>
   );

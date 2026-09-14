@@ -66,7 +66,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
         <div className="sidebar-title">品类目录</div>
         <div className="sidebar-add">
           <input placeholder="输入新分类..." value={newCatName} onChange={e => setNewCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} />
-          <button className="btn-add-circle" onClick={addCategory} title="添加分类"><Plus size={14} /></button>
+          <button className="btn--primary btn--circle" onClick={addCategory} title="添加分类"><Plus size={14} /></button>
         </div>
         <div className="sidebar-list custom-scrollbar">
           {categories.map((c, i) => (
@@ -84,7 +84,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
                   <span className="cat-name" onDoubleClick={() => setEditingCatIndex(i)}>{c}</span>
                 )}
               </div>
-              <button className="del-btn-mini" onClick={ev => { ev.stopPropagation(); setConfirmCatIdx(i); }}><Trash2 size={12} /></button>
+              <button className="btn--icon btn--xs btn--reveal" onClick={ev => { ev.stopPropagation(); setConfirmCatIdx(i); }}><Trash2 size={12} /></button>
             </div>
           ))}
           {categories.length === 0 && <div className="empty-tip">暂无分类</div>}
@@ -96,7 +96,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
             <div className="active-cat-badge">{activeCat || '未选择'}</div>
             <span className="header-title">部位预设明细</span>
           </div>
-          <button className="btn-blue btn-sm btn-glow" disabled={!activeCat} onClick={() => setEditing({ name: '', method: '', tolerance: '', grading_rule: '', sort_order: 0 })}>
+          <button className="btn--primary btn--sm" disabled={!activeCat} onClick={() => setEditing({ name: '', method: '', tolerance: '', grading_rule: '', sort_order: 0 })}>
             <Plus size={14} /> 新增部位
           </button>
         </div>
@@ -125,8 +125,8 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
                   <td><span className="tpl-tag-blue" style={{ background: 'var(--accent-soft)', borderColor: 'var(--accent-soft)' }}>{t.grading_rule || '-'}</span></td>
                   <td>
                     <div className="row-ops-v4">
-                      <button className="icon-btn" onClick={() => setEditing({ ...t })} title="编辑"><Edit2 size={14} /></button>
-                      <button className="icon-btn-danger" onClick={() => setConfirmTplId(t.id)} title="删除"><Trash2 size={14} /></button>
+                      <button className="btn--icon btn--md" onClick={() => setEditing({ ...t })} title="编辑"><Edit2 size={14} /></button>
+                      <button className="btn--icon-danger" onClick={() => setConfirmTplId(t.id)} title="删除"><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
@@ -137,7 +137,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
                     <div className="empty-state-v4">
                       <div className="empty-icon"><FileText size={40} /></div>
                       <p>当前分类下暂无预设部位</p>
-                      <button className="btn-ghost-sm" onClick={() => setEditing({ name: '', method: '', tolerance: '', grading_rule: '', sort_order: 0 })}>立即添加第一个</button>
+                      <button className="btn--ghost btn--sm" onClick={() => setEditing({ name: '', method: '', tolerance: '', grading_rule: '', sort_order: 0 })}>立即添加第一个</button>
                     </div>
                   </td>
                 </tr>
@@ -188,7 +188,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
             </div>
 
             <div className="modal-foot">
-              <button className="btn-blue" onClick={saveTemplate} disabled={!editing.name.trim()}>保存</button>
+              <button className="btn--primary" onClick={saveTemplate} disabled={!editing.name.trim()}>保存</button>
             </div>
           </div>
         </div>

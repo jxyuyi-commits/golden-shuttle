@@ -1,0 +1,277 @@
+/* ==========================================================================
+   buttons.css —— 按钮系统单一来源（U9 类名校名收敛，2026-09-14）
+   层序：tokens(theme) → base → components → buttons → views
+   3 基类：
+     .btn--primary  实心强调（原 .btn-blue / .btn-blue-sm / .btn-add-mini / .btn-add-circle）
+     .btn--ghost    描边幽灵（原 .btn-ghost / .btn-ghost-sm / .btn-del-ghost / .btn-mode-toggle / .op-btn）
+     .btn--icon     图标按钮（原 .btn-icon / .btn-icon-xs / .btn-icon-sm / .icon-btn / .icon-btn-danger / .del-btn / .btn-sort）
+   修饰符（可叠加）：
+     .btn--sm .btn--lg .btn--xs .btn--mini .btn--md .btn--circle
+     .btn--block .btn--dashed .btn--accent
+     .btn--danger（实心危险，原 .btn-danger） .btn--ghost-danger（幽灵危险，原 .btn-del-ghost）
+     .btn--toggle（模式切换，原 .btn-mode-toggle） .btn--reveal（悬停显隐，原 .del-btn）
+     .btn--active（选中，原 .dp-act.primary） .btn--pdf .btn--pdf-lg（PDF 操作，原 .pdf-action-btn / .pdf-enlarge-btn）
+   旧类名保留为「别名」（grouped selector），零视觉漂移；JSX 已逐步迁移到新名。
+   ========================================================================== */
+
+/* ============ 基类：实心强调 .btn--primary ============ */
+.btn--primary,
+.btn-blue,
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent-btn); color: var(--accent-btn-text);
+  font-weight: 800; border: none; padding: 10px 22px;
+  border-radius: 10px; cursor: pointer; font-size: 14px;
+  transition: 0.2s;
+}
+.btn--primary:hover, .btn-blue:hover { opacity: 0.9; }
+.btn--primary:disabled, .btn-blue:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn--primary.btn--sm,
+.btn-blue-sm {
+  background: var(--accent-btn); color: var(--accent-btn-text); border: none;
+  padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: 0.2s;
+}
+.btn--primary.btn--sm:hover, .btn-blue-sm:hover { transform: scale(1.05); }
+
+.btn--primary.btn--mini,
+.btn-add-mini {
+  background: var(--accent-btn); color: var(--accent-btn-text); border: none;
+  border-radius: 6px; padding: 0 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.btn--primary.btn--circle,
+.btn-add-circle {
+  width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%;
+  background: var(--accent-btn); color: var(--accent-btn-text); border: none;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.btn--primary.btn--circle:hover, .btn-add-circle:hover { transform: scale(1.1); }
+
+/* 批量卡片：实心虚线块（原 .run-add-btn） */
+.btn--primary.btn--block.btn--dashed,
+.run-add-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px; border: 1px dashed var(--accent-soft-2); border-radius: 10px;
+  background: var(--accent-soft); color: var(--accent); font-size: 13px;
+  cursor: pointer; width: 100%;
+}
+.btn--primary.btn--block.btn--dashed:hover, .run-add-btn:hover { background: var(--accent-soft-2); }
+
+/* ============ 基类：描边幽灵 .btn--ghost ============ */
+.btn--ghost,
+.btn-ghost {
+  background: var(--bg-hover); color: var(--text); font-weight: 600;
+  border: 1px solid var(--border); padding: 10px 20px;
+  border-radius: var(--radius-lg); cursor: pointer; font-size: var(--fs-lg);
+}
+
+.btn--ghost.btn--sm,
+.btn-ghost-sm {
+  display: flex; align-items: center; gap: 6px;
+  font-size: var(--fs-sm); color: var(--text-2);
+  background: none; border: none; cursor: pointer; padding: 6px 0;
+}
+
+/* 强调色幽灵（原 .run-material-btn / .run-linked-manage） */
+.btn--ghost.btn--sm.btn--accent,
+.run-material-btn,
+.run-linked-manage {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 6px; font-size: 12px;
+  color: var(--accent); background: var(--accent-soft);
+  border: 1px solid var(--accent-soft-2); cursor: pointer; transition: all 0.15s;
+}
+.btn--ghost.btn--sm.btn--accent:hover,
+.run-material-btn:hover,
+.run-linked-manage:hover { background: var(--accent-soft-2); }
+
+/* 操作按钮（原 .op-btn） */
+.btn--ghost.btn--op,
+.op-btn {
+  background: var(--border-weak); border: 1px solid var(--border);
+  color: var(--text-2); padding: 6px; border-radius: var(--radius-md);
+  cursor: pointer; transition: 0.2s; display: flex;
+}
+.btn--ghost.btn--op:hover,
+.op-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.btn--ghost.btn--op.btn--ghost-danger:hover,
+.op-btn.delete:hover { background: rgba(244,63,94,0.1); color: #f43f5e; border-color: #f43f5e; }
+
+/* 模式切换（原 .btn-mode-toggle） */
+.btn--ghost.btn--toggle,
+.btn-mode-toggle {
+  display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+  border-radius: var(--radius-sm); font-size: var(--fs-md);
+  background: var(--bg-hover); border: 1px solid var(--border);
+  color: var(--text-2); cursor: pointer;
+}
+.btn--ghost.btn--toggle.active,
+.btn-mode-toggle.active { background: var(--accent-soft-2); border-color: var(--accent); color: var(--accent); }
+
+/* 上传 PDF（原 .btn-upload-pdf） */
+.btn--ghost.btn--block.btn--dashed,
+.btn-upload-pdf {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 11px;
+  border: 1px dashed var(--border-strong); border-radius: 10px;
+  color: var(--text-3); cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s;
+}
+.btn--ghost.btn--block.btn--dashed:hover,
+.btn-upload-pdf:hover { border-color: var(--accent); color: var(--accent); }
+
+/* 幽灵危险（原 .btn-del-ghost） */
+.btn--ghost-danger,
+.btn-del-ghost { color: var(--text-2); }
+.btn--ghost-danger:hover, .btn--ghost-danger:focus-visible,
+.btn-del-ghost:hover, .btn-del-ghost:focus-visible {
+  color: #ef4444; background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25);
+}
+
+/* ============ 基类：图标 .btn--icon ============ */
+.btn--icon,
+.btn-icon {
+  background: none; border: none; color: var(--text-3);
+  cursor: pointer; padding: 6px; border-radius: var(--radius-md); display: flex;
+}
+.btn--icon:hover, .btn-icon:hover { background: var(--bg-hover); color: var(--text); }
+
+/* 标准 28×28 图标按钮（原 .icon-btn / .dp-nav） */
+.btn--icon.btn--md,
+.icon-btn,
+.dp-nav {
+  background: transparent; border: none; color: var(--text-3); cursor: pointer;
+  width: 28px; height: 28px; border-radius: var(--radius-md);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex: none;
+}
+.btn--icon.btn--md:hover, .icon-btn:hover, .dp-nav:hover { color: var(--accent); background: var(--accent-soft); }
+
+/* 危险图标按钮（原 .icon-btn-danger / .run-del-btn） */
+.btn--icon-danger,
+.icon-btn-danger,
+.run-del-btn {
+  background: transparent; border: none; color: var(--text-2); cursor: pointer;
+  width: 28px; height: 28px; border-radius: var(--radius-md);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex: none;
+}
+.btn--icon-danger:hover, .btn--icon-danger:focus-visible,
+.icon-btn-danger:hover, .icon-btn-danger:focus-visible,
+.run-del-btn:hover { color: #ef4444; background: rgba(239,68,68,0.14); }
+
+/* 超小图标（原 .btn-icon-xs / .btn-icon-sm） */
+.btn--icon.btn--xs,
+.btn-icon-xs,
+.btn-icon-sm {
+  background: var(--border-weak); border: none; color: var(--text-2);
+  padding: 4px; border-radius: var(--radius-sm); cursor: pointer; display: flex;
+}
+.btn--icon.btn--xs:hover, .btn-icon-xs:hover, .btn-icon-sm:hover { background: var(--border-strong); color: var(--text); }
+
+/* 排序小按钮（原 .btn-sort） */
+.btn--icon.btn--xs.btn--sort,
+.btn-sort {
+  background: none; border: none; color: var(--text-4); cursor: pointer;
+  padding: 1px 4px; border-radius: var(--radius-sm); line-height: 1; transition: color 0.15s;
+}
+.btn--icon.btn--xs.btn--sort:hover:not(:disabled),
+.btn-sort:hover:not(:disabled) { color: var(--accent); }
+.btn--icon.btn--xs.btn--sort:disabled,
+.btn-sort:disabled { opacity: 0.2; cursor: default; }
+
+/* 悬停显隐删除（原 .del-btn / .del-btn-mini） */
+.btn--icon.btn--reveal,
+.del-btn {
+  background: none; border: none; color: var(--text-4); cursor: pointer;
+  padding: 2px; border-radius: var(--radius-sm); opacity: 0; transition: 0.15s; display: flex;
+}
+.btn--icon.btn--reveal:hover, .del-btn:hover { color: #ef4444; }
+
+.btn--icon.btn--xs.btn--reveal,
+.del-btn-mini {
+  opacity: 0.8; color: var(--text-2); background: none; border: none;
+  cursor: pointer; padding: 4px; transition: 0.2s; display: flex;
+}
+.btn--icon.btn--xs.btn--reveal:hover, .del-btn-mini:hover { color: #f43f5e; }
+
+/* 图纸删除浮层（原 .drawing-del；旧 JSX 叠加 icon-btn-danger 会覆盖其深色底，故收敛后只保留本类） */
+.btn--icon.btn--circle.btn--danger-dark,
+.drawing-del {
+  background: rgba(0,0,0,0.55); border: none; color: #fca5a5;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: 0.75; transition: opacity 0.2s;
+}
+.btn--icon.btn--circle.btn--danger-dark:hover, .drawing-del:hover {
+  background: var(--color-danger-soft); color: var(--color-danger-fg);
+}
+
+/* ============ 实心危险 .btn--danger（原 .btn-danger） ============ */
+.btn--danger,
+.btn-danger {
+  background: var(--color-danger-strong); border: none; color: var(--color-danger-fg);
+  padding: 7px 14px; border-radius: var(--radius-md); font-size: var(--fs-md);
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;
+}
+.btn--danger:hover, .btn-danger:hover { background: var(--color-danger-deep); }
+.btn--danger:disabled, .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ============ PDF 操作（原 .pdf-action-btn / .pdf-enlarge-btn） ============ */
+.btn--ghost.btn--sm.btn--pdf,
+.pdf-action-btn {
+  height: 30px; padding: 0 10px; display: flex; align-items: center; gap: 5px;
+  background: var(--bg-elev-2); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md); color: var(--text); cursor: pointer;
+  transition: 0.15s; font-size: var(--fs-xs); font-weight: 600; white-space: nowrap;
+}
+.btn--ghost.btn--sm.btn--pdf:hover, .pdf-action-btn:hover {
+  background: var(--accent-soft-2); color: var(--accent); border-color: var(--accent-soft-2);
+}
+.btn--ghost.btn--pdf-lg,
+.pdf-enlarge-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 18px;
+  background: var(--bg-elev-2); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg); color: var(--text); cursor: pointer;
+  font-size: var(--fs-md); font-weight: 600; transition: 0.15s;
+}
+.btn--ghost.btn--pdf-lg:hover, .pdf-enlarge-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft-2); }
+
+/* ============ 日期选择器操作（原 .dp-act） ============ */
+.btn--ghost.btn--block,
+.dp-act {
+  flex: 1; background: var(--bg-hover); border: none; color: var(--text-2);
+  padding: 7px 0; border-radius: var(--radius-md); font-size: 12.5px;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn--ghost.btn--block:hover, .dp-act:hover { background: var(--bg-hover-2); color: var(--text); }
+.btn--ghost.btn--block.btn--active,
+.dp-act.primary { background: var(--accent-soft); color: var(--accent); }
+.btn--ghost.btn--block.btn--active:hover,
+.dp-act.primary:hover { background: var(--accent-soft-2); }
+
+/* ============ 标签删除 / 人员角色（原 .tag-del / .people-*） ============ */
+.btn--icon.btn--xs.btn--ghost-danger,
+.tag-del {
+  background: none; border: none; color: inherit; cursor: pointer;
+  opacity: 0.5; display: flex;
+}
+.btn--icon.btn--xs.btn--ghost-danger:hover, .tag-del:hover { opacity: 1; color: #ef4444; }
+
+.btn--ghost.btn--xs.btn--dashed,
+.people-add-role {
+  background: transparent; border: 1px dashed var(--border-strong);
+  color: var(--text-3); font-size: 10.5px; border-radius: 6px; padding: 2px 6px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 2px;
+}
+.btn--ghost.btn--xs.btn--dashed:hover, .people-add-role:hover { color: var(--accent); border-color: var(--accent-soft-2); }
+
+.btn--ghost.btn--xs,
+.people-suggest-btn {
+  background: transparent; border: none; color: var(--text-4); font-size: 10px;
+  cursor: pointer; padding: 1px 3px; border-radius: 4px;
+}
+.btn--ghost.btn--xs:hover, .people-suggest-btn:hover { color: var(--accent); background: var(--accent-soft); }

@@ -275,7 +275,7 @@ const App = () => {
           <span>加载打样数据失败：{tasksError.message || '未知错误'}（可能是本地服务未启动或数据库被占用）</span>
           <button
             type="button"
-            className="btn-ghost-sm"
+            className="btn--ghost btn--sm"
             onClick={loadTasks}
             style={{ marginLeft: 'auto', border: '1px solid var(--border-weak)', borderRadius: 8, padding: '4px 12px', color: 'var(--accent)', cursor: 'pointer', background: 'transparent' }}
           >

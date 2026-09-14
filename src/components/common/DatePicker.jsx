@@ -66,9 +66,9 @@ const DatePicker = ({ value, onChange, className, placeholder = '年/月/日', w
       {open && (
         <div className="dp-cal glass">
           <div className="dp-head">
-            <button type="button" className="dp-nav" onClick={prevMonth} title="上个月"><ChevronLeft size={16} /></button>
+            <button type="button" className="btn--icon btn--md" onClick={prevMonth} title="上个月"><ChevronLeft size={16} /></button>
             <span className="dp-title">{y}年 {m + 1}月</span>
-            <button type="button" className="dp-nav" onClick={nextMonth} title="下个月"><ChevronRight size={16} /></button>
+            <button type="button" className="btn--icon btn--md" onClick={nextMonth} title="下个月"><ChevronRight size={16} /></button>
           </div>
           <div className="dp-week">
             {WEEK_ZH.map(w => <span key={w}>{w}</span>)}
@@ -86,8 +86,8 @@ const DatePicker = ({ value, onChange, className, placeholder = '年/月/日', w
             ))}
           </div>
           <div className="dp-foot">
-            <button type="button" className="dp-act" onClick={() => { onChange(''); setOpen(false); }}>清除</button>
-            <button type="button" className="dp-act primary" onClick={() => { onChange(fmt(today.getFullYear(), today.getMonth(), today.getDate())); setOpen(false); }}>今天</button>
+            <button type="button" className="btn--ghost btn--block" onClick={() => { onChange(''); setOpen(false); }}>清除</button>
+            <button type="button" className="btn--ghost btn--block btn--active" onClick={() => { onChange(fmt(today.getFullYear(), today.getMonth(), today.getDate())); setOpen(false); }}>今天</button>
           </div>
         </div>
       )}

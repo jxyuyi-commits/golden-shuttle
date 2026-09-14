@@ -120,7 +120,7 @@ const PeopleEditor = ({ people, onChange, onRenamed }) => {
               {p.roles.map(r => (
                 <span key={r} className="tag-mini" style={{ background: roleColor(r) }}>
                   {r}
-                  <button className="tag-del" onClick={() => removeRole(p, r)}><X size={10} /></button>
+                  <button className="btn--icon btn--xs btn--ghost-danger" onClick={() => removeRole(p, r)}><X size={10} /></button>
                 </span>
               ))}
               {roleInputFor === idx ? (
@@ -137,26 +137,26 @@ const PeopleEditor = ({ people, onChange, onRenamed }) => {
                   onBlur={() => { if (roleInput.trim()) addRole(p, roleInput); else { setRoleInputFor(null); setRoleInput(''); } }}
                 />
               ) : (
-                <button className="people-add-role" title="添加角色" onClick={() => { setRoleInputFor(idx); setRoleInput(''); }}>
+                <button className="btn--ghost btn--xs btn--dashed" title="添加角色" onClick={() => { setRoleInputFor(idx); setRoleInput(''); }}>
                   <Plus size={11} /> 角色
                 </button>
               )}
               {roleInputFor !== idx && suggestRoles(p).length > 0 && (
                 <span className="people-suggest">
                   {suggestRoles(p).map(r => (
-                    <button key={r} className="people-suggest-btn" onClick={() => addRole(p, r)}>+{r}</button>
+                    <button key={r} className="btn--ghost btn--xs" onClick={() => addRole(p, r)}>+{r}</button>
                   ))}
                 </span>
               )}
             </span>
-            <button className="tag-del" title="移除人员" onClick={() => setConfirmRemove(p.name)}><X size={11} /></button>
+            <button className="btn--icon btn--xs btn--ghost-danger" title="移除人员" onClick={() => setConfirmRemove(p.name)}><X size={11} /></button>
           </div>
         ))}
       </div>
       <div className="add-row-mini">
         <input value={input} onChange={e => setInput(e.target.value)} placeholder="添加人员姓名"
           onKeyDown={e => e.key === 'Enter' && addPerson()} />
-        <button className="btn-add-mini" onClick={addPerson}><Plus size={14} /></button>
+        <button className="btn--primary btn--mini" onClick={addPerson}><Plus size={14} /></button>
       </div>
 
       {confirmRemove && (

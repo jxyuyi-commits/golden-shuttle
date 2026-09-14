@@ -80,7 +80,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
       <form className="modal glass" onSubmit={submit} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
           <span>新建打样需求单</span>
-          <button type="button" className="btn-icon" onClick={onClose}><X size={20} /></button>
+          <button type="button" className="btn--icon" onClick={onClose}><X size={20} /></button>
         </div>
 
         <div className="field">
@@ -100,7 +100,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
                   <span>版次：{t.sample_type || '未填'} · 状态：{STATUS_CN[t.status] || t.status || '—'} · {t.size || '—'}码</span>
                   <button
                     type="button"
-                    className="btn-ghost"
+                    className="btn--ghost"
                     style={{ padding: '3px 10px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                     onClick={() => onOpenExisting && onOpenExisting(t)}
                   >
@@ -112,7 +112,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
             {!forceCreate ? (
               <button
                 type="button"
-                className="btn-ghost"
+                className="btn--ghost"
                 style={{ fontSize: 11, width: '100%', padding: '6px' }}
                 onClick={() => setForceCreate(true)}
               >
@@ -163,10 +163,10 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
         </div>
 
         <div className="modal-foot">
-          <button type="button" className="btn-ghost" onClick={onClose}>取消</button>
+          <button type="button" className="btn--ghost" onClick={onClose}>取消</button>
           <button
             type="submit"
-            className="btn-blue"
+            className="btn--primary"
             disabled={existingTasks.length > 0 && !forceCreate}
             style={{ opacity: (existingTasks.length > 0 && !forceCreate) ? 0.45 : 1, cursor: (existingTasks.length > 0 && !forceCreate) ? 'not-allowed' : 'pointer' }}
           >

@@ -196,7 +196,7 @@ const DetailView = ({
             style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--accent-soft-2)', background: 'var(--accent-soft)', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
           />
           <button
-            className="btn-ghost-sm"
+            className="btn--ghost btn--sm"
             onClick={() => setShowVersions(true)}
             title="历史版本：查看快照/对比/回滚"
             style={{ color: 'var(--text-2)', border: '1px solid var(--border-weak)', padding: '6px 12px', borderRadius: 8 }}
@@ -204,7 +204,7 @@ const DetailView = ({
             <History size={14} /> 历史版本
           </button>
           <button
-            className="btn-ghost-sm btn-del-ghost"
+            className="btn--ghost btn--sm btn--ghost-danger"
             onClick={onDelete}
             style={{ border: '1px solid var(--border-weak)', padding: '6px 12px', borderRadius: 8 }}
           >
@@ -259,7 +259,7 @@ const DetailView = ({
         <div className="form-panel glass" style={{ display: detailTab === 'base' ? '' : 'none' }}>
           <div className="section-title" style={{ borderLeftColor: 'var(--color-danger-rose)', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div>款式信息 <span>(款级共享 · 同款各版次同步生效，编辑保存即全局生效)</span></div>
-            <button type="button" className="btn-icon" onClick={() => onSetIsStyleEditing(!isStyleEditing)} style={{ background: isStyleEditing ? 'var(--accent-soft-2)' : 'var(--border-weak)', borderRadius: 4, padding: 4 }}>
+            <button type="button" className="btn--icon" onClick={() => onSetIsStyleEditing(!isStyleEditing)} style={{ background: isStyleEditing ? 'var(--accent-soft-2)' : 'var(--border-weak)', borderRadius: 4, padding: 4 }}>
               <Edit2 size={16} color={isStyleEditing ? 'var(--accent)' : 'var(--text-2)'} />
             </button>
           </div>
@@ -356,7 +356,7 @@ const DetailView = ({
 
               {!task.pdf_url && (
                 <div className="pdf-hover-actions">
-                  <button className="pdf-action-btn" title="从图纸资料库选择设计稿" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
+                  <button className="btn--ghost btn--sm btn--pdf" title="从图纸资料库选择设计稿" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
                     <FolderOpen size={14} />
                     <span>从资料库选</span>
                   </button>
@@ -365,16 +365,16 @@ const DetailView = ({
 
               {task.pdf_url && (
                 <div className="pdf-hover-actions">
-                  <button className="pdf-action-btn" title="上传新文件更换设计稿" onClick={e => { e.stopPropagation(); pdfInputRef.current?.click(); }}>
+                  <button className="btn--ghost btn--sm btn--pdf" title="上传新文件更换设计稿" onClick={e => { e.stopPropagation(); pdfInputRef.current?.click(); }}>
                     <Upload size={14} />
                     <span>更换</span>
                   </button>
-                  <button className="pdf-action-btn" title="从图纸资料库选择已有设计稿" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
+                  <button className="btn--ghost btn--sm btn--pdf" title="从图纸资料库选择已有设计稿" onClick={e => { e.stopPropagation(); setShowPdfPicker(true); }}>
                     <FolderOpen size={14} />
                     <span>从资料库选</span>
                   </button>
                   <button
-                    className="pdf-action-btn btn-del-ghost"
+                    className="btn--ghost btn--sm btn--pdf btn--ghost-danger"
                     title="移除设计稿"
                     onClick={e => { e.stopPropagation(); setConfirmPdfRemove(true); }}
                   >
@@ -397,7 +397,7 @@ const DetailView = ({
           <div className="glass side-box" style={{ marginTop: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <div className="section-title" style={{ margin: 0, border: 'none', padding: 0 }}>工作动态</div>
-              <button type="button" className="btn-blue-sm" onClick={() => {
+              <button type="button" className="btn--primary btn--sm" onClick={() => {
                 const next = [...(task.progress_nodes || []), { label: '', status: 'pending', date: '', by: '', note: '' }];
                 onSetField('progress_nodes', next); commitNodesNow(next);
               }}>
@@ -418,7 +418,7 @@ const DetailView = ({
                   />
                   <button
                     type="button"
-                    className="icon-btn-danger"
+                    className="btn--icon-danger"
                     title="删除该事件"
                     onClick={() => setConfirmNode(i)}
                   >

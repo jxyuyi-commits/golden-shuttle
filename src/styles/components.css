@@ -18,22 +18,10 @@
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
   border-color: var(--accent-blue);
 }
-.btn-primary {
-  background: var(--accent-btn);
-  color: var(--accent-btn-text);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.btn-primary:hover { opacity: 0.9; }
 .card-title { font-weight: 700; color: var(--text); margin-bottom: 4px; }
 .card-meta { font-size: 12px; color: var(--text-3); }
 .update-time { font-size: 11px; color: var(--text-3); margin-left: 8px; font-weight: 400; }
 .sort-actions { display: flex; flex-direction: column; gap: 2px; }
-.btn-sort:hover:not(:disabled) { color: var(--accent); }
 
 /* 弹窗内快捷管理叠加层 */
 .manage-overlay { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; background: var(--overlay-strong); padding: 20px; animation: fadeIn 0.2s ease; }
@@ -55,9 +43,7 @@
 .sidebar-add button { background: var(--accent-soft); border: none; border-radius: 6px; color: var(--accent); cursor: pointer; padding: 6px 8px; transition: 0.2s; }
 .sidebar-add button:hover { background: var(--accent-soft); }
 .cat-item input { background: none; border: none; color: inherit; outline: none; font-size: 13px; flex: 1; }
-.del-btn { background: none; border: none; color: var(--text-4); cursor: pointer; padding: 2px; border-radius: var(--radius-sm); opacity: 0; transition: 0.15s; }
 .cat-item:hover .del-btn { opacity: 1; }
-.del-btn:hover { color: #ef4444; }
 .content-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-weak); font-size: 14px; font-weight: 600; color: var(--text); }
 .tpl-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tpl-table th { padding: 10px 16px; text-align: left; font-size: 12px; color: var(--text-3); font-weight: 600; border-bottom: 1px solid var(--border-weak); position: sticky; top: 0; background: var(--bg-elev); }
@@ -83,8 +69,7 @@
 .data-table .cell-shake { border: 1px solid #ef4444; }
 
 /* 成衣测值模式切换按钮 */
-.btn-mode-toggle { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-sm); font-size: var(--fs-md); background: var(--bg-hover); border: 1px solid var(--border); color: var(--text-2); cursor: pointer; }
-.btn-mode-toggle.active { background: var(--accent-soft-2); border-color: var(--accent); color: var(--accent); }
+
 
 /* ============ Bento Box（便当盒）排版系统 ============ */
 .bento-box { border: 1px solid var(--border-strong); border-radius: 6px; background: var(--card-bg); }
@@ -168,11 +153,6 @@ em.audit-wait { color: var(--text-2); }
 .add-row-enhanced .mini-ss .ss-display {min-height: 32px; box-sizing: border-box; padding: 0 24px 0 8px; font-size: 12px; display: flex; align-items: center; }
 .add-row-enhanced .btn-add-mini {height: 32px; box-sizing: border-box; min-width: 36px; }
 
-.btn-blue-sm {background: var(--accent-btn); color: var(--accent-btn-text); border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-.btn-blue-sm:hover {transform: scale(1.05); }
-.btn-icon-xs {background: var(--border-weak); border: none; color: var(--text-2); padding: 4px; border-radius: var(--radius-sm); cursor: pointer; display: flex; }
-.btn-icon-xs:hover {background: var(--border-strong); color: var(--text); }
-
 .size-group-table-wrapper {max-height: 240px; overflow-y: auto; }
 
 /* 预设管理器专用样式 - 强制水平布局 */
@@ -181,8 +161,6 @@ em.audit-wait { color: var(--text-2); }
 .sidebar-title {font-size: 12px; font-weight: 800; color: var(--text-3); text-transform: uppercase; margin-bottom: 16px; letter-spacing: 1px; }
 .sidebar-add {display: flex; gap: 8px; margin-bottom: 20px; padding-right: 2px; }
 .sidebar-add input {flex: 1; background: var(--input-bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; color: var(--text); font-size: 13px; outline: none; min-width: 0; }
-.btn-add-circle {width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; background: var(--accent-btn); color: var(--accent-btn-text); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.btn-add-circle:hover {transform: scale(1.1); }
 
 .sidebar-list {flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
 .cat-item {display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: all 0.25s; border: 1px solid transparent; }
@@ -191,9 +169,7 @@ em.audit-wait { color: var(--text-2); }
 .cat-item-content {flex: 1; min-width: 0; display: flex; align-items: center; }
 .cat-edit-input {width: 100%; background: var(--input-bg); border: 1px solid var(--accent); color: var(--text); padding: 4px 8px; border-radius: 6px; font-size: 13px; outline: none; }
 .cat-item.active .cat-name {color: var(--accent); }
-.del-btn-mini {opacity: 0.8; color: var(--text-2); background: none; border: none; cursor: pointer; padding: 4px; transition: 0.2s; }
 .cat-item:hover .del-btn-mini {opacity: 1; }
-.del-btn-mini:hover {color: #f43f5e; }
 
 .content-v4 {flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; overflow: hidden; }
 .content-header-v4 {display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; }
@@ -210,17 +186,13 @@ em.audit-wait { color: var(--text-2); }
 .tpl-method-cell {color: var(--text-2); font-size: 13px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tpl-tag-blue {background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block; }
 .row-ops-v4 {display: flex; gap: 10px; justify-content: center; }
-.op-btn {background: var(--border-weak); border: 1px solid var(--border); color: var(--text-2); padding: 6px; border-radius: var(--radius-md); cursor: pointer; transition: 0.2s; display: flex; }
-.op-btn:hover {background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-.op-btn.delete:hover {background: rgba(244,63,94,0.1); color: #f43f5e; border-color: #f43f5e; }
 
 .empty-state-v4 {display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0; color: var(--text-4); }
 .empty-icon {margin-bottom: 16px; opacity: 0.3; }
 .text-dim {color: var(--text-3); font-style: italic; }
 
 /* 按钮增强 */
-.btn-glow {}
-.btn-glow:hover {}
+
 
 /* 任务卡片 */
 .card {padding: 14px; margin-bottom: 16px; cursor: pointer; transition: transform .25s, border-color .25s, box-shadow .25s; }
@@ -362,15 +334,9 @@ em.audit-wait { color: var(--text-2); }
 /* 有稿：悬停浮出的更换/移除 */
 .pdf-hover-actions {position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; opacity: 0; transform: translateY(-4px); transition: opacity .18s, transform .18s; }
 .pdf-upload-zone:hover .pdf-hover-actions {opacity: 1; transform: translateY(0); }
-.pdf-action-btn {height: 30px; padding: 0 10px; display: flex; align-items: center; gap: 5px; background: var(--bg-elev-2); border: 1px solid var(--border-strong); border-radius: var(--radius-md); color: var(--text); cursor: pointer; transition: .15s; font-size: var(--fs-xs); font-weight: 600; white-space: nowrap; }
-.pdf-action-btn:hover {background: var(--accent-soft-2); color: var(--accent); border-color: var(--accent-soft-2); }
 /* 放大预览内的操作按钮（单击预览图后出现，不依赖 hover） */
-.pdf-enlarge-btn {display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 18px; background: var(--bg-elev-2); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); color: var(--text); cursor: pointer; font-size: var(--fs-md); font-weight: 600; transition: .15s; }
-.pdf-enlarge-btn:hover {background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft-2); }
+
 .pdf-preview-wrap img {width: 100%; height: 100%; object-fit: cover; }
-.btn-upload-pdf {display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border: 1px dashed var(--border-strong); border-radius: 10px; color: var(--text-3); cursor: pointer; font-size: 13px; font-weight: 600; transition: .2s; }
-.btn-upload-pdf:hover {border-color: var(--accent); color: var(--accent); }
-.btn-ghost-sm {display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--text-2); background: none; border: none; cursor: pointer; padding: 6px 0; }
 /* 设计稿移除按钮：右对齐、有边框的小按钮，hover 才变红 */
 .drawing-placeholder {grid-column: 1 / -1; padding: 90px 40px; text-align: center; }
 .drawing-placeholder .dp-title {font-size: 22px; font-weight: 900; color: var(--text-2); margin-bottom: 16px; letter-spacing: 0.5px; }
@@ -417,12 +383,9 @@ em.audit-wait { color: var(--text-2); }
 .modal-foot {display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
 
 /* 按钮 */
-.btn-blue {display: flex; align-items: center; gap: 8px; background: var(--accent-btn); color: var(--accent-btn-text); font-weight: 800; border: none; padding: 10px 22px; border-radius: 10px; cursor: pointer; font-size: 14px; }
-.btn-blue:hover {opacity: .9; } .btn-blue:disabled {opacity: .4; cursor: not-allowed; }
-.btn-ghost {background: var(--bg-hover); color: var(--text); font-weight: 600; border: 1px solid var(--border); padding: 10px 20px; border-radius: var(--radius-lg); cursor: pointer; font-size: var(--fs-lg); }
+
 /* §2：.btn-icon idx:281/app:355 → 取 app:355 */
-.btn-icon {background: none; border: none; color: var(--text-3); cursor: pointer; padding: 6px; border-radius: var(--radius-md); display: flex; }
-.btn-icon:hover {background: var(--bg-hover); color: var(--text); }
+
 
 /* 列表视图行悬停（§3(b)：去 !important，靠源序与 app:655 收敛） */
 .list-row:hover {background: transparent; cursor: pointer; }
@@ -454,9 +417,7 @@ em.audit-wait { color: var(--text-2); }
 .drawing-ver-row .ver-name {font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .drawing-ver-row .ver-sub {font-size: 11px; color: var(--text-3); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .drawing-ver-row .ver-actions {flex-shrink: 0; }
-.drawing-del {background: rgba(0,0,0,0.55); border: none; color: #fca5a5; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.75; transition: opacity .2s; }
 .drawing-card:hover .drawing-del {opacity: 1; }
-.drawing-del:hover {background: var(--color-danger-soft); color: var(--color-danger-fg); }
 /* 右上角：文件类型标签 + 删除按钮 */
 .drawing-corner {position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; align-items: center; z-index: 2; }
 .drawing-meta {display: flex; flex-direction: column; gap: 8px; padding: 10px; }
@@ -497,11 +458,6 @@ em.audit-wait { color: var(--text-2); }
 .run-card-title .smart-select { min-width: 140px; flex: none; }
 .run-card-title .smart-select.run-status-ss { min-width: 96px; }
 .run-spin { color: var(--accent); animation: run-rotate 1s linear infinite; }
-.run-del-btn {
-  background: transparent; border: none; color: var(--text-2); cursor: pointer;
-  padding: 5px; border-radius: 6px; display: inline-flex;
-}
-.run-del-btn:hover { color: #f87171; background: rgba(248,113,113,0.1); }
 .run-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 8px 12px;
@@ -518,21 +474,6 @@ em.audit-wait { color: var(--text-2); }
 }
 .run-card > .run-section-title:first-of-type { margin-top: 4px; }
 .run-materials-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-.run-material-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 12px; border-radius: 6px; font-size: 12px;
-  color: var(--accent); background: var(--accent-soft);
-  border: 1px solid var(--accent-soft-2); cursor: pointer;
-  transition: all 0.15s;
-}
-.run-material-btn:hover { background: var(--accent-soft-2); }
-.run-add-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 9px; border: 1px dashed var(--accent-soft-2); border-radius: 10px;
-  background: var(--accent-soft); color: var(--accent); font-size: 13px;
-  cursor: pointer; width: 100%;
-}
-.run-add-btn:hover { background: var(--accent-soft); }
 
 /* REQ-004：批次打样单号（下沉版次，款内 V 编号） */
 .run-order-no {
@@ -591,8 +532,6 @@ em.audit-wait { color: var(--text-2); }
 /* ── 批次绑定资料版本 ── */
 .run-linked-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-weak); }
 .run-linked-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.run-linked-manage { background: none; border: 1px solid var(--accent-soft-2); color: var(--accent); padding: 3px 10px; border-radius: 6px; font-size: 11.5px; cursor: pointer; }
-.run-linked-manage:hover { background: var(--accent-soft); }
 .run-linked-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .run-linked-tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; background: var(--accent-soft); border: 1px solid var(--accent-soft-2); border-radius: 6px; font-size: 11.5px; color: var(--text); }
 .run-linked-tag button { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 0; display: flex; }
@@ -614,10 +553,7 @@ em.audit-wait { color: var(--text-2); }
 .confirm-actions { display: flex; gap: 12px; margin-top: 8px; }
 
 /* 统一操作图标规范（REQ-007）：常驻显示 + 悬停高亮 */
-.icon-btn { background: transparent; border: none; color: var(--text-3); cursor: pointer; width: 28px; height: 28px; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; flex: none; }
-.icon-btn:hover { color: var(--accent); background: var(--accent-soft); }
-.icon-btn-danger { background: transparent; border: none; color: var(--text-2); cursor: pointer; width: 28px; height: 28px; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; flex: none; }
-.icon-btn-danger:hover, .icon-btn-danger:focus-visible { color: #ef4444; background: rgba(239,68,68,0.14); }
+
 
 /* 统一 select 控件：全局基线（input-bg 底 + 边框 + 自绘中性灰箭头），表格内 select 由 .data-table 规则接管 */
 select {
@@ -649,8 +585,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .dp-cal { position: absolute; top: calc(100% + 6px); left: 0; z-index: 1500; width: 288px; padding: 14px; border-radius: 12px; box-shadow: 0 20px 40px -12px rgba(0,0,0,.6); }
 .dp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .dp-title { font-size: 14px; font-weight: 800; color: var(--text); }
-.dp-nav { background: transparent; border: none; color: var(--text-2); width: 28px; height: 28px; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; }
-.dp-nav:hover { color: var(--accent); background: var(--accent-soft); }
 .dp-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 6px; }
 .dp-week span { text-align: center; font-size: 11px; color: var(--text-3); padding: 4px 0; }
 .dp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
@@ -661,10 +595,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .dp-cell.selected { background: var(--accent); color: var(--bg); font-weight: 800; }
 .dp-cell.selected:hover { background: var(--accent-btn); color: var(--accent-btn-text); }
 .dp-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-weak); }
-.dp-act { flex: 1; background: var(--bg-hover); border: none; color: var(--text-2); padding: 7px 0; border-radius: var(--radius-md); font-size: 12.5px; cursor: pointer; transition: all .15s; }
-.dp-act:hover { background: var(--bg-hover-2); color: var(--text); }
-.dp-act.primary { background: var(--accent-soft); color: var(--accent); }
-.dp-act.primary:hover { background: var(--accent-soft-2); }
 
 /* ── REQ-011 历史版本弹窗 ── */
 .version-modal { width: 760px; max-width: 92vw; max-height: 86vh; display: flex; flex-direction: column; }
@@ -695,13 +625,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .diff-badge.del { background: rgba(239,68,68,0.15); color: #f87171; }
 .diff-badge.chg { background: rgba(250,204,21,0.15); color: #facc15; }
 /* §2：.btn-danger app:548/app:631 → 取 app:631（破坏色统一交 U8，本轮保留原色） */
-.btn-danger { background: var(--color-danger-strong); border: none; color: var(--color-danger-fg); padding: 7px 14px; border-radius: var(--radius-md); font-size: var(--fs-md); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s; }
-.btn-danger:hover { background: var(--color-danger-deep); }
-.btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
 
 /* 全站删除按钮统一：常态与文字同色（text-2），hover/focus 才变红 */
-.btn-del-ghost { color: var(--text-2); }
-.btn-del-ghost:hover, .btn-del-ghost:focus-visible { color: #ef4444; background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
+
 
 /* REQ-010 外观主题选择器 */
 .theme-option {display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 16px; min-width: 140px; border-radius: var(--radius-lg); background: var(--bg-panel); border: 1px solid var(--border); color: var(--text); cursor: pointer; transition: 0.2s; font-family: inherit; text-align: left; }
@@ -733,14 +660,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .table-checkbox,
 .data-table .table-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
 /* 排序按钮（§2：.btn-sort 取 idx:809；:disabled 取 idx:824） */
-.btn-sort { background: none; border: none; color: var(--text-4); cursor: pointer; padding: 1px 4px; border-radius: var(--radius-sm); line-height: 1; transition: color 0.15s; }
-.btn-sort:disabled { opacity: 0.2; cursor: default; }
+
 /* 单行省略工具类 */
 .txt-ellipsis { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 看板便当卡（§3(b)：去 !important，靠源序排在 .card 之后自然胜） */
 .bento-card { padding: 12px; gap: 12px; display: flex; flex-direction: column; width: 100%; }
 /* 小号按钮（§3(b)：去 !important，靠源序排在 .btn-blue 之后自然胜） */
-.btn-sm { padding: 6px 12px; font-size: 12px; }
+
 
 /* ==========================================================================
    补迁 · U7-A 漏迁声明并回（依据 docs/audit/U7-漏迁声明清单-20260914.md）
@@ -757,8 +683,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .card-mini-count {font-size: 10px; font-weight: 900; background: var(--border-weak); color: var(--text-4); padding: 2px 8px; border-radius: 10px; }
 .tag-cloud-mini {display: flex; flex-wrap: wrap; gap: 6px; min-height: 36px; max-height: 80px; overflow-y: auto; padding-right: 4px; }
 .tag-mini {display: flex; align-items: center; gap: 4px; background: var(--accent-soft); color: var(--accent); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid var(--accent-soft); }
-.tag-del {background: none; border: none; color: inherit; cursor: pointer; opacity: 0.5; display: flex; }
-.tag-del:hover {opacity: 1; color: #ef4444; }
 .tag-empty-mini {font-size: 12px; color: var(--text-3); font-style: italic; }
 .add-row-mini {display: flex; gap: 6px; }
 .add-row-mini input {flex: 1; background: var(--input-bg); border: 1px solid var(--bg-hover-2); padding: 7px 10px; border-radius: 6px; color: var(--text); font-size: 12px; outline: none; }
@@ -772,20 +696,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .people-row:hover .people-name-pen {opacity: 0.6; }
 .people-name-input {width: 84px; background: var(--input-bg); border: 1px solid var(--accent); color: var(--text); border-radius: 6px; padding: 2px 6px; font-size: 12px; font-weight: 700; outline: none; }
 .people-roles {display: flex; flex-wrap: wrap; gap: 4px; align-items: center; flex: 1; }
-.people-add-role {background: transparent; border: 1px dashed var(--border-strong); color: var(--text-3); font-size: 10.5px; border-radius: 6px; padding: 2px 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px; }
-.people-add-role:hover {color: var(--accent); border-color: var(--accent-soft-2); }
 .people-role-input {width: 84px; background: var(--overlay); border: 1px solid var(--accent); color: var(--text); border-radius: 6px; padding: 2px 6px; font-size: 11px; outline: none; }
 .people-suggest {display: inline-flex; gap: 3px; }
-.people-suggest-btn {background: transparent; border: none; color: var(--text-4); font-size: 10px; cursor: pointer; padding: 1px 3px; border-radius: 4px; }
-.people-suggest-btn:hover {color: var(--accent); background: var(--accent-soft); }
 
 /* —— B. 规则在、属性被漏并：并回败者独有属性（取值照旧） —— */
 .template-manager-v4 {background: var(--bg-panel); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-top: 16px; }
 .cat-item {margin-bottom: 2px; font-size: 13px; color: var(--text-2); position: relative; gap: 6px; }
 .tcard-meta {margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.btn-icon {align-items: center; justify-content: center; transition: 0.2s; }
-.btn-icon:hover {border-radius: var(--radius-sm); }
-.btn-sort {display: flex; }
 .sidebar-v4 {border-right: 1px solid var(--border); background: var(--bg-elev); min-width: 180px; }
 /* padding 简写须保留既有 padding-right 胜者值，写在同规则最后 */
 .sidebar-add {padding: 12px; padding-right: 2px; border-bottom: 1px solid var(--border-weak); }
@@ -801,6 +718,5 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .tpl-table td {font-size: 13px; }
 .tcard-name {margin-bottom: 6px; }
 .cat-name {flex: 1; }
-.btn-danger {font-weight: 800; }
 /* .cell-shake 红框：原件为 !important，此处以普通声明并回；表格内胜出仍由上方 .data-table .cell-shake 承担 */
 .cell-shake {border: 1px solid #ef4444; }

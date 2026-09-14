@@ -53,7 +53,7 @@ const BomRow = React.memo(({ row, idx, onField }) => {
         <input style={cellStyle} value={row.note || ''} placeholder="备注" onChange={e => set('note', e.target.value)} />
       </td>
       <td style={{ padding: 6, textAlign: 'center' }}>
-        <button className="icon-btn-danger" onClick={() => onField(row.id, '__delete')} title="删除">
+        <button className="btn--icon-danger" onClick={() => onField(row.id, '__delete')} title="删除">
           <Trash2 size={14} />
         </button>
       </td>
@@ -117,7 +117,7 @@ const BomEditor = ({ taskId }) => {
           <div>物料清单（BOM）</div>
           <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项</span>
         </div>
-        <button className="btn-blue-sm" onClick={handleAdd} disabled={busy}>
+        <button className="btn--primary btn--sm" onClick={handleAdd} disabled={busy}>
           {busy ? <Loader2 size={14} className="spin" /> : <Plus size={14} />} 添加物料
         </button>
       </div>

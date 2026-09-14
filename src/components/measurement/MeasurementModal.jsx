@@ -31,7 +31,7 @@ const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
       <div className="modal-content glass">
         <div className="modal-header">
           <div style={{ fontSize: 18, fontWeight: 800 }}>选择尺寸部位</div>
-          <button className="btn-icon" onClick={onClose}><X size={20} /></button>
+          <button className="btn--icon" onClick={onClose}><X size={20} /></button>
         </div>
         <div className="modal-body">
           <div className="modal-sidebar">
@@ -61,8 +61,8 @@ const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
         <div className="modal-footer">
           <div style={{ fontSize: 13, color: 'var(--text-2)' }}>已选 {selectedIds.length} 个</div>
           <div style={{ display: 'flex', gap: 12 }}>
-            <button className="btn-ghost" onClick={onClose}>取消</button>
-            <button className="btn-blue" onClick={handleConfirm} disabled={selectedIds.length === 0}>确认选择</button>
+            <button className="btn--ghost" onClick={onClose}>取消</button>
+            <button className="btn--primary" onClick={handleConfirm} disabled={selectedIds.length === 0}>确认选择</button>
           </div>
         </div>
       </div>

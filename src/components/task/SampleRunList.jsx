@@ -166,7 +166,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
               {savingId === r.id && <Loader2 size={13} className="run-spin" />}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <button type="button" className="icon-btn-danger" title="删除批次" onClick={() => askRemoveRun(r)}>
+              <button type="button" className="btn--icon-danger" title="删除批次" onClick={() => askRemoveRun(r)}>
                 <Trash2 size={14} />
               </button>
             </div>
@@ -272,16 +272,16 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
           <div className="run-materials-row">
             <button
               type="button"
-              className="run-material-btn"
+              className="btn--ghost btn--sm btn--accent"
               onClick={() => onOpenSizeTable?.(r)}
               title={`进入「${r.order_no || '本版次'}」的尺寸表（锁定编辑，与其它版次数据隔离）`}
             >
               <Ruler size={13} /> 尺寸表
             </button>
-            <button type="button" className="run-material-btn" onClick={() => onOpenBom?.()} title="查看本款物料清单（BOM）">
+            <button type="button" className="btn--ghost btn--sm btn--accent" onClick={() => onOpenBom?.()} title="查看本款物料清单（BOM）">
               <Package size={13} /> 物料清单
             </button>
-            <button type="button" className="run-material-btn" onClick={() => onOpenDrawings?.()} title="查看本款图纸资料（纸样/唛架）">
+            <button type="button" className="btn--ghost btn--sm btn--accent" onClick={() => onOpenDrawings?.()} title="查看本款图纸资料（纸样/唛架）">
               <FileText size={13} /> 纸样
             </button>
           </div>
@@ -315,7 +315,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
               </span>
               <button
                 type="button"
-                className="run-linked-manage"
+                className="btn--ghost btn--sm btn--accent"
                 onClick={() => setManageId(manageId === r.id ? null : r.id)}
               >
                 {manageId === r.id ? '收起' : '管理绑定'}
@@ -361,7 +361,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
         </div>
       ))}
 
-      <button type="button" className="run-add-btn" onClick={addRun}>
+      <button type="button" className="btn--primary btn--block btn--dashed" onClick={addRun}>
         <Plus size={15} /> 新增打样批次
       </button>
 

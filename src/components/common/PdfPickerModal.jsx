@@ -42,7 +42,7 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
             <span style={{ fontSize: 15, fontWeight: 800 }}>从图纸资料选择设计稿</span>
             <span style={{ fontSize: 11, color: 'var(--text-3)' }}>共 {items.length} 份</span>
           </div>
-          <button className="btn-icon" onClick={onClose}><X size={18} /></button>
+          <button className="btn--icon" onClick={onClose}><X size={18} /></button>
         </div>
         <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
           {loading && <div style={{ padding: 28, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>}
@@ -96,7 +96,7 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn" style={{ padding: '7px 14px', fontSize: 13 }} onClick={onClose}>取消</button>
             <button
-              className="btn btn-primary"
+              className="btn--primary"
               style={{ padding: '7px 14px', fontSize: 13, opacity: selected ? 1 : 0.45, cursor: selected ? 'pointer' : 'not-allowed' }}
               disabled={!selected}
               onClick={() => { if (selected) { onSelect(selected); onClose(); } }}

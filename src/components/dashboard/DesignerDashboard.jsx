@@ -84,7 +84,7 @@ const DesignerDashboard = ({ tasks, onTaskClick, onOpenSidebar, onNewTask }) => 
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button className="btn-blue" onClick={onNewTask}><Plus size={16} /> 新建打样单</button>
+          <button className="btn--primary" onClick={onNewTask}><Plus size={16} /> 新建打样单</button>
         </div>
       </header>
 

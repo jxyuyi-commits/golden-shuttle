@@ -90,7 +90,7 @@ const ProcessRow = React.memo(({ row, idx, onField, widths, dragIdx, onDragStart
         />
       </td>
       <td style={{ padding: 6, textAlign: 'center', width: widths.action }}>
-        <button className="icon-btn-danger" onClick={() => onField(row.id, '__delete')} title="删除">
+        <button className="btn--icon-danger" onClick={() => onField(row.id, '__delete')} title="删除">
           <Trash2 size={14} />
         </button>
       </td>
@@ -234,7 +234,7 @@ const ProcessEditor = ({ taskId }) => {
           <div>工艺指示</div>
           <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项 · 拖动行首手柄可排序 · 拖动表头右侧竖线可调列宽</span>
         </div>
-        <button className="btn-blue-sm" onClick={handleAdd} disabled={busy}>
+        <button className="btn--primary btn--sm" onClick={handleAdd} disabled={busy}>
           {busy ? <Loader2 size={14} className="spin" /> : <Plus size={14} />} 添加工艺
         </button>
       </div>

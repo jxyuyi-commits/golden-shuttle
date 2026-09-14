@@ -279,7 +279,7 @@ const DrawingLibrary = ({ taskId }) => {
             {['全部', ...DRAWING_CATEGORIES].map(c => (
               <button
                 key={c}
-                className="btn-icon-sm"
+                className="btn--icon btn--xs"
                 onClick={() => setFilter(c)}
                 style={{
                   padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
@@ -296,7 +296,7 @@ const DrawingLibrary = ({ taskId }) => {
             </span>
           </div>
         </div>
-        <button className="btn-blue-sm" onClick={() => { setUpFiles([]); setShowUpload(true); }}>
+        <button className="btn--primary btn--sm" onClick={() => { setUpFiles([]); setShowUpload(true); }}>
           <Plus size={14} /> 上传资料
         </button>
       </div>
@@ -353,7 +353,7 @@ const DrawingLibrary = ({ taskId }) => {
                     );
                   })()}
                   <button
-                    className="drawing-del icon-btn-danger"
+                    className="btn--icon btn--circle btn--danger-dark"
                     title={d._versionCount > 1 ? `删除整组（${d._versionCount} 个版本）` : '删除'}
                     onClick={() => handleDelete(d)}
                   >
@@ -390,7 +390,7 @@ const DrawingLibrary = ({ taskId }) => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontSize: 17, fontWeight: 800 }}>上传图纸资料</div>
-              <button className="btn-icon" onClick={() => setShowUpload(false)} disabled={busy}><X size={18} /></button>
+              <button className="btn--icon" onClick={() => setShowUpload(false)} disabled={busy}><X size={18} /></button>
             </div>
 
             <div className="field" style={{ marginBottom: 14 }}>
@@ -426,7 +426,7 @@ const DrawingLibrary = ({ taskId }) => {
                     <span className="uplist-name" title={f.name}>{f.name}</span>
                     <span className="uplist-size">{fmtSize(f.size)}</span>
                     <button
-                      className="btn-icon btn-del-ghost"
+                      className="btn--icon btn--ghost-danger"
                       title="移除"
                       onClick={() => setUpFiles(prev => prev.filter((_, x) => x !== i))}
                       disabled={busy}
@@ -440,8 +440,8 @@ const DrawingLibrary = ({ taskId }) => {
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
-              <button className="btn-ghost" onClick={() => setShowUpload(false)} disabled={busy} style={{ padding: '8px 18px', fontSize: 13 }}>取消</button>
-              <button className="btn-blue" onClick={handleUpload} disabled={busy || upFiles.length === 0} style={{ padding: '8px 18px', fontSize: 13 }}>
+              <button className="btn--ghost" onClick={() => setShowUpload(false)} disabled={busy} style={{ padding: '8px 18px', fontSize: 13 }}>取消</button>
+              <button className="btn--primary" onClick={handleUpload} disabled={busy || upFiles.length === 0} style={{ padding: '8px 18px', fontSize: 13 }}>
                 {busy ? <Loader2 size={14} className="spin" /> : <Upload size={14} />} {busy ? `上传中 ${upFiles.length} 个…` : `确认上传（${upFiles.length}）`}
               </button>
             </div>
@@ -462,7 +462,7 @@ const DrawingLibrary = ({ taskId }) => {
               <div style={{ fontSize: 17, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <History size={18} color="var(--color-info)" /> 版本历史
               </div>
-              <button className="btn-icon" onClick={() => setGroupModal(null)}><X size={18} /></button>
+              <button className="btn--icon" onClick={() => setGroupModal(null)}><X size={18} /></button>
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 14 }}>
               共 {groupModal.versions.length} 个版本 · 工作成果可追溯，旧版本保留可随时回看
@@ -499,7 +499,7 @@ const DrawingLibrary = ({ taskId }) => {
                         </div>
                       </div>
                       <div className="ver-actions">
-                        <button className="icon-btn-danger" title="删除该版本" onClick={() => handleDeleteVersion(v.id)}>
+                        <button className="btn--icon-danger" title="删除该版本" onClick={() => handleDeleteVersion(v.id)}>
                           <Trash2 size={14} />
                         </button>
                       </div>

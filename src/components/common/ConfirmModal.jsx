@@ -17,8 +17,8 @@ const ConfirmModal = ({ title, message, confirmText = '确认删除', danger = t
       <div className="confirm-title">{title}</div>
       {message && <div className="confirm-msg">{message}</div>}
       <div className="confirm-actions">
-        <button className="btn-ghost" onClick={onCancel}>取消</button>
-        <button className={danger ? 'btn-danger' : 'btn-blue'} onClick={onConfirm}>{confirmText}</button>
+        <button className="btn--ghost" onClick={onCancel}>取消</button>
+        <button className={danger ? 'btn--danger' : 'btn--primary'} onClick={onConfirm}>{confirmText}</button>
       </div>
     </div>
   </div>

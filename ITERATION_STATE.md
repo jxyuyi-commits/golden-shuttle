@@ -729,3 +729,14 @@ npm run dev:all
 **待办/遗留**：① 无 e2e（缺 Chrome），运行时以 build+dist 验证替代；② `.active-mode {}` 为空规则（看板/列表切换按钮无选中态，属既有遗留，未在本轮改动）；③ 旧类名作为分组别名保留在 `buttons.css`，待有 e2e 后可整体摘除。
 
 **推送**：已推远端 `origin`（代理开启）：`39a4153..f2232aa feature/sample-run-model -> feature/sample-run-model`。
+
+### 批4 U13 Modal 基座（体验提升首批，2026-09-14）
+
+> 依据路线图 `docs/roadmap/统一实施路径与任务分解-20260914.md` 批4（U13–U22），依赖 U5/U7 已完成；「Modal 先于确认分级」。
+
+- **新建 `src/components/common/Modal.jsx`**：Portal 到 body；Esc 关**最上层**弹窗（模块级栈；`.ss-dropdown`/`.dp-cal` 下拉打开时 Esc 让位给面板，不误关弹窗）；焦点陷阱（Tab/Shift+Tab 不逃逸，焦点在陷阱外一律拉回弹窗内）；打开时焦点移入遮罩容器、关闭时还原触发元素；`role="dialog"` + `aria-modal` + `aria-label`；遮罩关闭用 mousedown 且仅 target===遮罩本体（防「框内选文字、框外松手」误关）。
+- **结构约定**：role/ref 落在遮罩 div 本体、不加包装层——避免破坏 `.overlay` 的 flex/stretch 布局，children 原样渲染，DOM 与迁移前一致，零视觉漂移；各弹窗经 `overlayClassName`/`overlayStyle`/`zIndex` 复刻原遮罩类（`.modal-overlay` 或 `.overlay overlay-show`）与 z 层。
+- **11 处弹窗统一接入**：ConfirmModal / VersionHistoryModal(z2100) / MeasurementModal（保留原「无遮罩关闭」行为，新增 Esc）/ OperationLogsModal / PdfPickerModal / NewTaskModal / DrawingLibrary 上传+版本历史（busy 守卫保留）/ ExportButton 确认框 / MeasurementTemplateManager 编辑框 / SizeGroupManager 编辑框。PdfThumb 放大灯箱与 App 侧栏遮罩为非对话框用途，有意不接入。
+- **顺带修掉一个堆叠隐患**：ConfirmModal 原内联渲染、随父级堆叠上下文；统一 Portal 后 z2000 会被 z2100/z9999 父弹窗盖住 → ConfirmModal 增加 `zIndex` 透传：版本回滚确认传 2200、图纸版本删除确认传 10000（叠加于版本历史 z9999 之上）。
+- **验证**：ESLint 全量 src 通过（no-undef 门禁）+ 生产 build 通过（10.2s）；静态一致性核查「剩余裸遮罩仅 PdfThumb 灯箱 / 10 文件 import Modal」；无 Chrome，运行时行为（Esc/焦点陷阱/嵌套堆叠）待用户界面点验。
+- **提交**：`555b7a4`（ref 已回填落盘）。推送两遇代理 502/Empty reply 未上远端，待代理稳定后 `git push origin feature/sample-run-model`。

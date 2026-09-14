@@ -740,3 +740,13 @@ npm run dev:all
 - **顺带修掉一个堆叠隐患**：ConfirmModal 原内联渲染、随父级堆叠上下文；统一 Portal 后 z2000 会被 z2100/z9999 父弹窗盖住 → ConfirmModal 增加 `zIndex` 透传：版本回滚确认传 2200、图纸版本删除确认传 10000（叠加于版本历史 z9999 之上）。
 - **验证**：ESLint 全量 src 通过（no-undef 门禁）+ 生产 build 通过（10.2s）；静态一致性核查「剩余裸遮罩仅 PdfThumb 灯箱 / 10 文件 import Modal」；无 Chrome，运行时行为（Esc/焦点陷阱/嵌套堆叠）待用户界面点验。
 - **提交**：`555b7a4`（ref 已回填落盘）。推送两遇代理 502/Empty reply 未上远端，待代理稳定后 `git push origin feature/sample-run-model`。
+
+---
+
+## 交接锚点（2026-09-14 18:33 收工，换机续做）
+
+- **当前状态**：批1止血 / 批2工程治本(G9-G15) / 批3 UI治本(U7-U12+U9类名收敛) / 批4 U13 Modal基座 已全部完成并推远端；本地 HEAD = 远端 = `e23b5ac`。
+- **下一单元**：批4 U17 消灭 prompt()/alert() + 确认分级 + 可撤销 toast（依赖 U13 已满足）→ U14 可点击div→button / U15 空态骨架 / U16 保存指示器 → U18-U22 性能与响应式。
+- **新机初始化**：`git pull origin feature/sample-run-model` 后 `npm install`（node_modules 未入库），dev 启动 `node scripts/dev.cjs`。
+- **强制流程**：JSX/JS 提交前必须 `eslint src` 过 no-undef（build 抓不到未定义标识符，见 AGENTS.md 规则4）；任何改动亲测通过才能提交。
+- **本会话事故复盘**：U12 漏改 KanbanView 第209行 RUN_STATUS_META 致看板崩溃（commit 034a450 修复）——收敛类枚举时必须全仓 grep 引用点，勿凭记忆改两处。

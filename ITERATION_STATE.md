@@ -750,3 +750,12 @@ npm run dev:all
 - **新机初始化**：`git pull origin feature/sample-run-model` 后 `npm install`（node_modules 未入库），dev 启动 `node scripts/dev.cjs`。
 - **强制流程**：JSX/JS 提交前必须 `eslint src` 过 no-undef（build 抓不到未定义标识符，见 AGENTS.md 规则4）；任何改动亲测通过才能提交。
 - **本会话事故复盘**：U12 漏改 KanbanView 第209行 RUN_STATUS_META 致看板崩溃（commit 034a450 修复）——收敛类枚举时必须全仓 grep 引用点，勿凭记忆改两处。
+
+---
+
+## 批4 U17 弹窗治理（消灭原生对话框 + 确认分级 + 可撤销 toast，2026-09-14 晚）
+
+- **交付**（提交 `b0ff680`，已推远端）：全仓 **28 处**原生弹窗清零（25 alert→toast、1 window.confirm→ConfirmModal、1 prompt→InputModal）；新增 `common/Toast.jsx`（事件单例+Host，零 keydown 不碰 U13 Esc 栈）与 `common/InputModal.jsx`（Enter 确认/空名禁钮/聚焦全选）；ConfirmModal 增 `tone('danger'|'default')` 分级（16 处删除/回滚=danger、2 处中性=default），`cancelText` 可自定义，旧 `danger` 属性向后兼容。
+- **可撤销范围（重要决策）**：仅版本回滚接了「撤销回滚」（复用现有 rollbackVersion API，撤销=再回滚一次，不新增后端接口）；其余删除类服务端无恢复接口，按约束保持 danger 确认、不做假撤销。
+- **验证**：主理人独立复验（grep 原生弹窗=0、三道门实跑 eslint 0 / test 全绿 / build 通过、关键 diff 逐行过目）；无 Chrome，Esc/焦点陷阱/堆叠等运行时行为待用户界面点验。
+- **下一单元**：U14 可点击 div→button → U15 空态骨架 → U16 保存指示器 → U18-U22。

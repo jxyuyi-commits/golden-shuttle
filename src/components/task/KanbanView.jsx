@@ -206,7 +206,7 @@ const KanbanView = ({
                   return (
                     <>
                       {shown.map((r, i) => {
-                        const meta = RUN_STATUS_META[r.status];
+                        const meta = RUN_STATUS[r.status];
                         const who = r.sample_maker ? [r.sample_maker].filter(Boolean).join(' / ') : '';
                         return (
                           <div className="bento-row bento-run-row" key={i}

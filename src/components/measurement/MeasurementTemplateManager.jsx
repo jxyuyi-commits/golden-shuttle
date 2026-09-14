@@ -4,6 +4,7 @@ import { autoSign } from '../../utils/format';
 import { fetchMeasurementTemplates, saveMeasurementTemplate, deleteMeasurementTemplate } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
 import Modal from '../common/Modal';
+import { keyboardActivate } from '../../hooks/useKeyboardActivate';
 
 /** 尺寸部位预设管理（品类目录 + 部位明细表格 + 新增/编辑弹窗） */
 const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => {
@@ -71,7 +72,15 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
         </div>
         <div className="sidebar-list custom-scrollbar">
           {categories.map((c, i) => (
-            <div key={i} className={`cat-item ${activeCat === c ? 'active' : ''} animate-slide-right`} style={{ animationDelay: `${i * 0.05}s` }} onClick={() => setActiveCat(c)}>
+            <div
+              key={i}
+              className={`cat-item ${activeCat === c ? 'active' : ''} animate-slide-right`}
+              style={{ animationDelay: `${i * 0.05}s` }}
+              onClick={() => setActiveCat(c)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={keyboardActivate(() => setActiveCat(c))}
+            >
               <div className="cat-item-content">
                 {editingCatIndex === i ? (
                   <input autoFocus className="cat-edit-input" value={c}

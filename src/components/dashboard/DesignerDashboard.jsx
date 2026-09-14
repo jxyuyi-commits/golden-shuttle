@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Plus, Layout, BarChart3, PieChart, CheckCircle2, Clock, AlertCircle, XCircle } from 'lucide-react';
 import { RUN_STATUS, RUN_STATUS_ORDER, RUN_STATUS_RANK } from '../../constants/terms';
+import { keyboardActivate } from '../../hooks/useKeyboardActivate';
 
 // 款级聚合状态元数据收敛至 src/constants/terms.js（U12）
 const STATUS_META = RUN_STATUS;
@@ -76,13 +77,13 @@ const DesignerDashboard = ({ tasks, onTaskClick, onOpenSidebar, onNewTask }) => 
     <div className="dashboard-view custom-scrollbar" style={{ height: '100vh', overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg)' }}>
       {/* 顶部栏（REQ-012 修订：顶级页无返回箭头；菜单按钮与其他页面一致置于左侧 logo 区，仅图标热区） */}
       <header className="top-bar glass">
-        <div className="logo" onClick={onOpenSidebar} style={{ gap: 12 }}>
+        <button type="button" className="logo u14-btn" onClick={onOpenSidebar} style={{ gap: 12 }} aria-label="打开主菜单">
           <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="var(--accent)" /></span>
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
             <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: 0.5, WebkitTextFillColor: 'var(--text-2)' }}>设计师视角 · 款级宏观</span>
             <span style={{ fontSize: 19, fontWeight: 900, letterSpacing: -0.5 }}>开发总览仪表盘</span>
           </span>
-        </div>
+        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button className="btn--primary" onClick={onNewTask}><Plus size={16} /> 新建打样单</button>
         </div>
@@ -191,8 +192,9 @@ const DesignerDashboard = ({ tasks, onTaskClick, onOpenSidebar, onNewTask }) => 
                     if (!topRun || (RUN_STATUS_RANK[r.status] || 0) > (RUN_STATUS_RANK[topRun.status] || 0)) topRun = r;
                   }
                   const runMeta = topRun ? (STATUS_META[topRun.status] || STATUS_META.not_started) : null;
+                  // U14 C 案：tr 不改 role（保表格语义），tabIndex+onKeyDown 键盘可达
                   return (
-                    <tr key={t.id} className="dash-table-row" onClick={() => onTaskClick(t)}>
+                    <tr key={t.id} className="dash-table-row" tabIndex={0} onClick={() => onTaskClick(t)} onKeyDown={keyboardActivate(() => onTaskClick(t))} aria-label={`打开打样单：${t.style_no || ''} ${t.title || ''}`}>
                       <td style={{ fontWeight: 600, color: 'var(--text)' }}>{t.style_no || '—'}</td>
                       <td>{t.title || '未命名'}</td>
                       <td>{t.category || '—'}</td>

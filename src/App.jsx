@@ -370,19 +370,19 @@ const App = () => {
                   <span className="sb-pro">Pro</span>
                 </span>
               </div>
-              <div className={`menu-item ${view === 'kanban' ? 'active' : ''}`} onClick={() => { setView('kanban'); setShowSidebar(false); }}>
+              <button type="button" className={`menu-item u14-btn ${view === 'kanban' ? 'active' : ''}`} onClick={() => { setView('kanban'); setShowSidebar(false); }}>
                 <Layout size={20} /> 看板主页
-              </div>
-              <div className={`menu-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => { setView('dashboard'); setShowSidebar(false); }}>
+              </button>
+              <button type="button" className={`menu-item u14-btn ${view === 'dashboard' ? 'active' : ''}`} onClick={() => { setView('dashboard'); setShowSidebar(false); }}>
                 <BarChart3 size={20} /> 设计师仪表盘
-              </div>
-              <div className={`menu-item ${view === 'settings' ? 'active' : ''}`} onClick={() => { setView('settings'); setShowSidebar(false); }}>
+              </button>
+              <button type="button" className={`menu-item u14-btn ${view === 'settings' ? 'active' : ''}`} onClick={() => { setView('settings'); setShowSidebar(false); }}>
                 <Settings size={20} /> 系统设置
-              </div>
+              </button>
               <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid var(--bg-hover-2)' }}>
-                <div className="menu-item" onClick={() => { setShowLogs(true); setShowSidebar(false); }}>
+                <button type="button" className="menu-item u14-btn" onClick={() => { setShowLogs(true); setShowSidebar(false); }}>
                   <Clock size={20} /> 操作日志
-                </div>
+                </button>
                 <div style={{ fontSize: 11, color: 'var(--text-3)', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                   <span>PatternMaster v3.1.0</span>
                   <span>HTTP 通道</span>

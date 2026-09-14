@@ -11,9 +11,9 @@ const SettingsView = ({ settings, saveSetting, loadSettings, loadTasks, onOpenSi
   return (
     <div className="custom-scrollbar" style={{ background: 'var(--bg)', height: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
       <header className="top-bar glass">
-        <div className="logo" onClick={onOpenSidebar}>
+        <button type="button" className="logo u14-btn" onClick={onOpenSidebar} aria-label="打开主菜单">
           <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="var(--accent)" /></span><span>PatternMaster Pro</span>
-        </div>
+        </button>
       </header>
 
       <div className="settings-container animate-fade-in">

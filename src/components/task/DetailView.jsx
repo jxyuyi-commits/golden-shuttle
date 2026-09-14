@@ -152,14 +152,14 @@ const DetailView = ({
     <div>
       <header className="top-bar glass">
         <div className="detail-breadcrumb">
-          <div className="logo sidebar-hotzone" onClick={onOpenSidebar} onMouseEnter={onOpenSidebar} style={{ marginRight: 20 }}>
+          <button type="button" className="logo sidebar-hotzone u14-btn" onClick={onOpenSidebar} onMouseEnter={onOpenSidebar} style={{ marginRight: 20 }} aria-label="打开主菜单">
             <Layout size={28} color="var(--accent)" />
-          </div>
+          </button>
           <div>
             <div className="bc-sub">
-              <span className="bc-link" onClick={onBack}>主页</span>
+              <button type="button" className="bc-link u14-btn" onClick={onBack}>主页</button>
               <span className="bc-sep"> / </span>
-              <span className="bc-link" onClick={onBack}>打样需求单</span>
+              <button type="button" className="bc-link u14-btn" onClick={onBack}>打样需求单</button>
               <span className="bc-sep"> / </span>
               <span className="bc-current">编辑</span>
             </div>
@@ -214,11 +214,11 @@ const DetailView = ({
       </header>
 
       <div className="tab-bar glass">
-        <div className={`tab ${detailTab === 'base' ? 'active' : ''}`} onClick={() => handleSetTab('base')}>基本信息</div>
-        <div className={`tab ${detailTab === 'drawing' ? 'active' : ''}`} onClick={() => handleSetTab('drawing')}>图纸资料</div>
-        <div className={`tab ${detailTab === 'size' ? 'active' : ''}`} onClick={() => handleSetTab('size')}>尺寸指标</div>
-        <div className={`tab ${detailTab === 'bom' ? 'active' : ''}`} onClick={() => handleSetTab('bom')}>物料清单</div>
-        <div className={`tab ${detailTab === 'process' ? 'active' : ''}`} onClick={() => handleSetTab('process')}>工艺指示</div>
+        <button type="button" className={`tab u14-btn ${detailTab === 'base' ? 'active' : ''}`} onClick={() => handleSetTab('base')}>基本信息</button>
+        <button type="button" className={`tab u14-btn ${detailTab === 'drawing' ? 'active' : ''}`} onClick={() => handleSetTab('drawing')}>图纸资料</button>
+        <button type="button" className={`tab u14-btn ${detailTab === 'size' ? 'active' : ''}`} onClick={() => handleSetTab('size')}>尺寸指标</button>
+        <button type="button" className={`tab u14-btn ${detailTab === 'bom' ? 'active' : ''}`} onClick={() => handleSetTab('bom')}>物料清单</button>
+        <button type="button" className={`tab u14-btn ${detailTab === 'process' ? 'active' : ''}`} onClick={() => handleSetTab('process')}>工艺指示</button>
       </div>
 
       <div className="detail-content custom-scrollbar">

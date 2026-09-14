@@ -2,6 +2,7 @@
 // 值与原生 input[type=date] 兼容（yyyy-MM-dd），可无缝替换全站日期输入
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import useKeyboardActivate from '../../hooks/useKeyboardActivate';
 
 const WEEK_ZH = ['一', '二', '三', '四', '五', '六', '日'];
 const pad = (n) => String(n).padStart(2, '0');
@@ -26,6 +27,8 @@ const DatePicker = ({ value, onChange, className, placeholder = '年/月/日', w
     setView({ y: d.getFullYear(), m: d.getMonth() });
     setOpen(true);
   };
+  // U14 键盘可达：dp-input 触发器支持 Enter/Space 打开日历（B 案：合成触发器，保留 div）
+  const onInputKeyDown = useKeyboardActivate(openPicker);
 
   const prevMonth = () => setView(v => v.m === 0 ? { y: v.y - 1, m: 11 } : { y: v.y, m: v.m - 1 });
   const nextMonth = () => setView(v => v.m === 11 ? { y: v.y + 1, m: 0 } : { y: v.y, m: v.m + 1 });
@@ -59,7 +62,14 @@ const DatePicker = ({ value, onChange, className, placeholder = '年/月/日', w
 
   return (
     <div className="dp-wrap" ref={wrapRef} style={{ width }}>
-      <div className={`dp-input${open ? ' open' : ''}${className ? ' ' + className : ''}`} onClick={openPicker}>
+      <div
+        className={`dp-input${open ? ' open' : ''}${className ? ' ' + className : ''}`}
+        role="button"
+        tabIndex={0}
+        aria-label={value ? `选择日期，当前 ${value}` : '选择日期'}
+        onClick={openPicker}
+        onKeyDown={onInputKeyDown}
+      >
         <Calendar size={14} className="dp-icon" />
         <span className={value ? '' : 'dp-placeholder'}>{value ? value.replace(/-/g, '/') : placeholder}</span>
       </div>

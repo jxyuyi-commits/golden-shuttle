@@ -765,3 +765,13 @@ npm run dev:all
 - 方法：Playwright（装于受管 node 工作区 `~/.workbuddy/binaries/node/workspace`，**未进项目依赖**、跳过浏览器下载）手动 spawn + `--remote-debugging-port` + `connectOverCDP`（Chrome++ 壳与 remote-debugging-pipe 不兼容，executablePath 直启会立即退出）；点验脚本 `uiprobe-runtime.cjs`（gitignored，本机保留复用）。
 - **U17 运行时点验 11/11 通过**：看板加载(6 卡)/ToastHost 挂载/3 toast 并存/右上定位避开 76px 顶栏(x:1202,y:88)/pre-line 多行/≤8s 自动消失/详情「删除单据」→ danger 红钮+「删除打样单」标题/取消关闭/Esc 关最上层/**零 console 错误**；截图 `.uiprobe/runtime-toasts.png`、`runtime-danger-confirm.png`、`runtime-toasts-dark/light.png`。
 - U17 交付时标注的"运行时行为待用户界面点验"至此已由真浏览器自动点验覆盖；后续单元（U14-U16 等）的交互验证可直接复用此通道。
+
+---
+
+## 批4 U14 可点击非交互元素键盘可达化（2026-09-14 深夜）
+
+- **交付**：36 处盘点 → **30 处改造**（A 案转 `<button type="button">`×18，挂 `.u14-btn` 复位类中和 UA 默认样式；B 案保留标签 + `role="button"`+`tabIndex={0}`+键盘激活×11；C 案 tr 仅 tabIndex+键盘×1，保表格语义）+ **6 处合理不改造**（遮罩关闭/stopPropagation，非控件）。
+- **新增** `src/hooks/useKeyboardActivate.js`（hook + 循环用模块级工厂双导出；Enter/Space 触发、Space 防滚动、事件目标为子交互元素时放行防双重触发）。base.css 仅增 `.u14-btn` 复位类一条。
+- **关键判定**：看板卡片/SmartSelect/DatePicker/视图下拉走 B 案（嵌套交互禁令或 `.ss-display > span` 元素限定选择器）；tr/td 一律不改标签（11 处元素限定选择器）。
+- **验证（主理人独立复跑）**：grep 残留=6（与清单一致）；eslint 0 / test 95+20+43 全绿 / build 通过；**U17 回归 11/11 + U14 专项 19/19**（真 Chrome CDP）；焦点环截图 `.uiprobe/u14-focus-card.png` 可见、看板零漂移。
+- **遗留（待办池）**：① 侧栏遮罩的键盘关闭路径（Esc 关侧栏）属新行为，待拍板后另做；② 基线说明——改造在基线截图之前已落盘，零漂移以"逐项计算样式断言"替代像素 diff（更精准定位 UA 注入类漂移）。

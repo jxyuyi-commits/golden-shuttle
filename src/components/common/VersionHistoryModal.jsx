@@ -5,6 +5,7 @@ import { fetchVersionHistory, fetchVersionDetail, fetchBomItems, rollbackVersion
 import ConfirmModal from './ConfirmModal';
 import Modal from './Modal';
 import { toast } from './Toast';
+import { keyboardActivate } from '../../hooks/useKeyboardActivate';
 
 const STYLE_FIELDS = [
   ['title', '款式名称'], ['category', '款式类别'], ['brand', '品牌'], ['designer', '设计师'],
@@ -140,7 +141,7 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
             ) : (
               <div className="version-list custom-scrollbar">
                 {versions.map((v, i) => (
-                  <div key={v.id} className={`version-item ${i === 0 ? 'latest' : ''}`} onClick={() => openVersion(v)}>
+                  <div key={v.id} className={`version-item ${i === 0 ? 'latest' : ''}`} onClick={() => openVersion(v)} role="button" tabIndex={0} onKeyDown={keyboardActivate(() => openVersion(v))}>
                     <div className="version-item-head">
                       <span className="version-no">V{v.version_no}</span>
                       {i === 0 && <span className="version-latest-tag">最新</span>}

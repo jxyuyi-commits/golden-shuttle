@@ -111,10 +111,10 @@ const PeopleEditor = ({ people, onChange, onRenamed }) => {
                 onBlur={commitRename}
               />
             ) : (
-              <span className="people-name" title="点击编辑姓名" onClick={() => startEditName(idx)}>
+              <button type="button" className="people-name u14-btn" title="点击编辑姓名" onClick={() => startEditName(idx)}>
                 {p.name}
                 <Pencil size={10} className="people-name-pen" />
-              </span>
+              </button>
             )}
             <span className="people-roles">
               {p.roles.map(r => (

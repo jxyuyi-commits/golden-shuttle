@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
+import useKeyboardActivate, { keyboardActivate } from '../../hooks/useKeyboardActivate';
 
 /** 选项键：string 即自身；对象优先 key（枚举），退 name */
 const optKey = (o) => (typeof o === 'object' ? (o.key ?? o.name ?? '') : o);
@@ -54,12 +55,20 @@ const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择�
   }, [open]);
 
   const select = (v) => { onChange(v); setOpen(false); };
+  // U14 键盘可达：ss-display 触发器支持 Enter/Space 展开（B 案：保留 div，元素限定选择器 .compare-run-ss .ss-display > span 禁改标签）
+  const onDisplayKeyDown = useKeyboardActivate(() => setOpen(o => !o));
   const matched = value !== undefined && value !== null && value !== '' ? options.find(o => optKey(o) === value) : null;
   const display = matched ? optLabel(matched) : (value || placeholder);
 
   return (
     <div className={`smart-select${className ? ' ' + className : ''}`} style={style} ref={ref}>
-      <div className={`ss-display${open ? ' open' : ''}`} onClick={() => setOpen(o => !o)}>
+      <div
+        className={`ss-display${open ? ' open' : ''}`}
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen(o => !o)}
+        onKeyDown={onDisplayKeyDown}
+      >
         <span className={value ? '' : 'placeholder'}>{display}</span>
         <ChevronDown size={14} />
       </div>
@@ -80,7 +89,14 @@ const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择�
             const k = optKey(opt);
             const label = optLabel(opt);
             return (
-              <div key={k || i} className={`ss-option ${value === k ? 'selected' : ''}`} onClick={() => select(k)}>
+              <div
+                key={k || i}
+                className={`ss-option ${value === k ? 'selected' : ''}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => select(k)}
+                onKeyDown={keyboardActivate(() => select(k))}
+              >
                 {label}
               </div>
             );

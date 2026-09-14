@@ -8,6 +8,7 @@ import ExportButton from '../common/ExportButton';
 import SmartSelect from '../common/SmartSelect';
 import InputModal from '../common/InputModal';
 import { toast } from '../common/Toast';
+import { keyboardActivate } from '../../hooks/useKeyboardActivate';
 import { exportTasksToExcel, getTaskListFileName } from '../../utils/exportTasks';
 import { peopleByRole } from '../../utils/people';
 import { RUN_STATUS, RUN_STATUS_LIST } from '../../constants/terms';
@@ -175,10 +176,20 @@ const KanbanView = ({
     return [];
   };
   // 打样单卡片（REQ-024 重开：全部视图与分组视图共用同一卡片渲染，全部视图下卡片直排 grid）
+  // U14 B 案：卡片内含 PdfThumb 等潜在交互子元素，禁改 button（嵌套禁令）；Tab 聚焦卡片、Enter/Space 进详情
   const renderBentoCard = (task) => {
     const ov = getOverdueInfo(task);
     return (
-      <div key={task.id} className="card glass bento-card" onClick={() => onTaskClick(task)} style={{ position: 'relative', ...(ov.state === 'overdue' ? { borderColor: 'rgba(239,68,68,0.55)' } : {}) }}>
+      <div
+        key={task.id}
+        className="card glass bento-card"
+        role="button"
+        tabIndex={0}
+        aria-label={`打开打样单：${task.style_no || ''} ${task.title || '未命名款式'}`}
+        onClick={() => onTaskClick(task)}
+        onKeyDown={keyboardActivate(() => onTaskClick(task))}
+        style={{ position: 'relative', ...(ov.state === 'overdue' ? { borderColor: 'rgba(239,68,68,0.55)' } : {}) }}
+      >
         {ov.state === 'overdue' && (
           <div className="bento-overdue-badge" title={`期望交期 ${ov.due}（最新版次），已逾期`}>⚠ 逾期 {ov.days} 天</div>
         )}
@@ -266,9 +277,9 @@ const KanbanView = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       <header className="top-bar glass">
-        <div className="logo" onClick={onOpenSidebar}>
+        <button type="button" className="logo u14-btn" onClick={onOpenSidebar} aria-label="打开主菜单">
           <span className="sidebar-hotzone" onMouseEnter={onOpenSidebar}><Layout size={28} color="var(--accent)" /></span><span>PatternMaster Pro</span>
-        </div>
+        </button>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button className="btn--primary" onClick={onNewTask}>
             <Plus size={16} /> 新建打样单
@@ -383,18 +394,25 @@ const KanbanView = ({
               <div style={{ display: 'flex', gap: 8 }}>
                 {/* 视图保存下拉 */}
                 <div className="smart-select">
-                  <div className="ss-display" style={{ padding: '7px 12px', fontSize: 12, background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)', color: 'var(--accent)' }} onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'views' ? null : 'views'); }}>
+                  <div
+                    className="ss-display"
+                    role="button"
+                    tabIndex={0}
+                    style={{ padding: '7px 12px', fontSize: 12, background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)', color: 'var(--accent)' }}
+                    onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === 'views' ? null : 'views'); }}
+                    onKeyDown={keyboardActivate(() => setActiveDropdown(activeDropdown === 'views' ? null : 'views'))}
+                  >
                     <Database size={13} /> <span>{savedViews.find(v => v.id === activeViewId)?.name || '默认列表'}</span>
                   </div>
                   {activeDropdown === 'views' && (
                     <div className="ss-dropdown" style={{ right: 0, width: 180 }}>
                       {savedViews.map(v => (
-                        <div key={v.id} className="ss-option" onClick={() => { setActiveViewId(v.id); setListColumns(prev => prev.map(c => ({ ...c, visible: v.columns.find(vc => vc.id === c.id)?.visible ?? false }))); setActiveDropdown(null); }}>
+                        <div key={v.id} className="ss-option" role="button" tabIndex={0} onClick={() => { setActiveViewId(v.id); setListColumns(prev => prev.map(c => ({ ...c, visible: v.columns.find(vc => vc.id === c.id)?.visible ?? false }))); setActiveDropdown(null); }} onKeyDown={keyboardActivate(() => { setActiveViewId(v.id); setListColumns(prev => prev.map(c => ({ ...c, visible: v.columns.find(vc => vc.id === c.id)?.visible ?? false }))); setActiveDropdown(null); })}>
                           {v.name}
                         </div>
                       ))}
                       <div className="ss-divider">新建工作区</div>
-                      <div className="ss-option" onClick={() => { setViewNameOpen(true); }}>
+                      <div className="ss-option" role="button" tabIndex={0} onClick={() => { setViewNameOpen(true); }} onKeyDown={keyboardActivate(() => { setViewNameOpen(true); })}>
                         <Plus size={14} /> 保存当前配置
                       </div>
                     </div>
@@ -420,7 +438,7 @@ const KanbanView = ({
                     }}>
                       <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-3)', marginBottom: 12, padding: '0 4px', display: 'flex', justifyContent: 'space-between' }}>
                         字段排序与显示
-                        <span style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => setActiveDropdown(null)}>关闭</span>
+                        <span style={{ color: 'var(--accent)', cursor: 'pointer' }} role="button" tabIndex={0} onClick={() => setActiveDropdown(null)} onKeyDown={keyboardActivate(() => setActiveDropdown(null))}>关闭</span>
                       </div>
                       {listColumns.map((col, idx) => (
                         <div

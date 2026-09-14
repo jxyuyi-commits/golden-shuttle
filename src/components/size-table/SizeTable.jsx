@@ -339,12 +339,12 @@ const SizeTable = ({
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <div className="toggle-expand" onClick={() => setIsExpanding(!isExpanding)}>
+          <button type="button" className="toggle-expand u14-btn" onClick={() => setIsExpanding(!isExpanding)}>
             <div className={`toggle-btn ${isExpanding ? 'on' : ''}`}>
               <div className="toggle-thumb" />
             </div>
             <span>拓码模式</span>
-          </div>
+          </button>
           {selectedIndices.length > 0 && (
             <button className="btn--ghost btn--ghost-danger" style={{ borderColor: 'var(--border-weak)' }} onClick={() => setConfirmBatch(true)}>
               批量删除 ({selectedIndices.length})

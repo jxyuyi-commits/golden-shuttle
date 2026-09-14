@@ -36,19 +36,19 @@ const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
         <div className="modal-body">
           <div className="modal-sidebar">
             {categories.map(cat => (
-              <div key={cat} className={`side-nav-item ${activeCat === cat ? 'active' : ''}`} onClick={() => setActiveCat(cat)}>
+              <button type="button" key={cat} className={`side-nav-item u14-btn ${activeCat === cat ? 'active' : ''}`} onClick={() => setActiveCat(cat)}>
                 {cat}
-              </div>
+              </button>
             ))}
           </div>
           <div className="modal-main">
             <div className="template-grid">
               {templates.map(t => (
-                <div key={t.id} className={`template-card ${selectedIds.includes(t.id) ? 'selected' : ''}`} onClick={() => toggle(t.id)}>
+                <button type="button" key={t.id} className={`template-card u14-btn ${selectedIds.includes(t.id) ? 'selected' : ''}`} onClick={() => toggle(t.id)} aria-pressed={selectedIds.includes(t.id)}>
                   <div className="tcard-name">{t.name}</div>
                   <div className="tcard-meta">方法: {t.method || '---'}</div>
                   <div className="tcard-meta">误差: {t.tolerance || '---'}</div>
-                </div>
+                </button>
               ))}
               {templates.length === 0 && (
                 <div style={{ color: 'var(--text-3)', padding: 32, textAlign: 'center', gridColumn: '1/-1' }}>

@@ -3,6 +3,7 @@ import { X, FolderOpen, Check } from 'lucide-react';
 import { fetchDrawings } from '../../api';
 import PdfThumb from './PdfThumb';
 import Modal from './Modal';
+import EmptyState from './EmptyState';
 
 /**
  * 从图纸资料库选择设计稿：
@@ -49,10 +50,10 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
           {loading && <div style={{ padding: 28, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>}
           {error && <div style={{ padding: 28, textAlign: 'center', color: 'var(--color-danger-text)', fontSize: 13 }}>加载失败：{error}</div>}
           {!loading && !error && items.length === 0 && (
-            <div style={{ padding: 36, textAlign: 'center', color: 'var(--text-3)', fontSize: 13, lineHeight: 1.8 }}>
-              暂无「设计稿」分类的图纸资料。
-              <br />可到下方「图纸资料」tab 上传设计稿，或直接拖拽文件到设计稿区域。
-            </div>
+            <EmptyState
+              title="暂无「设计稿」分类的图纸资料"
+              hint="可到下方「图纸资料」tab 上传设计稿，或直接拖拽文件到设计稿区域"
+            />
           )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 12 }}>
             {items.map(d => {

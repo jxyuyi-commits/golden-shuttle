@@ -5,6 +5,7 @@ import { fetchMeasurementTemplates, saveMeasurementTemplate } from '../../api';
 import MeasurementModal from '../measurement/MeasurementModal';
 import ConfirmModal from '../common/ConfirmModal';
 import { toast } from '../common/Toast';
+import EmptyState from '../common/EmptyState';
 import SmartSelect from '../common/SmartSelect';
 
 /** 尺寸指标表格：排序 + 批量操作 + 预设导入 + 拓码 + 成衣实测公差报警 + 跨版次（批次）同码对比
@@ -481,8 +482,8 @@ const SizeTable = ({
             ))}
             {data.length === 0 && (
               <tr>
-                <td colSpan={isExpanding ? allSizes.length + 6 : 9} style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-3)' }}>
-                  暂无数据，点击「从预设加入」批量导入部位
+                <td colSpan={isExpanding ? allSizes.length + 6 : 9}>
+                  <EmptyState compact title="暂无数据" hint="点击「从预设加入」批量导入部位" />
                 </td>
               </tr>
             )}

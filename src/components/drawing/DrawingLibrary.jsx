@@ -6,6 +6,8 @@ import { Plus, Trash2, Loader2, X, Upload, FileText, ClipboardPaste, History, Al
 import ConfirmModal from '../common/ConfirmModal';
 import Modal from '../common/Modal';
 import { toast } from '../common/Toast';
+import EmptyState from '../common/EmptyState';
+import { Filter } from 'lucide-react';
 import SmartSelect from '../common/SmartSelect';
 import PdfThumb from '../common/PdfThumb';
 import {
@@ -319,11 +321,12 @@ const DrawingLibrary = ({ taskId }) => {
       {loading ? (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
-          {cards.length === 0
-            ? '暂无图纸资料：点击「上传资料」、拖拽文件到本区域，或 Ctrl+V 粘贴（图片/PDF/专业软件文件均可）'
-            : `「${filter}」分类暂无资料`}
-        </div>
+        // U15：真空态（库内无任何资料）与筛选无结果态（分类过滤后为空）分开表达
+        cards.length === 0 ? (
+          <EmptyState title="暂无图纸资料" hint="点击「上传资料」、拖拽文件到本区域，或 Ctrl+V 粘贴（图片/PDF/专业软件文件均可）" />
+        ) : (
+          <EmptyState icon={Filter} title={`「${filter}」分类暂无资料`} hint="试试其他分类" />
+        )
       ) : (
         <div className="drawing-grid">
           {filtered.map(d => (

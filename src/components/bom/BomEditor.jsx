@@ -6,6 +6,8 @@ import {
 } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
 import { toast } from '../common/Toast';
+import EmptyState from '../common/EmptyState';
+import Skeleton from '../common/Skeleton';
 import SmartSelect from '../common/SmartSelect';
 
 const CATEGORIES = ['主料', '辅料', '里料', '衬料', '其他'];
@@ -124,11 +126,9 @@ const BomEditor = ({ taskId }) => {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>
+        <Skeleton variant="table" rows={4} />
       ) : rows.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
-          暂无物料，点击右上角「添加物料」开始建立清单
-        </div>
+        <EmptyState title="暂无物料" hint="点击右上角「添加物料」开始建立清单" />
       ) : (
         <div style={{ overflow: 'auto' }}>
           <table className="data-table bom-grid" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12 }}>

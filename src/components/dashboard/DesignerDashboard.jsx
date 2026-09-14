@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Plus, Layout, BarChart3, PieChart, CheckCircle2, Clock, AlertCircle, XCircle } from 'lucide-react';
 import { RUN_STATUS, RUN_STATUS_ORDER, RUN_STATUS_RANK } from '../../constants/terms';
 import { keyboardActivate } from '../../hooks/useKeyboardActivate';
+import EmptyState from '../common/EmptyState';
 
 // 款级聚合状态元数据收敛至 src/constants/terms.js（U12）
 const STATUS_META = RUN_STATUS;
@@ -119,7 +120,7 @@ const DesignerDashboard = ({ tasks, onTaskClick, onOpenSidebar, onNewTask }) => 
           {/* 品类占比（点击筛选清单，REQ-003①） */}
           <div className="dash-panel glass">
             <div className="dash-panel-title"><PieChart size={16} /> 品类占比 <span style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 400 }}>（点击筛选清单，可再点恢复）</span></div>
-            {catEntries.length === 0 && <div style={{ color: 'var(--text-3)', fontSize: 13 }}>暂无数据</div>}
+            {catEntries.length === 0 && <EmptyState compact title="暂无数据" />}
             {catEntries.map(([cat, cnt]) => {
               const pct = Math.round((cnt / stats.total) * 100);
               const active = categoryFilter === cat;

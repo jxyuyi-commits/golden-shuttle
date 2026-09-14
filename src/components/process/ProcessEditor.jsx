@@ -8,6 +8,8 @@ import {
 } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
 import { toast } from '../common/Toast';
+import EmptyState from '../common/EmptyState';
+import Skeleton from '../common/Skeleton';
 import SmartSelect from '../common/SmartSelect';
 
 const SECTIONS = ['部位工艺', '缝制工艺', '后整理', '特殊工艺', '其他'];
@@ -241,11 +243,9 @@ const ProcessEditor = ({ taskId }) => {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>
+        <Skeleton variant="table" rows={5} />
       ) : rows.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
-          暂无工艺指示，点击右上角「添加工艺」开始记录
-        </div>
+        <EmptyState title="暂无工艺指示" hint="点击右上角「添加工艺」开始记录" />
       ) : (
         <div style={{ overflow: 'auto' }}>
           <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 12, tableLayout: 'fixed' }}>

@@ -189,6 +189,25 @@ em.audit-wait { color: var(--text-2); }
 
 .empty-state-v4 {display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0; color: var(--text-4); }
 .empty-icon {margin-bottom: 16px; opacity: 0.3; }
+/* U15 EmptyState 扩展：标题/次要说明/动作钮 + 紧凑模式（侧栏/表格单元格/嵌套小区域） */
+.empty-state__title { margin: 0; font-size: 13px; color: var(--text-3); }
+.empty-state__hint { margin: 4px 0 0; font-size: 12px; color: var(--text-4); line-height: 1.7; }
+.empty-state__action { margin-top: 12px; }
+.empty-state--compact { padding: 20px 12px; }
+.empty-state--compact .empty-icon { margin-bottom: 8px; }
+.empty-state--compact .empty-state__title { font-size: 12px; }
+.empty-state--compact .empty-state__hint { font-size: 11px; margin-top: 2px; }
+
+/* U15 骨架屏 Skeleton：shimmer 占位块（reduced-motion 下关闭动画） */
+.skeleton-wrap { padding: 40px 24px; }
+.skeleton--list-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.skeleton { display: block; background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-hover-2) 50%, var(--bg-hover) 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.4s ease infinite; border-radius: var(--radius-md); }
+.skeleton--row { height: 34px; margin-bottom: 10px; }
+.skeleton--line { height: 13px; margin-bottom: 12px; }
+.skeleton--avatar { width: 36px; height: 36px; border-radius: var(--radius-pill); flex: none; }
+.skeleton--list-row .skeleton--line { flex: 1; margin-bottom: 0; }
+@keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
 .text-dim {color: var(--text-3); font-style: italic; }
 
 /* 按钮增强 */

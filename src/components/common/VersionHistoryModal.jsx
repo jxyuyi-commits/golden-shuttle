@@ -5,6 +5,8 @@ import { fetchVersionHistory, fetchVersionDetail, fetchBomItems, rollbackVersion
 import ConfirmModal from './ConfirmModal';
 import Modal from './Modal';
 import { toast } from './Toast';
+import EmptyState from './EmptyState';
+import Skeleton from './Skeleton';
 import { keyboardActivate } from '../../hooks/useKeyboardActivate';
 
 const STYLE_FIELDS = [
@@ -133,11 +135,9 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
         {!selected && (
           <div className="version-body">
             {loading ? (
-              <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>加载中…</div>
+              <Skeleton variant="list" rows={4} />
             ) : versions.length === 0 ? (
-              <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
-                暂无历史版本。<br />每次自动保存后生成版本，同一编辑会话（5 分钟内）自动合并为一条。
-              </div>
+              <EmptyState title="暂无历史版本" hint="每次自动保存后生成版本，同一编辑会话（5 分钟内）自动合并为一条" />
             ) : (
               <div className="version-list custom-scrollbar">
                 {versions.map((v, i) => (

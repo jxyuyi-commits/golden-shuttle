@@ -3,6 +3,7 @@ import { Plus, Trash2, Loader2, Link2, X, Ruler, Package, FileText } from 'lucid
 import SmartSelect from '../common/SmartSelect';
 import ConfirmModal from '../common/ConfirmModal';
 import DatePicker from '../common/DatePicker';
+import EmptyState from '../common/EmptyState';
 import { fetchRuns, createRun, updateRun, deleteRun, fetchDrawings } from '../../api';
 import { peopleByRole } from '../../utils/people';
 import { RUN_STATUS_LIST } from '../../constants/terms';
@@ -133,9 +134,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
   return (
     <div className="run-list">
       {runs.length === 0 && (
-        <div style={{ fontSize: 12.5, color: 'var(--text-2)', padding: '8px 0 4px' }}>
-          暂无打样批次，点击下方按钮新增（一款可并行胚样、头版样等多个批次）
-        </div>
+        <EmptyState compact title="暂无打样批次" hint="点击下方按钮新增" />
       )}
       {runs.map((r, idx) => (
         <div key={r.id} className="run-card" data-blocked={r.blocker && r.blocker !== 'none' ? '1' : '0'}>
@@ -336,7 +335,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
             </div>
             {manageId === r.id && (
               <div className="run-linked-picker">
-                {drawingGroups.length === 0 && <div style={{ color: 'var(--text-3)', fontSize: 12 }}>该款暂无图纸资料，请先在「图纸资料」页上传</div>}
+                {drawingGroups.length === 0 && <EmptyState compact title="该款暂无图纸资料" hint="请先在「图纸资料」页上传" />}
                 {drawingGroups.map(g => (
                   <div key={g.group_id} className="run-linked-group">
                     <div className="run-linked-group-title">{g.file_name}</div>

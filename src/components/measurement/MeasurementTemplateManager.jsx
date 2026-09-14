@@ -4,6 +4,7 @@ import { autoSign } from '../../utils/format';
 import { fetchMeasurementTemplates, saveMeasurementTemplate, deleteMeasurementTemplate } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
 import Modal from '../common/Modal';
+import EmptyState from '../common/EmptyState';
 import { keyboardActivate } from '../../hooks/useKeyboardActivate';
 
 /** 尺寸部位预设管理（品类目录 + 部位明细表格 + 新增/编辑弹窗） */
@@ -97,7 +98,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
               <button className="btn--icon btn--xs btn--reveal" onClick={ev => { ev.stopPropagation(); setConfirmCatIdx(i); }}><Trash2 size={12} /></button>
             </div>
           ))}
-          {categories.length === 0 && <div className="empty-tip">暂无分类</div>}
+          {categories.length === 0 && <EmptyState compact title="暂无分类" />}
         </div>
       </div>
       <div className="content-v4">
@@ -144,11 +145,11 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
               {templates.length === 0 && (
                 <tr>
                   <td colSpan={5}>
-                    <div className="empty-state-v4">
-                      <div className="empty-icon"><FileText size={40} /></div>
-                      <p>当前分类下暂无预设部位</p>
-                      <button className="btn--ghost btn--sm" onClick={() => setEditing({ name: '', method: '', tolerance: '', grading_rule: '', sort_order: 0 })}>立即添加第一个</button>
-                    </div>
+                    <EmptyState
+                      icon={FileText}
+                      title="当前分类下暂无预设部位"
+                      action={{ label: '立即添加第一个', onClick: () => setEditing({ name: '', method: '', tolerance: '', grading_rule: '', sort_order: 0 }) }}
+                    />
                   </td>
                 </tr>
               )}

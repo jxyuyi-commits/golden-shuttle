@@ -5,6 +5,7 @@ import PdfPickerModal from '../common/PdfPickerModal';
 import ConfirmModal from '../common/ConfirmModal';
 import VersionHistoryModal from '../common/VersionHistoryModal';
 import DatePicker from '../common/DatePicker';
+import EmptyState from '../common/EmptyState';
 import SizeTable from '../size-table/SizeTable';
 import SmartSelect from '../common/SmartSelect';
 import ExportButton from '../common/ExportButton';
@@ -455,9 +456,7 @@ const DetailView = ({
               </div>
             ))}
             {(task.progress_nodes || []).length === 0 && (
-              <div style={{ padding: '18px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 12 }}>
-                暂无工作动态，点击「添加事件」开始记录项目推进
-              </div>
+              <EmptyState compact title="暂无工作动态" hint="点击「添加事件」开始记录项目推进" />
             )}
           </div>
         </div>

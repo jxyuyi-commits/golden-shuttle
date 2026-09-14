@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Plus, ArrowUp, Tag, AlertCircle, CheckCircle2, Clock, FileText, Circle } from 'lucide-react';
 import { fetchLogs } from '../../api';
 import Modal from './Modal';
+import EmptyState from './EmptyState';
 
 // 动作 → 图标/颜色/短标签
 const ACTION_META = {
@@ -48,10 +49,10 @@ const OperationLogsModal = ({ onClose }) => {
           {loading && <div style={{ padding: 28, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>}
           {error && <div style={{ padding: 28, textAlign: 'center', color: 'var(--color-danger-text)', fontSize: 13 }}>加载失败：{error}</div>}
           {!loading && !error && logs.length === 0 && (
-            <div style={{ padding: 36, textAlign: 'center', color: 'var(--text-3)', fontSize: 13, lineHeight: 1.8 }}>
-              暂无操作记录。
-              <br />创建或修改打样单后，关键动作（状态/版次/优先级/审核/交期/工作动态）会自动记录在这里。
-            </div>
+            <EmptyState
+              title="暂无操作记录"
+              hint="创建或修改打样单后，关键动作（状态/版次/优先级/审核/交期/工作动态）会自动记录在这里"
+            />
           )}
           {logs.map(l => {
             const meta = ACTION_META[l.action] || { icon: Circle, color: 'var(--text-3)', label: l.action || '操作' };

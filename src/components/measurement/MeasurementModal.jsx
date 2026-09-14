@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { fetchMeasurementTemplates } from '../../api';
 import Modal from '../common/Modal';
+import EmptyState from '../common/EmptyState';
 
 /** 部位预设选择弹窗（SizeTable 内部使用） */
 const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
@@ -51,8 +52,8 @@ const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
                 </button>
               ))}
               {templates.length === 0 && (
-                <div style={{ color: 'var(--text-3)', padding: 32, textAlign: 'center', gridColumn: '1/-1' }}>
-                  该分类下暂无预设，请先在「设置」中添加
+                <div style={{ gridColumn: '1/-1' }}>
+                  <EmptyState compact title="该分类下暂无预设" hint="请先在「设置」中添加" />
                 </div>
               )}
             </div>

@@ -238,7 +238,7 @@ const DetailView = ({
               </div>
             )}
             {toastMsg && (
-              <div style={{ fontSize: 12, color: '#4ade80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', padding: '6px 12px', borderRadius: 8, marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: 'var(--run-done)', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', padding: '6px 12px', borderRadius: 8, marginBottom: 16 }}>
                 {toastMsg}
               </div>
             )}
@@ -257,7 +257,7 @@ const DetailView = ({
         )}
 
         <div className="form-panel glass" style={{ display: detailTab === 'base' ? '' : 'none' }}>
-          <div className="section-title" style={{ borderLeftColor: '#f43f5e', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="section-title" style={{ borderLeftColor: 'var(--color-danger-rose)', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div>款式信息 <span>(款级共享 · 同款各版次同步生效，编辑保存即全局生效)</span></div>
             <button type="button" className="btn-icon" onClick={() => onSetIsStyleEditing(!isStyleEditing)} style={{ background: isStyleEditing ? 'var(--accent-soft-2)' : 'var(--border-weak)', borderRadius: 4, padding: 4 }}>
               <Edit2 size={16} color={isStyleEditing ? 'var(--accent)' : 'var(--text-2)'} />
@@ -302,7 +302,7 @@ const DetailView = ({
             </div>
           </div>
 
-          <div className="section-title" style={{ marginTop: 32, borderLeftColor: '#fbbf24' }}>
+          <div className="section-title" style={{ marginTop: 32, borderLeftColor: 'var(--run-sample)' }}>
             打样批次 <span>(同款各版次并行，板师工作单元；各自独立打样单号与审核)</span>
           </div>
           <SampleRunList taskId={task.id} settings={settings} category={task.category} onStatusSync={onStatusSync} onRunsChanged={reloadRuns} onOpenSizeTable={handleOpenSizeTable} onOpenBom={() => handleSetTab('bom')} onOpenDrawings={() => handleSetTab('drawing')} />

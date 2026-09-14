@@ -46,7 +46,7 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
         </div>
         <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
           {loading && <div style={{ padding: 28, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>}
-          {error && <div style={{ padding: 28, textAlign: 'center', color: '#f87171', fontSize: 13 }}>加载失败：{error}</div>}
+          {error && <div style={{ padding: 28, textAlign: 'center', color: 'var(--color-danger-text)', fontSize: 13 }}>加载失败：{error}</div>}
           {!loading && !error && items.length === 0 && (
             <div style={{ padding: 36, textAlign: 'center', color: 'var(--text-3)', fontSize: 13, lineHeight: 1.8 }}>
               暂无「设计稿」分类的图纸资料。

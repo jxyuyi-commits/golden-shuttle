@@ -13,9 +13,9 @@ import { peopleByRole } from '../../utils/people';
 export const RUN_STATUS = [
   { key: 'waiting_material', label: '待安排', color: 'var(--text-2)' }, // REQ-030 改词
   { key: 'pattern_making', label: '打版中', color: 'var(--accent)' },
-  { key: 'sample_making', label: '样衣中', color: '#fbbf24' },
-  { key: 'pending_confirm', label: '待审版', color: '#a78bfa' }, // REQ-030 改词
-  { key: 'done', label: '已完成', color: '#4ade80' },
+  { key: 'sample_making', label: '样衣中', color: 'var(--run-sample)' },
+  { key: 'pending_confirm', label: '待审版', color: 'var(--color-info)' }, // REQ-030 改词
+  { key: 'done', label: '已完成', color: 'var(--run-done)' },
 ];
 // 阻塞原因（独立字段）
 const BLOCKERS = [
@@ -27,9 +27,9 @@ const BLOCKERS = [
 ];
 const PRIORITIES = ['C', 'B', 'A', 'S']; // REQ-030 优先级四级（S 最高）
 // REQ-030 优先级值色：S 红 / A 橙 / B 品牌色 / C 中性
-const prioColor = (v) => v === 'S' ? '#f43f5e' : v === 'A' ? '#fb923c' : v === 'B' ? 'var(--accent)' : 'var(--text)';
+const prioColor = (v) => v === 'S' ? 'var(--color-danger-rose)' : v === 'A' ? 'var(--color-orange-400)' : v === 'B' ? 'var(--accent)' : 'var(--text)';
 const AUDIT_STATUSES = ['未提交', '待审核', '已通过', '已驳回'];
-const auditColor = (s) => (s === '已通过' ? '#4ade80' : s === '已驳回' ? '#f87171' : s === '待审核' ? '#fbbf24' : 'var(--text-2)');
+const auditColor = (s) => (s === '已通过' ? 'var(--run-done)' : s === '已驳回' ? 'var(--color-danger-text)' : s === '待审核' ? 'var(--run-sample)' : 'var(--text-2)');
 const statusColor = (k) => RUN_STATUS.find(s => s.key === k)?.color || 'var(--text-2)';
 
 /**
@@ -245,7 +245,7 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
                 options={BLOCKERS}
                 placeholder="选择阻塞原因"
                 allowCustom={false}
-                style={{ '--sel-color': r.blocker && r.blocker !== 'none' ? '#f87171' : 'var(--text)' }}
+                style={{ '--sel-color': r.blocker && r.blocker !== 'none' ? 'var(--color-danger-text)' : 'var(--text)' }}
               />
             </div>
             <div className="field"><label>任务开始</label><DatePicker value={r.start_date || ''} onChange={v => patch(r.id, { start_date: v })} /></div>

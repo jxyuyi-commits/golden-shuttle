@@ -169,7 +169,7 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
               })()}
 
               {/* 尺寸表差异 */}
-              <div className="section-title" style={{ borderLeftColor: '#f59e0b', marginTop: 24 }}>尺寸表</div>
+              <div className="section-title" style={{ borderLeftColor: 'var(--color-warn)', marginTop: 24 }}>尺寸表</div>
               {(() => {
                 const rows = diffRows(selected.snapshot?.size_data || [], curSize, r => r.name);
                 if (!rows.length) return <div className="version-none">与当前一致</div>;
@@ -198,7 +198,7 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
               })()}
 
               {/* BOM 差异 */}
-              <div className="section-title" style={{ borderLeftColor: '#34d399', marginTop: 24 }}>物料清单（BOM）</div>
+              <div className="section-title" style={{ borderLeftColor: 'var(--color-success)', marginTop: 24 }}>物料清单（BOM）</div>
               {(() => {
                 const rows = diffRows(selected.snapshot?.bom || [], curBom, r => `${r.category}|${r.name}|${r.spec}`);
                 if (!rows.length) return <div className="version-none">与当前一致</div>;

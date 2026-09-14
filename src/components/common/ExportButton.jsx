@@ -103,8 +103,8 @@ const ExportButton = ({ label, title, confirmText, fileName, onExport, style, di
           animation: 'fadeInUp 0.25s ease'
         }}>
           {toast.type === 'success'
-            ? <CheckCircle2 size={16} color="#4ade80" />
-            : <AlertCircle size={16} color="#f87171" />}
+            ? <CheckCircle2 size={16} color="var(--run-done)" />
+            : <AlertCircle size={16} color="var(--color-danger-text)" />}
           <span style={{ wordBreak: 'break-all' }}>{toast.text}</span>
         </div>,
         document.body

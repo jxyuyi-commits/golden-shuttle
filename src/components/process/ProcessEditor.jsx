@@ -230,7 +230,7 @@ const ProcessEditor = ({ taskId }) => {
   return (
     <div className="glass" style={{ gridColumn: '1/-1', padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div className="section-title" style={{ borderLeftColor: '#f59e0b' }}>
+        <div className="section-title" style={{ borderLeftColor: 'var(--color-warn)' }}>
           <div>工艺指示</div>
           <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>编辑后自动保存 · 共 {rows.length} 项 · 拖动行首手柄可排序 · 拖动表头右侧竖线可调列宽</span>
         </div>

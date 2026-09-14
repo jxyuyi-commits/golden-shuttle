@@ -263,7 +263,7 @@ const DrawingLibrary = ({ taskId }) => {
     >
       {dragOver && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(22,23,25,0.7)', borderRadius: 20, zIndex: 5, pointerEvents: 'none' }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#c4b5fd', background: 'var(--overlay-strong)', padding: '18px 34px', borderRadius: 12, border: '1px dashed rgba(167,139,250,0.6)' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-violet-300)', background: 'var(--overlay-strong)', padding: '18px 34px', borderRadius: 12, border: '1px dashed rgba(167,139,250,0.6)' }}>
             松开鼠标上传（支持任意格式，可多选）
           </div>
         </div>
@@ -271,7 +271,7 @@ const DrawingLibrary = ({ taskId }) => {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div className="section-title" style={{ borderLeftColor: '#a78bfa', marginBottom: 8 }}>
+          <div className="section-title" style={{ borderLeftColor: 'var(--color-info)', marginBottom: 8 }}>
             <div>图纸资料</div>
             <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 400 }}>集中管理设计稿 / 参考图 / 成衣图 / 纸样 / 唛架图等资料 · 共 {cards.length} 份</span>
           </div>
@@ -285,7 +285,7 @@ const DrawingLibrary = ({ taskId }) => {
                   padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
                   border: filter === c ? '1px solid rgba(167,139,250,0.6)' : '1px solid var(--border-strong)',
                   background: filter === c ? 'rgba(167,139,250,0.18)' : 'var(--bg-hover)',
-                  color: filter === c ? '#c4b5fd' : 'var(--text-2)', fontWeight: 600,
+                  color: filter === c ? 'var(--color-violet-300)' : 'var(--text-2)', fontWeight: 600,
                 }}
               >
                 {c}
@@ -404,7 +404,7 @@ const DrawingLibrary = ({ taskId }) => {
               onDrop={e => { e.preventDefault(); e.stopPropagation(); collectFiles(e.dataTransfer?.files); }}
               style={{ borderColor: upFiles.length ? 'rgba(167,139,250,0.4)' : 'var(--border-strong)' }}
             >
-              <Upload size={26} color="#a78bfa" />
+              <Upload size={26} color="var(--color-info)" />
               <div className="dz-title">点击选择 / 拖拽文件到此处 / Ctrl+V 粘贴</div>
               <div className="dz-sub">支持任意格式：图片、PDF、dxf、pla、prj、Zprj、zpac 等（可多选）</div>
               <label className="dz-btn">
@@ -422,7 +422,7 @@ const DrawingLibrary = ({ taskId }) => {
               <div className="drawing-uplist">
                 {upFiles.map((f, i) => (
                   <div key={`${f.name}-${i}`} className="drawing-uplist-row">
-                    <FileText size={14} color="#a78bfa" />
+                    <FileText size={14} color="var(--color-info)" />
                     <span className="uplist-name" title={f.name}>{f.name}</span>
                     <span className="uplist-size">{fmtSize(f.size)}</span>
                     <button
@@ -460,7 +460,7 @@ const DrawingLibrary = ({ taskId }) => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div style={{ fontSize: 17, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <History size={18} color="#a78bfa" /> 版本历史
+                <History size={18} color="var(--color-info)" /> 版本历史
               </div>
               <button className="btn-icon" onClick={() => setGroupModal(null)}><X size={18} /></button>
             </div>

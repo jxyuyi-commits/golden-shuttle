@@ -37,6 +37,37 @@
   --shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
   --card-bg: rgba(22, 23, 25, 0.75);
   --board-col-w: 600px; /* U7·S3 .col 单源：看板分栏统一宽度（改宽度只动此处） */
+  /* U8 语义状态色令牌：替代 JSX/CSS 内硬编码 hex（成功/危险/警告/信息/逾期 + 版次批次状态色） */
+  --color-success: #34d399;
+  --color-danger: #ef4444;
+  --color-danger-strong: #dc2626;
+  --color-danger-soft: rgba(239, 68, 68, 0.8);
+  --color-danger-fg: #ffffff;
+  --color-warn: #f59e0b;
+  --color-warn-soft: rgba(245, 158, 11, 0.92);
+  --color-info: #a78bfa;
+  --color-overdue: #ef4444;
+  --color-overdue-soft: rgba(239, 68, 68, 0.92);
+  --color-overdue-fg: #ffffff;
+  --run-waiting: var(--text-2);
+  --run-pattern: var(--accent);
+  --run-sample: #fbbf24;
+  --run-confirm: #a78bfa;
+  --run-done: #4ade80;
+  /* U8 扩展语义色令牌：固定值、三主题共享（不在 dark/light 重定义 → 不随主题漂移） */
+  --color-green-500: #22c55e;
+  --color-danger-rose: #f43f5e;
+  --color-orange-400: #fb923c;
+  --color-warn-2: #eab308;
+  --color-violet-300: #c4b5fd;
+  --color-danger-text: #f87171;
+  --color-rose-400: #fb7185;
+  --color-teal-400: #2dd4bf;
+  --color-slate-400: #94a3b8;
+  --color-indigo-500: #6366f1;
+  --color-pink-400: #f472b6;
+  --color-danger-deep: #b91c1c; /* .btn-danger hover 深红 */
+  --color-warn-fg: #1a1a1a; /* 琥珀底之上的深色前景，保证对比度 */
   --app-bg: radial-gradient(circle at 22% 0%, rgba(200,169,110,0.10), transparent 52%), radial-gradient(circle at 78% 100%, rgba(200,169,110,0.06), transparent 55%), var(--bg);
   color-scheme: dark;
 }
@@ -61,10 +92,10 @@
   --border-strong: rgba(255, 255, 255, 0.3);
   --input-bg: Field;
   --input-bg-strong: #232327;
-  --accent: #e6e8eb;
-  --accent-text: #1a1a1a;
-  --accent-btn: #e6e8eb;
-  --accent-btn-text: #1a1a1a;
+  --accent: #c8a96e; /* U11: 深主题保留香槟金（品牌色），不跟随系统中性灰 */
+  --accent-text: #141410;
+  --accent-btn: #c8a96e;
+  --accent-btn-text: #141410;
   --accent-soft: rgba(255, 255, 255, 0.1);
   --accent-soft-2: rgba(255, 255, 255, 0.18);
   --overlay: rgba(2, 6, 23, 0.6);
@@ -72,6 +103,23 @@
   --scroll-thumb: rgba(148, 163, 184, 0.4);
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   --card-bg: #1f1f23;
+  /* U8 语义状态色令牌（与 custom 同值，三主题一致） */
+  --color-success: #34d399;
+  --color-danger: #ef4444;
+  --color-danger-strong: #dc2626;
+  --color-danger-soft: rgba(239, 68, 68, 0.8);
+  --color-danger-fg: #ffffff;
+  --color-warn: #f59e0b;
+  --color-warn-soft: rgba(245, 158, 11, 0.92);
+  --color-info: #a78bfa;
+  --color-overdue: #ef4444;
+  --color-overdue-soft: rgba(239, 68, 68, 0.92);
+  --color-overdue-fg: #ffffff;
+  --run-waiting: var(--text-2);
+  --run-pattern: var(--accent);
+  --run-sample: #fbbf24;
+  --run-confirm: #a78bfa;
+  --run-done: #4ade80;
   --app-bg: var(--bg);
 }
 
@@ -95,9 +143,9 @@
   --border-strong: rgba(0, 0, 0, 0.26);
   --input-bg: Field;
   --input-bg-strong: #eef0f3;
-  --accent: #1f2329;
+  --accent: #8a6d2f; /* U11: 浅主题用深一档金保对比度（品牌色） */
   --accent-text: #ffffff;
-  --accent-btn: #1f2329;
+  --accent-btn: #8a6d2f;
   --accent-btn-text: #ffffff;
   --accent-soft: rgba(0, 0, 0, 0.06);
   --accent-soft-2: rgba(0, 0, 0, 0.12);
@@ -106,6 +154,23 @@
   --scroll-thumb: rgba(100, 116, 139, 0.4);
   --shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
   --card-bg: #ffffff;
+  /* U8 语义状态色令牌（与 custom 同值，三主题一致） */
+  --color-success: #34d399;
+  --color-danger: #ef4444;
+  --color-danger-strong: #dc2626;
+  --color-danger-soft: rgba(239, 68, 68, 0.8);
+  --color-danger-fg: #ffffff;
+  --color-warn: #f59e0b;
+  --color-warn-soft: rgba(245, 158, 11, 0.92);
+  --color-info: #a78bfa;
+  --color-overdue: #ef4444;
+  --color-overdue-soft: rgba(239, 68, 68, 0.92);
+  --color-overdue-fg: #ffffff;
+  --run-waiting: var(--text-2);
+  --run-pattern: var(--accent);
+  --run-sample: #fbbf24;
+  --run-confirm: #a78bfa;
+  --run-done: #4ade80;
   --app-bg: var(--bg);
 }
 

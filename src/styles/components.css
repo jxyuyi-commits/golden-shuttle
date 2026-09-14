@@ -107,7 +107,7 @@
 .bento-img-wrap .pdf-empty .pdf-empty-icon { color: var(--text-4); opacity: 0.9; }
 .bento-img-wrap .pdf-empty .pdf-empty-text { font-size: 11px; letter-spacing: 0.5px; color: var(--text-3); }
 .bento-img-wrap .pdf-empty .pdf-empty-hint { font-size: 10px; color: var(--text-4); opacity: 0.7; }
-.bento-badge { position: absolute; top: 4px; left: 4px; background: rgba(0, 0, 0, 0.65); border-radius: 4px; padding: 2px 6px; color: var(--text); font-size: 11px; z-index: 10; width: auto; height: auto; line-height: 1.2; }
+.bento-badge { position: absolute; top: 4px; left: 4px; background: rgba(0, 0, 0, 0.65); border-radius: 4px; padding: 2px 6px; color: var(--color-overdue-fg); font-size: 11px; z-index: 10; width: auto; height: auto; line-height: 1.2; }
 .bento-right-col { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 0; }
 .bento-tr { padding: 8px 16px; display: flex; justify-content: flex-end; align-items: center; }
 .bento-style-no { font-size: 24px; font-weight: 950; color: var(--accent); line-height: 1; white-space: nowrap; letter-spacing: 0.5px; }
@@ -225,7 +225,7 @@ em.audit-wait { color: var(--text-2); }
 /* 任务卡片 */
 .card {padding: 14px; margin-bottom: 16px; cursor: pointer; transition: transform .25s, border-color .25s, box-shadow .25s; }
 /* 逾期提醒徽章（看板卡片右上角） */
-.bento-overdue-badge {position: absolute; top: 10px; right: 10px; background: rgba(239,68,68,0.92); color: var(--text); font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; z-index: 5; box-shadow: 0 4px 12px rgba(239,68,68,0.4); white-space: nowrap; }
+.bento-overdue-badge {position: absolute; top: 10px; right: 10px; background: var(--color-overdue-soft); color: var(--color-overdue-fg); font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; z-index: 5; box-shadow: 0 4px 12px rgba(239,68,68,0.4); white-space: nowrap; }
 .card:hover {transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 6px 20px rgba(0,0,0,.22); }
 .card-header-row {font-size: 11px; color: var(--text-3); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border-weak); font-weight: 600; }
 .card-body-row {display: flex; gap: 12px; }
@@ -456,7 +456,7 @@ em.audit-wait { color: var(--text-2); }
 .drawing-ver-row .ver-actions {flex-shrink: 0; }
 .drawing-del {background: rgba(0,0,0,0.55); border: none; color: #fca5a5; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.75; transition: opacity .2s; }
 .drawing-card:hover .drawing-del {opacity: 1; }
-.drawing-del:hover {background: rgba(239,68,68,0.8); color: var(--text); }
+.drawing-del:hover {background: var(--color-danger-soft); color: var(--color-danger-fg); }
 /* 右上角：文件类型标签 + 删除按钮 */
 .drawing-corner {position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; align-items: center; z-index: 2; }
 .drawing-meta {display: flex; flex-direction: column; gap: 8px; padding: 10px; }
@@ -478,7 +478,7 @@ em.audit-wait { color: var(--text-2); }
 .generic-file .generic-hint {display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-3); }
 /* DXF 内联 SVG 放大预览 */
 .drawing-svg-preview {max-width: 92vw; max-height: 90vh; overflow: auto; display: flex; align-items: center; justify-content: center; }
-.drawing-svg-preview svg {width: auto; height: auto; max-width: 92vw; max-height: 90vh; background: var(--text); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+.drawing-svg-preview svg {width: auto; height: auto; max-width: 92vw; max-height: 90vh; background: var(--bg-elev); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
 .drawing-root {position: relative; }
 .active-mode {}
 
@@ -695,8 +695,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .diff-badge.del { background: rgba(239,68,68,0.15); color: #f87171; }
 .diff-badge.chg { background: rgba(250,204,21,0.15); color: #facc15; }
 /* §2：.btn-danger app:548/app:631 → 取 app:631（破坏色统一交 U8，本轮保留原色） */
-.btn-danger { background: #dc2626; border: none; color: var(--text); padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s; }
-.btn-danger:hover { background: #b91c1c; }
+.btn-danger { background: var(--color-danger-strong); border: none; color: var(--color-danger-fg); padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s; }
+.btn-danger:hover { background: var(--color-danger-deep); }
 .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* 全站删除按钮统一：常态与文字同色（text-2），hover/focus 才变红 */

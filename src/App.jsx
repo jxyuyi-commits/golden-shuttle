@@ -271,7 +271,7 @@ const App = () => {
           gap: 12,
           fontSize: 13,
         }}>
-          <AlertCircle size={16} color="#f87171" />
+          <AlertCircle size={16} color="var(--color-danger-text)" />
           <span>加载打样数据失败：{tasksError.message || '未知错误'}（可能是本地服务未启动或数据库被占用）</span>
           <button
             type="button"

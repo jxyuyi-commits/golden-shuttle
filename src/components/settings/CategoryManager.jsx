@@ -45,7 +45,7 @@ const CategoryManager = ({ items = [], sizeGroups = [], onChange }) => {
                 <input className="cat-edit-input" value={editVal.name} onChange={e => setEditVal({ ...editVal, name: e.target.value })} autoFocus />
                 <div style={{ display: 'flex', gap: 6, width: '100%' }}>
                   <SmartSelect className="mini-ss" style={{ flex: 1, fontSize: 11 }} allowCustom={false} value={editVal.size_group_id != null ? String(editVal.size_group_id) : ''} onChange={v => setEditVal({ ...editVal, size_group_id: v ? Number(v) : '' })} options={sizeGroups.map(g => ({ key: String(g.id), label: g.name }))} placeholder="不绑定" />
-                  <button className="btn-icon-xs" style={{ color: '#4ade80' }} onClick={confirmEdit}><Check size={12} /></button>
+                  <button className="btn-icon-xs" style={{ color: 'var(--run-done)' }} onClick={confirmEdit}><Check size={12} /></button>
                   <button className="btn-icon-xs" onClick={() => setEditIdx(-1)}><X size={12} /></button>
                 </div>
               </div>

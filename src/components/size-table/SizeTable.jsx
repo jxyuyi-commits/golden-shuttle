@@ -99,7 +99,7 @@ const SizeRow = React.memo(({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: 13 }}>{compVal === null ? '—' : (compVal || '—')}</span>
               {diff !== null && diff !== 0 && (
-                <span style={{ fontSize: 10, color: diff > 0 ? '#ef4444' : '#22c55e' }}>
+                <span style={{ fontSize: 10, color: diff > 0 ? 'var(--color-danger)' : 'var(--color-green-500)' }}>
                   {diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)}
                 </span>
               )}
@@ -124,8 +124,8 @@ const SizeRow = React.memo(({
               if (!actualVals[standardSize]) return null;
               return (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                  {out && <AlertCircle size={14} color="#ef4444" />}
-                  <span style={{ fontSize: 11, color: out ? '#ef4444' : 'var(--text-2)', fontWeight: out ? 700 : 400 }}>
+                  {out && <AlertCircle size={14} color="var(--color-danger)" />}
+                  <span style={{ fontSize: 11, color: out ? 'var(--color-danger)' : 'var(--text-2)', fontWeight: out ? 700 : 400 }}>
                     {diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)}
                   </span>
                 </div>
@@ -366,16 +366,16 @@ const SizeTable = ({
 
       {missingParts.length > 0 && (
         <div style={{ margin: '0 24px 16px', padding: '10px 16px', borderRadius: 8, background: 'rgba(244, 63, 94, 0.08)', border: '1px solid rgba(244, 63, 94, 0.2)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <AlertCircle size={16} color="#fb7185" />
+          <AlertCircle size={16} color="var(--color-rose-400)" />
           <span style={{ fontSize: 13, color: '#fda4af' }}>
             建议包含核心部位：
-            <span style={{ fontWeight: 700, color: '#fb7185', marginLeft: 4 }}>
+            <span style={{ fontWeight: 700, color: 'var(--color-rose-400)', marginLeft: 4 }}>
               {missingParts.map(p => p.name).join('、')}
             </span>
           </span>
           <button
             className="btn-ghost-sm"
-            style={{ marginLeft: 'auto', background: 'rgba(244, 63, 94, 0.1)', color: '#fb7185', border: 'none', padding: '4px 10px' }}
+            style={{ marginLeft: 'auto', background: 'rgba(244, 63, 94, 0.1)', color: 'var(--color-rose-400)', border: 'none', padding: '4px 10px' }}
             onClick={() => addPoints(missingParts)}
           >
             快速补齐

@@ -108,7 +108,7 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
       ) : isVectorThumb ? (
         thumbFailed ? (
           <div className="generic-file" style={{ width: '100%', height: '100%', cursor: 'pointer', userSelect: 'none' }} {...interactiveProps}>
-            <FileText size={34} color="#a78bfa" />
+            <FileText size={34} color="var(--color-info)" />
             <div className="generic-ext">{ext.toUpperCase()}</div>
             <div className="generic-hint"><FolderOpen size={13} /> 单击本地打开</div>
           </div>
@@ -117,13 +117,13 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
             src={thumbUrl}
             alt={`${ext.toUpperCase()} 预览（单击放大，双击本地打开）`}
             onError={() => setThumbFailed(true)}
-            style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, background: 'var(--text)', cursor: pdfUrl ? 'pointer' : 'default' }}
+            style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, background: 'var(--bg-elev)', cursor: pdfUrl ? 'pointer' : 'default' }}
             {...interactiveProps}
           />
         )
       ) : isGeneric ? (
         <div className="generic-file" style={{ width: '100%', height: '100%', cursor: 'pointer', userSelect: 'none' }} {...interactiveProps}>
-          <FileText size={34} color="#a78bfa" />
+          <FileText size={34} color="var(--color-info)" />
           <div className="generic-ext">{ext.toUpperCase()}</div>
           <div className="generic-hint"><FolderOpen size={13} /> 单击本地打开</div>
         </div>
@@ -144,8 +144,8 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
           <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', maxWidth: '100%', maxHeight: '100%' }} onClick={e => e.stopPropagation()}>
             {isGeneric ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, background: 'var(--bg-elev)', border: '1px solid var(--border-strong)', borderRadius: 14, padding: '48px 56px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
-                <FileText size={56} color="#a78bfa" />
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#c4b5fd' }}>{ext.toUpperCase()}</div>
+                <FileText size={56} color="var(--color-info)" />
+                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-violet-300)' }}>{ext.toUpperCase()}</div>
                 <div style={{ fontSize: 13, color: 'var(--text-3)' }}>该格式无在线预览，双击卡片可调用本地软件打开</div>
               </div>
             ) : ext === 'dxf' && svgText ? (

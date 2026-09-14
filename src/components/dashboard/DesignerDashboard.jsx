@@ -6,9 +6,9 @@ const STATUS_META = {
   not_started:      { label: '未开始', color: 'var(--text-3)' },
   waiting_material: { label: '待安排', color: 'var(--text-2)' }, // REQ-030 改词
   pattern_making:   { label: '打版中', color: 'var(--accent)' },
-  sample_making:    { label: '样衣中', color: '#fbbf24' },
-  pending_confirm:  { label: '待审版', color: '#a78bfa' }, // REQ-030 改词
-  done:             { label: '已完成', color: '#4ade80' },
+  sample_making:    { label: '样衣中', color: 'var(--run-sample)' },
+  pending_confirm:  { label: '待审版', color: 'var(--color-info)' }, // REQ-030 改词
+  done:             { label: '已完成', color: 'var(--run-done)' },
 };
 const STATUS_ORDER = ['not_started', 'waiting_material', 'pattern_making', 'sample_making', 'pending_confirm', 'done'];
 
@@ -75,10 +75,10 @@ const DesignerDashboard = ({ tasks, onTaskClick, onOpenSidebar, onNewTask }) => 
 
   const statCards = [
     { filterKey: 'all', label: '总款数', value: stats.total, icon: <BarChart3 size={22} />, color: 'var(--accent)' },
-    { filterKey: 'inProgress', label: '进行中', value: stats.inProgress, icon: <Clock size={22} />, color: '#fbbf24' },
+    { filterKey: 'inProgress', label: '进行中', value: stats.inProgress, icon: <Clock size={22} />, color: 'var(--run-sample)' },
     { filterKey: 'waiting', label: '待安排/未开始', value: stats.byStatus.waiting_material + stats.byStatus.not_started, icon: <AlertCircle size={22} />, color: 'var(--text-2)' },
-    { filterKey: 'pendingConfirm', label: '待审版', value: stats.byStatus.pending_confirm, icon: <XCircle size={22} />, color: '#a78bfa' },
-    { filterKey: 'done', label: '已完成(可下大货)', value: stats.doneCount, icon: <CheckCircle2 size={22} />, color: '#4ade80' },
+    { filterKey: 'pendingConfirm', label: '待审版', value: stats.byStatus.pending_confirm, icon: <XCircle size={22} />, color: 'var(--color-info)' },
+    { filterKey: 'done', label: '已完成(可下大货)', value: stats.doneCount, icon: <CheckCircle2 size={22} />, color: 'var(--run-done)' },
   ];
 
   return (
@@ -143,7 +143,7 @@ const DesignerDashboard = ({ tasks, onTaskClick, onOpenSidebar, onNewTask }) => 
                 >
                   <div className="dash-bar-label">{cat}</div>
                   <div className="dash-bar-track">
-                    <div className="dash-bar-fill" style={{ width: `${(cnt / maxCat) * 100}%`, background: active ? '#fbbf24' : 'var(--accent)' }} />
+                    <div className="dash-bar-fill" style={{ width: `${(cnt / maxCat) * 100}%`, background: active ? 'var(--run-sample)' : 'var(--accent)' }} />
                   </div>
                   <div className="dash-bar-val">{cnt} 款 <span style={{ color: 'var(--text-3)' }}>({pct}%)</span></div>
                 </div>

@@ -5,11 +5,11 @@ import { fetchLogs } from '../../api';
 // 动作 → 图标/颜色/短标签
 const ACTION_META = {
   create: { icon: Plus, color: 'var(--accent)', label: '创建' },
-  status: { icon: ArrowUp, color: '#4ade80', label: '状态' },
-  sample_type: { icon: Tag, color: '#a78bfa', label: '版次' },
-  priority: { icon: AlertCircle, color: '#f59e0b', label: '优先级' },
-  audit: { icon: CheckCircle2, color: '#2dd4bf', label: '审核' },
-  expected_date: { icon: Clock, color: '#fb923c', label: '交期' },
+  status: { icon: ArrowUp, color: 'var(--run-done)', label: '状态' },
+  sample_type: { icon: Tag, color: 'var(--color-info)', label: '版次' },
+  priority: { icon: AlertCircle, color: 'var(--color-warn)', label: '优先级' },
+  audit: { icon: CheckCircle2, color: 'var(--color-teal-400)', label: '审核' },
+  expected_date: { icon: Clock, color: 'var(--color-orange-400)', label: '交期' },
   node: { icon: FileText, color: 'var(--text-2)', label: '动态' },
 };
 
@@ -45,7 +45,7 @@ const OperationLogsModal = ({ onClose }) => {
         </div>
         <div style={{ flex: 1, overflow: 'auto', padding: '8px 0', minHeight: 160 }}>
           {loading && <div style={{ padding: 28, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>}
-          {error && <div style={{ padding: 28, textAlign: 'center', color: '#f87171', fontSize: 13 }}>加载失败：{error}</div>}
+          {error && <div style={{ padding: 28, textAlign: 'center', color: 'var(--color-danger-text)', fontSize: 13 }}>加载失败：{error}</div>}
           {!loading && !error && logs.length === 0 && (
             <div style={{ padding: 36, textAlign: 'center', color: 'var(--text-3)', fontSize: 13, lineHeight: 1.8 }}>
               暂无操作记录。

@@ -89,10 +89,10 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
           <input value={fd.style_no} onChange={e => { setFd({ ...fd, style_no: e.target.value }); setExistingTasks([]); setForceCreate(false); setIsStyleFound(false); }} onBlur={handleStyleBlur} placeholder="例：RWCX-2025-001" />
         </div>
         {loading && <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 12 }}>正在查询款式资料...</div>}
-        {isStyleFound && <div style={{ fontSize: 12, color: '#4ade80', marginBottom: 12, padding: '4px 8px', background: 'rgba(74,222,128,0.1)', borderRadius: 4 }}>✓ 找到已有款式，已自动填入基础信息</div>}
+        {isStyleFound && <div style={{ fontSize: 12, color: 'var(--run-done)', marginBottom: 12, padding: '4px 8px', background: 'rgba(74,222,128,0.1)', borderRadius: 4 }}>✓ 找到已有款式，已自动填入基础信息</div>}
         {existingTasks.length > 0 && (
           <div style={{ marginBottom: 12, padding: 12, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#fbbf24', marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: 'var(--run-sample)', marginBottom: 8 }}>
               <AlertTriangle size={14} /> 该款号已有 {existingTasks.length} 张开发单
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
@@ -120,7 +120,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
                 以上都不是我要的，仍要新建一张单
               </button>
             ) : (
-              <div style={{ fontSize: 11, color: '#fbbf24' }}>已确认新建：将为该款再建一张开发单（阶段3完成后可改为在原单内新增版次批次）</div>
+              <div style={{ fontSize: 11, color: 'var(--run-sample)' }}>已确认新建：将为该款再建一张开发单（阶段3完成后可改为在原单内新增版次批次）</div>
             )}
           </div>
         )}

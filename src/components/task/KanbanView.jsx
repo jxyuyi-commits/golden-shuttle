@@ -10,7 +10,7 @@ import { exportTasksToExcel, getTaskListFileName } from '../../utils/exportTasks
 import { peopleByRole } from '../../utils/people';
 
 const getNodeIcon = (status) => {
-  if (status === 'done' || status === 'completed') return <CheckCircle2 size={14} color="#4ade80" />;
+  if (status === 'done' || status === 'completed') return <CheckCircle2 size={14} color="var(--run-done)" />;
   if (status === 'active') return <AlertCircle size={14} color="var(--accent)" />;
   return <Circle size={14} color="var(--text-4)" />;
 };
@@ -19,9 +19,9 @@ const getNodeIcon = (status) => {
 const RUN_STATUS_META = {
   waiting_material: { label: '待安排', color: 'var(--text-2)' }, // REQ-030 改词
   pattern_making: { label: '打版中', color: 'var(--accent)' },
-  sample_making: { label: '样衣中', color: '#fbbf24' },
-  pending_confirm: { label: '待审版', color: '#a78bfa' }, // REQ-030 改词
-  done: { label: '已完成', color: '#4ade80' },
+  sample_making: { label: '样衣中', color: 'var(--run-sample)' },
+  pending_confirm: { label: '待审版', color: 'var(--color-info)' }, // REQ-030 改词
+  done: { label: '已完成', color: 'var(--run-done)' },
 };
 const PRIO_RANK = { 'S': 3, 'A': 2, 'B': 1, 'C': 0 }; // REQ-030 优先级 S/A/B/C
 /** 取任务的批次列表（兼容迁移前旧字段，无 runs 时用 task 顶层字段拼一条） */
@@ -143,27 +143,27 @@ const KanbanView = ({
       return [
         { id: 'todo', name: '待处理', color: 'var(--text-2)' },
         { id: 'doing', name: '打版中', color: 'var(--accent)' },
-        { id: 'done', name: '已完结', color: '#4ade80' }
+        { id: 'done', name: '已完结', color: 'var(--run-done)' }
       ];
     }
     if (kanbanGroupBy === 'sample_type') {
-      const cols = settings.sampleTypes.map(s => ({ id: s, name: s, color: '#6366f1' }));
-      return cols.length ? cols : [{ id: 'none', name: '常规版', color: '#6366f1' }];
+      const cols = settings.sampleTypes.map(s => ({ id: s, name: s, color: 'var(--color-indigo-500)' }));
+      return cols.length ? cols : [{ id: 'none', name: '常规版', color: 'var(--color-indigo-500)' }];
     }
     if (kanbanGroupBy === 'priority') {
       return [
-        { id: 'S', name: 'S', color: '#f43f5e' }, // REQ-030 四级
-        { id: 'A', name: 'A', color: '#fb923c' },
+        { id: 'S', name: 'S', color: 'var(--color-danger-rose)' }, // REQ-030 四级
+        { id: 'A', name: 'A', color: 'var(--color-orange-400)' },
         { id: 'B', name: 'B', color: 'var(--accent)' },
         { id: 'C', name: 'C', color: 'var(--text-2)' }
       ];
     }
     if (kanbanGroupBy === 'overdue') {
       return [
-        { id: 'overdue', name: '已逾期', color: '#ef4444' },
-        { id: 'today', name: '今日到期', color: '#f59e0b' },
-        { id: 'soon', name: '3天内到期', color: '#eab308' },
-        { id: 'ok', name: '正常', color: '#4ade80' },
+        { id: 'overdue', name: '已逾期', color: 'var(--color-danger)' },
+        { id: 'today', name: '今日到期', color: 'var(--color-warn)' },
+        { id: 'soon', name: '3天内到期', color: 'var(--color-warn-2)' },
+        { id: 'ok', name: '正常', color: 'var(--run-done)' },
         { id: 'none', name: '无交期/已完结', color: 'var(--text-2)' }
       ];
     }
@@ -181,7 +181,7 @@ const KanbanView = ({
           <div className="bento-overdue-badge" style={{ background: 'rgba(245,158,11,0.92)' }} title="今日为期望交期（最新版次）">今日到期</div>
         )}
         {ov.state === 'soon' && (
-          <div className="bento-overdue-badge" style={{ background: 'rgba(234,179,8,0.85)' }} title={`期望交期 ${ov.due}（最新版次）`}>{ov.days} 天后到期</div>
+          <div className="bento-overdue-badge" style={{ background: 'rgba(234,179,8,0.85)', color: 'var(--color-warn-fg)' }} title={`期望交期 ${ov.due}（最新版次）`}>{ov.days} 天后到期</div>
         )}
         <div className="bento-upper">
           <div className="bento-box bento-left">
@@ -583,7 +583,7 @@ const KanbanView = ({
                             </span>
                           ) : col.id === 'status_text' ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span className="dot" style={{ background: derivedCol(task) === 'done' ? '#4ade80' : derivedCol(task) === 'doing' ? 'var(--accent)' : 'var(--text-2)' }} />
+                              <span className="dot" style={{ background: derivedCol(task) === 'done' ? 'var(--run-done)' : derivedCol(task) === 'doing' ? 'var(--accent)' : 'var(--text-2)' }} />
                               {derivedCol(task) === 'done' ? '已完结' : derivedCol(task) === 'doing' ? '打版中' : '待处理'}
                             </div>
                           ) : col.id === 'created_at' || col.id === 'updated_at' || col.id.endsWith('_date') ? (

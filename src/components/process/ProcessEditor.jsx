@@ -7,6 +7,7 @@ import {
   fetchProcessItems, createProcessItem, updateProcessItem, deleteProcessItem
 } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
+import { toast } from '../common/Toast';
 import SmartSelect from '../common/SmartSelect';
 
 const SECTIONS = ['部位工艺', '缝制工艺', '后整理', '特殊工艺', '其他'];
@@ -167,7 +168,7 @@ const ProcessEditor = ({ taskId }) => {
       // REQ-028 按 sort_order 升序渲染（后端若已排序也兼容）
       setRows([...data].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)));
     }
-    catch (e) { alert('加载工艺指示失败: ' + e.message); }
+    catch (e) { toast.error('加载工艺指示失败: ' + e.message); }
     finally { setLoading(false); }
   }, [taskId]);
 
@@ -182,7 +183,7 @@ const ProcessEditor = ({ taskId }) => {
     if (timersRef.current[key]) clearTimeout(timersRef.current[key]);
     timersRef.current[key] = setTimeout(async () => {
       try { await updateProcessItem(id, { [field]: value }); }
-      catch (e) { alert('保存失败: ' + e.message); }
+      catch (e) { toast.error('保存失败: ' + e.message); }
     }, 400);
   }, []);
 
@@ -197,7 +198,7 @@ const ProcessEditor = ({ taskId }) => {
     next.splice(targetIdx, 0, moved);
     next.forEach((r, i) => {
       if (r.sort_order !== i) {
-        updateProcessItem(r.id, { sort_order: i }).catch(e => alert('排序保存失败: ' + e.message));
+        updateProcessItem(r.id, { sort_order: i }).catch(e => toast.error('排序保存失败: ' + e.message));
       }
     });
     setRows(next.map((r, i) => ({ ...r, sort_order: i })));
@@ -209,7 +210,7 @@ const ProcessEditor = ({ taskId }) => {
     try {
       await createProcessItem({ task_id: taskId, section: '部位工艺', sort_order: rows.length });
       await load();
-    } catch (e) { alert('添加失败: ' + e.message); }
+    } catch (e) { toast.error('添加失败: ' + e.message); }
     finally { setBusy(false); }
   };
 
@@ -218,7 +219,7 @@ const ProcessEditor = ({ taskId }) => {
     const id = confirmDelId;
     setConfirmDelId(null);
     try { await deleteProcessItem(id); await load(); }
-    catch (e) { alert('删除失败: ' + e.message); }
+    catch (e) { toast.error('删除失败: ' + e.message); }
   };
 
   const thStyle = (w) => ({
@@ -295,6 +296,8 @@ const ProcessEditor = ({ taskId }) => {
       {confirmDelId != null && (
         <ConfirmModal
           title="删除工艺指示"
+          tone="danger"
+          confirmText="确认删除"
           message="确定删除该工艺指示吗？\n删除后不可恢复。"
           onConfirm={doDelete}
           onCancel={() => setConfirmDelId(null)}

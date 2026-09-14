@@ -4,6 +4,7 @@ import { autoSign, formatTime } from '../../utils/format';
 import { fetchMeasurementTemplates, saveMeasurementTemplate } from '../../api';
 import MeasurementModal from '../measurement/MeasurementModal';
 import ConfirmModal from '../common/ConfirmModal';
+import { toast } from '../common/Toast';
 import SmartSelect from '../common/SmartSelect';
 
 /** 尺寸指标表格：排序 + 批量操作 + 预设导入 + 拓码 + 成衣实测公差报警 + 跨版次（批次）同码对比
@@ -547,7 +548,7 @@ const SizeTable = ({
             title="一键将该部位及其规则存入系统预设库"
             onClick={async () => {
               const { name, method, grading, tolerance } = quickAdd;
-              if (!name.trim()) return alert('请先输入部位名称');
+              if (!name.trim()) { toast.info('请先输入部位名称'); return; }
               const cat = measurementCategories && measurementCategories.length > 0 ? measurementCategories[0] : '常规';
               const finalGrading = grading;
               const finalTolerance = autoSign(tolerance);
@@ -556,14 +557,14 @@ const SizeTable = ({
                   category: cat, name: name.trim(), code: '', method: method || '',
                   tolerance: finalTolerance, grading_rule: finalGrading, sort_order: 999
                 });
-                alert(`部位「${name}」及其测量规则已成功存入「${cat}」预设库`);
+                toast.success(`部位「${name}」及其测量规则已成功存入「${cat}」预设库`);
                 onChange([...data, {
                   name: name.trim(), method: method || '', tolerance: finalTolerance,
                   base: '', grading: finalGrading, note: '', size_values: {}
                 }]);
                 setQuickAdd({ name: '', method: '', grading: '', tolerance: '' });
               } catch (err) {
-                alert('存入预设失败: ' + err.message);
+                toast.error('存入预设失败: ' + err.message);
               }
             }}
           >
@@ -583,6 +584,8 @@ const SizeTable = ({
       {confirmIdx !== null && (
         <ConfirmModal
           title="删除尺寸部位"
+          tone="danger"
+          confirmText="确认删除"
           message={`确定删除「${data[confirmIdx]?.name || '该部位'}」吗？\n删除后该部位尺寸数据不可恢复。`}
           onConfirm={doRemoveRow}
           onCancel={() => setConfirmIdx(null)}
@@ -591,6 +594,8 @@ const SizeTable = ({
       {confirmBatch && (
         <ConfirmModal
           title="批量删除部位"
+          tone="danger"
+          confirmText="确认删除"
           message={`确定删除选中的 ${selectedIndices.length} 个部位吗？\n删除后不可恢复。`}
           onConfirm={doBatchDelete}
           onCancel={() => setConfirmBatch(false)}
@@ -599,19 +604,21 @@ const SizeTable = ({
       {confirmClear && (
         <ConfirmModal
           title="清空尺寸表"
+          tone="danger"
+          confirmText="确认清空"
           message="确定清空所有行吗？\n清空后当前尺寸表数据不可恢复。"
           onConfirm={doClear}
           onCancel={() => setConfirmClear(false)}
         />
       )}
 
-      {/* REQ-005 修订2：对比版次数据导入确认（已在当前窗口并排核对完整表与差异后导入） */}
+      {/* REQ-005 修订2：对比版次数据导入确认（已在当前窗口并排核对完整表与差异后导入）——中性确认（覆盖可经再次导入恢复） */}
       {confirmImportRun && (
         <ConfirmModal
           title="导入对比版次数据"
-          message={`将把「${confirmImportRun.order_no || '未编号'} · ${confirmImportRun.sample_type || ''}」的尺寸表（${Array.isArray(confirmImportRun.size_data) ? confirmImportRun.size_data.length : 0} 行）整体导入到当前版次？\n当前版次已有尺寸数据将被覆盖。请确认上方参考版次完整表与差异列已核对无误。`}
-          danger={false}
+          tone="default"
           confirmText="确认导入"
+          message={`将把「${confirmImportRun.order_no || '未编号'} · ${confirmImportRun.sample_type || ''}」的尺寸表（${Array.isArray(confirmImportRun.size_data) ? confirmImportRun.size_data.length : 0} 行）整体导入到当前版次？\n当前版次已有尺寸数据将被覆盖。请确认上方参考版次完整表与差异列已核对无误。`}
           onConfirm={() => { onImportCompare && onImportCompare(confirmImportRun); setConfirmImportRun(null); }}
           onCancel={() => setConfirmImportRun(null)}
         />

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Layout, Plus, FileText, Database, CheckCircle2, Circle,
   GripVertical, ChevronUp, ChevronDown, AlertCircle, FilterX
@@ -6,6 +6,8 @@ import {
 import PdfThumb from '../common/PdfThumb';
 import ExportButton from '../common/ExportButton';
 import SmartSelect from '../common/SmartSelect';
+import InputModal from '../common/InputModal';
+import { toast } from '../common/Toast';
 import { exportTasksToExcel, getTaskListFileName } from '../../utils/exportTasks';
 import { peopleByRole } from '../../utils/people';
 import { RUN_STATUS, RUN_STATUS_LIST } from '../../constants/terms';
@@ -117,6 +119,15 @@ const KanbanView = ({
     (tasks || []).forEach(t => taskRunTypes(t).forEach(x => set.add(x)));
     return [...set];
   }, [settings.sampleTypes, tasks]);
+
+  // U17 保存视图命名弹窗（替代原生 prompt）：空名禁用确认钮
+  const [viewNameOpen, setViewNameOpen] = useState(false);
+  const saveCurrentView = (name) => {
+    setSavedViews([...savedViews, { id: Date.now().toString(), name, columns: listColumns.map(c => ({ id: c.id, visible: c.visible })) }]);
+    setActiveDropdown(null);
+    setViewNameOpen(false);
+    toast.success(`已保存视图「${name}」`);
+  };
 
   const filterTasks = (list) => list.filter(t => {
     if (filters.keyword && !(t.title?.includes(filters.keyword) || t.style_no?.includes(filters.keyword))) return false;
@@ -383,7 +394,7 @@ const KanbanView = ({
                         </div>
                       ))}
                       <div className="ss-divider">新建工作区</div>
-                      <div className="ss-option" onClick={() => { const n = prompt('视图名为?'); if (n) { setSavedViews([...savedViews, { id: Date.now().toString(), name: n, columns: listColumns.map(c => ({ id: c.id, visible: c.visible })) }]); setActiveDropdown(null); } }}>
+                      <div className="ss-option" onClick={() => { setViewNameOpen(true); }}>
                         <Plus size={14} /> 保存当前配置
                       </div>
                     </div>
@@ -594,6 +605,18 @@ const KanbanView = ({
           </div>
         );
       })()}
+
+      {/* U17 保存视图命名（替代原生 prompt）：Esc 走 Modal 基座，空名禁用确认钮 */}
+      {viewNameOpen && (
+        <InputModal
+          title="保存当前配置"
+          label="视图名称"
+          placeholder="输入视图名称"
+          confirmText="保存"
+          onConfirm={saveCurrentView}
+          onCancel={() => setViewNameOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { X, History, ArrowLeft, RotateCcw, ChevronRight } from 'lucide-react';
 import { fetchVersionHistory, fetchVersionDetail, fetchBomItems, rollbackVersion } from '../../api';
 import ConfirmModal from './ConfirmModal';
 import Modal from './Modal';
+import { toast } from './Toast';
 
 const STYLE_FIELDS = [
   ['title', '款式名称'], ['category', '款式类别'], ['brand', '品牌'], ['designer', '设计师'],
@@ -74,7 +75,7 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
     try {
       const detail = await fetchVersionDetail(task.id, v.id);
       setSelected(detail);
-    } catch (e) { alert('加载版本详情失败: ' + e.message); }
+    } catch (e) { toast.error('加载版本详情失败: ' + e.message); }
     finally { setBusy(false); }
   };
 
@@ -83,11 +84,27 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
     setBusy(true);
     try {
       await rollbackVersion(task.id, selected.id);
-      alert(`已回滚到 V${selected.version_no}`);
+      // U17 可撤销 toast：回滚本身生成一条新版本（服务端无物理删除），
+      // 撤销 = 再对「回滚前最新版本」做一次回滚，完全复用现有 rollbackVersion API，不新增后端接口
+      const prevLatest = versions[0] && versions[0].id !== selected.id ? versions[0] : null;
+      toast.success(`已回滚到 V${selected.version_no}`, prevLatest ? {
+        action: {
+          label: '撤销回滚',
+          onClick: () => {
+            rollbackVersion(task.id, prevLatest.id)
+              .then(() => {
+                toast.success(`已撤销回滚，恢复到 V${prevLatest.version_no}`);
+                load();
+                if (onRolledBack) onRolledBack();
+              })
+              .catch((e) => toast.error('撤销回滚失败: ' + e.message));
+          },
+        },
+      } : undefined);
       setSelected(null);
       await load();
       onRolledBack && onRolledBack();
-    } catch (e) { alert('回滚失败: ' + e.message); }
+    } catch (e) { toast.error('回滚失败: ' + e.message); }
     finally { setBusy(false); }
   };
 
@@ -233,8 +250,9 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
         {confirmRollback && (
           <ConfirmModal
             title={`回滚到 V${selected?.version_no}`}
-            message={`将把款式信息、尺寸表、物料清单恢复为 V${selected?.version_no} 时的内容（批次状态不受影响）。\n回滚本身会生成一条新版本，可再次回滚撤销。`}
+            tone="danger"
             confirmText="确认回滚"
+            message={`将把款式信息、尺寸表、物料清单恢复为 V${selected?.version_no} 时的内容（批次状态不受影响）。\n回滚本身会生成一条新版本，可再次回滚撤销。`}
             zIndex={2200}
             onConfirm={doRollback}
             onCancel={() => setConfirmRollback(false)}

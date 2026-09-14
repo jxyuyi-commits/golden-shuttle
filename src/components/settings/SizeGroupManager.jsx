@@ -68,6 +68,8 @@ const SizeGroupManager = ({ groups, onChange }) => {
       {confirmDel != null && (
         <ConfirmModal
           title="删除号型系列"
+          tone="danger"
+          confirmText="确认删除"
           message={`确定删除该号型系列吗？\n删除后，绑定此系列的款式分类将失去尺码关联。`}
           onConfirm={doDelete}
           onCancel={() => setConfirmDel(null)}

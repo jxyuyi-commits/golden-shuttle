@@ -5,6 +5,7 @@ import {
   fetchBomItems, createBomItem, updateBomItem, deleteBomItem
 } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
+import { toast } from '../common/Toast';
 import SmartSelect from '../common/SmartSelect';
 
 const CATEGORIES = ['主料', '辅料', '里料', '衬料', '其他'];
@@ -71,7 +72,7 @@ const BomEditor = ({ taskId }) => {
   const load = useCallback(async () => {
     setLoading(true);
     try { setRows(await fetchBomItems(taskId)); }
-    catch (e) { alert('加载物料清单失败: ' + e.message); }
+    catch (e) { toast.error('加载物料清单失败: ' + e.message); }
     finally { setLoading(false); }
   }, [taskId]);
 
@@ -86,7 +87,7 @@ const BomEditor = ({ taskId }) => {
     if (timersRef.current[key]) clearTimeout(timersRef.current[key]);
     timersRef.current[key] = setTimeout(async () => {
       try { await updateBomItem(id, { [field]: value }); }
-      catch (e) { alert('保存失败: ' + e.message); }
+      catch (e) { toast.error('保存失败: ' + e.message); }
     }, 400);
   }, []);
 
@@ -96,7 +97,7 @@ const BomEditor = ({ taskId }) => {
     try {
       await createBomItem({ task_id: taskId, category: '主料' });
       await load();
-    } catch (e) { alert('添加失败: ' + e.message); }
+    } catch (e) { toast.error('添加失败: ' + e.message); }
     finally { setBusy(false); }
   };
 
@@ -105,7 +106,7 @@ const BomEditor = ({ taskId }) => {
     const id = confirmDelId;
     setConfirmDelId(null);
     try { await deleteBomItem(id); await load(); }
-    catch (e) { alert('删除失败: ' + e.message); }
+    catch (e) { toast.error('删除失败: ' + e.message); }
   };
 
   const totalCost = rows.reduce((s, r) => s + (parseFloat(r.usage) || 0) * (parseFloat(r.price) || 0), 0);
@@ -160,6 +161,8 @@ const BomEditor = ({ taskId }) => {
       {confirmDelId != null && (
         <ConfirmModal
           title="删除物料"
+          tone="danger"
+          confirmText="确认删除"
           message={`确定删除该物料吗？（共 ${rows.length} 项）\n删除后不可恢复。`}
           onConfirm={doDelete}
           onCancel={() => setConfirmDelId(null)}

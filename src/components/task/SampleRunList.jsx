@@ -369,6 +369,8 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
       {confirmRun && (
         <ConfirmModal
           title="删除打样批次"
+          tone="danger"
+          confirmText="确认删除"
           message={`确认删除「${confirmRun.sample_type || '未命名版次'} ${confirmRun.size || ''} ${confirmRun.sample_color || ''}」批次（${confirmRun.order_no || ''}）？\n删除后不可恢复。`}
           onConfirm={doRemoveRun}
           onCancel={() => setConfirmRun(null)}

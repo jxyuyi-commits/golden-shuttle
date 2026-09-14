@@ -162,6 +162,8 @@ const PeopleEditor = ({ people, onChange, onRenamed }) => {
       {confirmRemove && (
         <ConfirmModal
           title="移除人员"
+          tone="danger"
+          confirmText="确认删除"
           message={`确定将「${confirmRemove}」移出人员预设吗？\n仅移出预设，历史单据中的记录不受影响。`}
           onConfirm={doRemovePerson}
           onCancel={() => setConfirmRemove(null)}

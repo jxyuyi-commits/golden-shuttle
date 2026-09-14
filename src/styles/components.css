@@ -720,3 +720,26 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .cat-name {flex: 1; }
 /* .cell-shake 红框：原件为 !important，此处以普通声明并回；表格内胜出仍由上方 .data-table .cell-shake 承担 */
 .cell-shake {border: 1px solid #ef4444; }
+
+/* ── U17 全局 Toast（右上角，top 避开 76px sticky 顶栏；容器不拦截指针、不参与 Esc/焦点陷阱） ── */
+.toast-host { position: fixed; top: 88px; right: 20px; z-index: 12000; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: none; max-width: min(400px, calc(100vw - 32px)); }
+.toast { pointer-events: auto; display: flex; align-items: flex-start; gap: 10px; width: max-content; max-width: 100%; padding: 10px 12px 10px 10px; background: var(--bg-elev-2); border: 1px solid var(--border-strong); border-radius: var(--radius-md); box-shadow: var(--shadow); animation: toast-in 0.2s ease; }
+.toast--success { border-left: 3px solid var(--color-success); }
+.toast--error { border-left: 3px solid var(--color-danger); }
+.toast--info { border-left: 3px solid var(--color-info); }
+/* 状态图标章：彩色底 + 对应 -fg 前景（三主题固定值，AA 对比度），避免彩底白字在浅主题不可读 */
+.toast-icon { flex: none; width: 24px; height: 24px; border-radius: var(--radius-pill); display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.toast--success .toast-icon { background: var(--color-success); color: var(--color-success-fg); }
+.toast--error .toast-icon { background: var(--color-danger); color: var(--color-danger-fg); }
+.toast--info .toast-icon { background: var(--color-info); color: var(--color-info-fg); }
+.toast-body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.toast-msg { font-size: var(--fs-md); line-height: 1.6; color: var(--text); white-space: pre-line; word-break: break-word; max-height: 220px; overflow: auto; }
+.toast-action { align-self: flex-start; font-size: var(--fs-sm); font-weight: 700; color: var(--accent); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 2px 10px; cursor: pointer; white-space: nowrap; }
+.toast-action:hover { background: var(--bg-hover); border-color: var(--accent); }
+.toast-close { flex: none; background: transparent; border: none; color: var(--text-3); cursor: pointer; padding: 2px; border-radius: var(--radius-sm); display: flex; align-items: center; }
+.toast-close:hover { color: var(--text); background: var(--bg-hover); }
+@keyframes toast-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ── U17 InputModal 输入框（基座复用 .confirm-modal，仅补输入样式） ── */
+.input-modal-input { width: 100%; box-sizing: border-box; background: var(--input-bg); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 9px 12px; color: var(--text); font-size: var(--fs-md); outline: none; }
+.input-modal-input:focus { border-color: var(--accent); }

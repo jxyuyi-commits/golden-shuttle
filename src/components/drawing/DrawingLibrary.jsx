@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Plus, Trash2, Loader2, X, Upload, FileText, ClipboardPaste, History, AlertTriangle } from 'lucide-react';
 import ConfirmModal from '../common/ConfirmModal';
 import Modal from '../common/Modal';
+import { toast } from '../common/Toast';
 import SmartSelect from '../common/SmartSelect';
 import PdfThumb from '../common/PdfThumb';
 import {
@@ -78,11 +79,15 @@ const DrawingLibrary = ({ taskId }) => {
   const [groupLoading, setGroupLoading] = useState(false);
   const [confirmCard, setConfirmCard] = useState(null); // REQ-006② 待删除资料卡
   const [confirmVerId, setConfirmVerId] = useState(null); // 待删除版本 id
+  // U17 上传去重双选：async 循环内挂起等待用户选择（替代原生 window.confirm）
+  // Promise resolver 存 ref，ConfirmModal 的「仍新建/跳过」按钮 resolve 后循环继续
+  const [dupAsk, setDupAsk] = useState(null); // { file, existing } 当前待裁决的重复文件
+  const dupResolveRef = useRef(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try { setItems(await fetchDrawings(taskId)); }
-    catch (e) { alert('加载图纸资料失败: ' + e.message); }
+    catch (e) { toast.error('加载图纸资料失败: ' + e.message); }
     finally { setLoading(false); }
   }, [taskId]);
 
@@ -112,7 +117,7 @@ const DrawingLibrary = ({ taskId }) => {
     if (timersRef.current[key]) clearTimeout(timersRef.current[key]);
     timersRef.current[key] = setTimeout(async () => {
       try { await updateDrawing(id, { [field]: value }); }
-      catch (e) { alert('保存失败: ' + e.message); }
+      catch (e) { toast.error('保存失败: ' + e.message); }
     }, 400);
   };
 
@@ -157,8 +162,20 @@ const DrawingLibrary = ({ taskId }) => {
   }, []);
 
   // ── 批量上传：对每个文件 上传→建记录，处理去重/版本冲突 ──
+  // U17 重复资料双选：挂起该文件的处理，等用户在 ConfirmModal 里选择后继续（语义与原 window.confirm 一致）
+  const askDuplicate = (file, existing) => new Promise((resolve) => {
+    dupResolveRef.current = resolve;
+    setDupAsk({ file, existing });
+  });
+  const answerDuplicate = (goForce) => {
+    const resolve = dupResolveRef.current;
+    dupResolveRef.current = null;
+    setDupAsk(null);
+    if (resolve) resolve(goForce);
+  };
+
   const handleUpload = async () => {
-    if (upFiles.length === 0) { alert('请选择要上传的文件'); return; }
+    if (upFiles.length === 0) { toast.info('请选择要上传的文件'); return; }
     setBusy(true);
     try {
       const skipped = [];
@@ -176,9 +193,7 @@ const DrawingLibrary = ({ taskId }) => {
         let res = await createDrawing(payload);
         if (res.conflict === 'duplicate') {
           const ex = res.existing;
-          const goForce = window.confirm(
-            `「${file.name}」与已有资料内容完全相同（${ex.kind === 'reference' ? '参考资料' : '工作成果'}·${ex.category}·${ex.title} V${ex.version}）。\n\n点击「确定」= 仍新建独立资料（保留重复）；\n点击「取消」= 跳过该文件不重复上传。`
-          );
+          const goForce = await askDuplicate(file, ex);
           if (goForce) {
             res = await createDrawing({ ...payload, force: true });
             if (res.conflict) skipped.push(file.name);
@@ -194,12 +209,12 @@ const DrawingLibrary = ({ taskId }) => {
       setShowUpload(false);
       setUpFiles([]);
       setUpCategory('设计稿');
-      // 汇总提示
+      // 汇总提示（多行，toast 走 pre-line 保留换行格式）
       const msgs = [];
       if (versioned.length) msgs.push(`已作为新版本归档：${versioned.join('；')}`);
       if (skipped.length) msgs.push(`已跳过重复文件：${skipped.join('；')}`);
-      if (msgs.length) alert(msgs.join('\n'));
-    } catch (e) { alert('上传失败: ' + e.message); }
+      if (msgs.length) toast.info(msgs.join('\n'));
+    } catch (e) { toast.error('上传失败: ' + e.message); }
     finally { setBusy(false); }
   };
 
@@ -217,7 +232,7 @@ const DrawingLibrary = ({ taskId }) => {
         await deleteDrawing(card.id);
       }
       await load();
-    } catch (e) { alert('删除失败: ' + e.message); }
+    } catch (e) { toast.error('删除失败: ' + e.message); }
   };
 
   // ── 版本历史弹窗 ──
@@ -227,7 +242,7 @@ const DrawingLibrary = ({ taskId }) => {
     try {
       const v = await fetchDrawingGroup(card.group_id);
       setGroupModal({ groupId: card.group_id, versions: v });
-    } catch (e) { alert('加载版本历史失败: ' + e.message); }
+    } catch (e) { toast.error('加载版本历史失败: ' + e.message); }
     finally { setGroupLoading(false); }
   };
 
@@ -238,13 +253,13 @@ const DrawingLibrary = ({ taskId }) => {
     const id = confirmVerId;
     setConfirmVerId(null);
     try { await deleteDrawing(id); setGroupModal(null); await load(); }
-    catch (e) { alert('删除失败: ' + e.message); }
+    catch (e) { toast.error('删除失败: ' + e.message); }
   };
 
   // 切换分类：本地即时更新 + 立即持久化
   const handleCategoryChange = (d, value) => {
     setField(d.id, 'category', value);
-    updateDrawing(d.id, { category: value }).catch(e => alert('分类保存失败: ' + e.message));
+    updateDrawing(d.id, { category: value }).catch(e => toast.error('分类保存失败: ' + e.message));
   };
 
   return (
@@ -526,6 +541,8 @@ const DrawingLibrary = ({ taskId }) => {
       {confirmCard && (
         <ConfirmModal
           title="删除图纸资料"
+          tone="danger"
+          confirmText="确认删除"
           message={confirmCard._versionCount > 1
             ? `该资料有 ${confirmCard._versionCount} 个版本（V1~V${confirmCard._versionCount}）。\n确认删除整组全部版本？删除后不可恢复。`
             : `确认删除「${confirmCard.title || confirmCard.filename || '该资料'}」？删除后不可恢复。`}
@@ -536,10 +553,26 @@ const DrawingLibrary = ({ taskId }) => {
       {confirmVerId != null && (
         <ConfirmModal
           title="删除版本记录"
+          tone="danger"
+          confirmText="确认删除"
           message="确认删除该版本记录？\n删除后不可恢复。"
           zIndex={10000}
           onConfirm={doDeleteVersion}
           onCancel={() => setConfirmVerId(null)}
+        />
+      )}
+
+      {/* U17 上传重复资料双选（替代原生 window.confirm）：「仍新建独立资料」/「跳过该文件」，中性确认非删除 */}
+      {dupAsk && (
+        <ConfirmModal
+          title="发现重复资料"
+          tone="default"
+          confirmText="仍新建独立资料"
+          cancelText="跳过该文件"
+          zIndex={10000}
+          message={`「${dupAsk.file.name}」与已有资料内容完全相同\n（${dupAsk.existing.kind === 'reference' ? '参考资料' : '工作成果'}·${dupAsk.existing.category}·${dupAsk.existing.title} V${dupAsk.existing.version}）。`}
+          onConfirm={() => answerDuplicate(true)}
+          onCancel={() => answerDuplicate(false)}
         />
       )}
     </div>

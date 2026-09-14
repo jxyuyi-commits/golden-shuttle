@@ -13,6 +13,7 @@ import SmartSelect from './components/common/SmartSelect';
 import PdfThumb from './components/common/PdfThumb';
 import OperationLogsModal from './components/common/OperationLogsModal';
 import ConfirmModal from './components/common/ConfirmModal';
+import ToastHost, { toast } from './components/common/Toast';
 import MeasurementModal from './components/measurement/MeasurementModal';
 import MeasurementTemplateManager from './components/measurement/MeasurementTemplateManager';
 import SizeTable from './components/size-table/SizeTable';
@@ -188,7 +189,7 @@ const App = () => {
         loadTasks();
         setView('kanban');
       })
-      .catch(err => alert('删除失败: ' + err.message));
+      .catch(err => toast.error('删除失败: ' + err.message));
   };
 
   // PDF 上传并更新 pdf_url；同步进入图纸资料库（设计稿分类，工作成果可追溯版本）
@@ -219,7 +220,7 @@ const App = () => {
       }
     } catch (err) {
       setPdfSyncState(null);
-      alert('上传失败: ' + err.message);
+      toast.error('上传失败: ' + err.message);
     }
   };
 
@@ -410,12 +411,17 @@ const App = () => {
         confirmDelete && (
           <ConfirmModal
             title="删除打样单"
+            tone="danger"
+            confirmText="确认删除"
             message={`确定要彻底删除该打样单「${editingTask?.title || '未命名'}」（款号: ${editingTask?.style_no || '—'}）吗？\n此操作不可恢复，同款打样批次、尺寸表等数据将一并删除。`}
             onConfirm={doDelete}
             onCancel={() => setConfirmDelete(false)}
           />
         )
       }
+
+      {/* U17 全局 Toast 宿主（仅挂载一次；Portal 到 body，不参与 Esc/焦点陷阱） */}
+      <ToastHost />
 
     </div >
   );

@@ -484,6 +484,8 @@ const DetailView = ({
       {confirmPdfRemove && (
         <ConfirmModal
           title="移除设计稿"
+          tone="danger"
+          confirmText="确认移除"
           message="确定移除该设计稿吗？\n（图纸资料库中的文件不会被删除）"
           onConfirm={() => { onPdfRemove(); setConfirmPdfRemove(false); }}
           onCancel={() => setConfirmPdfRemove(false)}
@@ -492,6 +494,8 @@ const DetailView = ({
       {confirmNode !== null && (
         <ConfirmModal
           title="删除工作动态条目"
+          tone="danger"
+          confirmText="确认删除"
           message={`确定删除「${(task.progress_nodes || [])[confirmNode]?.label || '未命名事件'}」这条记录？`}
           onConfirm={() => {
             const next = (task.progress_nodes || []).filter((_, x) => x !== confirmNode);

@@ -43,6 +43,8 @@
   --color-danger-strong: #dc2626;
   --color-danger-soft: rgba(239, 68, 68, 0.8);
   --color-danger-fg: #ffffff;
+  --color-success-fg: #05331f; /* U17: 成功绿底之上的深色前景（7.3:1，AA） */
+  --color-info-fg: #241547;    /* U17: 紫罗兰信息底之上的深色前景（6.1:1，AA） */
   --color-warn: #f59e0b;
   --color-warn-soft: rgba(245, 158, 11, 0.92);
   --color-info: #a78bfa;
@@ -123,6 +125,8 @@
   --color-danger-strong: #dc2626;
   --color-danger-soft: rgba(239, 68, 68, 0.8);
   --color-danger-fg: #ffffff;
+  --color-success-fg: #05331f; /* U17 */
+  --color-info-fg: #241547;    /* U17 */
   --color-warn: #f59e0b;
   --color-warn-soft: rgba(245, 158, 11, 0.92);
   --color-info: #a78bfa;
@@ -174,6 +178,8 @@
   --color-danger-strong: #dc2626;
   --color-danger-soft: rgba(239, 68, 68, 0.8);
   --color-danger-fg: #ffffff;
+  --color-success-fg: #05331f; /* U17 */
+  --color-info-fg: #241547;    /* U17 */
   --color-warn: #f59e0b;
   --color-warn-soft: rgba(245, 158, 11, 0.92);
   --color-info: #a78bfa;

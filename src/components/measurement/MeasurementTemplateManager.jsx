@@ -199,6 +199,8 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
       {confirmCatIdx != null && (
         <ConfirmModal
           title="删除品类"
+          tone="danger"
+          confirmText="确认删除"
           message={`确定删除品类「${categories[confirmCatIdx] || ''}」吗？\n该品类下的预设部位不会被物理删除（仍保留在库中）。`}
           onConfirm={doRemoveCategory}
           onCancel={() => setConfirmCatIdx(null)}
@@ -207,6 +209,8 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
       {confirmTplId != null && (
         <ConfirmModal
           title="删除预设部位"
+          tone="danger"
+          confirmText="确认删除"
           message="确定删除该预设部位吗？\n删除后无法恢复。"
           onConfirm={doDeleteTemplate}
           onCancel={() => setConfirmTplId(null)}

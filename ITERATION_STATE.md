@@ -787,3 +787,13 @@ npm run dev:all
 - **验证（主理人独立复跑）**：eslint 0 / test 全绿 / build 通过（工程师三道门）+ 主理人复核 eslint 关键 6 文件 + npm test exit 0；**uiprobe-u15 真实 Chrome CDP 9/9**（空库态/筛选无结果态/Skeleton 延迟路由 8 占位块/零漂移断言/深浅动效开关/Esc 回归/零 console error）；OperationLogsModal 空态因库中已有日志不可达，软性降级验证（弹窗渲染正常）——如需强验证须 mock 或清库，暂接受。
 - **Git 提交**：`591fdc5`（已推送 feature/sample-run-model；commit 后 ref 丢失缺陷再现，手动重建分支 ref + 远端跟踪 ref 后以显式 refspec 推送）。
 - **下一单元**：U16 保存指示器 → U18-U22 性能与响应式。
+
+---
+
+## 批4 U16 统一 loading/disabled 令牌 + 次级按钮弱化 + 柔性超时（2026-09-14 深夜，提交 `5dc8432` 已推）
+
+- **交付**：①新增 `src/hooks/useSoftRetry.js`（柔性超时：失败→「N 秒后自动重试」递减倒计时，N=baseDelay×失败次数封顶 15s，最多 3 次后转手动兜底，UI 永不硬失败；mount 期重置 mountedRef 修复 StrictMode 双挂载丢更新的通用坑）；②三主题共享令牌 `--control-disabled-opacity:0.55` + `--control-disabled-cursor:not-allowed`（0.4/0.5/0.6 多档收敛单档，read-only 不套用）；③`buttons.css` primary/danger disabled 走令牌 + 新增 `.btn--quiet` 次级弱化修饰符（消费：看板「清除筛选」/SizeTable「清空」/DatePicker「清除」）；④useTasks/OperationLogsModal/PdfPickerModal/App.jsx 错误横幅接柔性超时。排序步进按钮 0.2/default 刻意保留（边界提示语义，非 disabled 态）。
+- **⚠️ 主理人复核抓到 P0 并已修复**：工程师首版把裸 `fetchTasks` 交给 useSoftRetry，结果只存其内部 data，**`setTasks` 全仓零调用 → tasks 永远空数组 → 看板/仪表盘/导出全空白**（且其"看板正常渲染"的点验结论与代码事实不符）。修复 = 数据落位收进 `fetchAndSet`（await fetchTasks → setTasks → return），useSoftRetry 只管重试编排不代持业务状态。**终验实锤：真 Chrome CDP 探针 API 任务数 6 = 看板 .bento-card 6、零空态误显、零 JS 错误**（uiprobe-u16fix.cjs，gitignored）。
+- **门禁**：lint 0；test 全绿（先跑 `node scripts/doc-stats.cjs` 回填 74 文件/11256 行——useTasks 修复 +8 行曾致 docStats 漂移 2 测试红）；build 17.16s 通过。注意：**PowerShell 通道跑 npm test 会解析到系统 Node（ABI 127）→ better-sqlite3/r ABI 相关 5+ 项假失败**，测试必须走 bash + PortableGit usr/bin PATH 通道（本夜 bash 环境劣化，`export PATH=...PortableGit/.../usr/bin:$PATH` 后恢复）。
+- **环境教训**：①PowerShell Remove-Item 静默失败（回 exit 0 但文件未删），导致 15 个门禁输出残留 txt 被 `git add -A` 误入提交——未推送前 `git rm --cached` + `--amend` 清除；②本夜 ref 丢失缺陷再现 4+ 次（commit/amend 后即吞），bash + PATH 补丁通道的 `mkdir -p && printf` 流程为唯一稳定修复法；③PowerShell 全程 stdout 被吞（只回 exit code），读输出靠落盘 + Read。
+- **下一单元**：U18-U22 性能与响应式（roadmap 尾批）。

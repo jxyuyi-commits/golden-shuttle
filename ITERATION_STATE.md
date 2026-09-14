@@ -712,7 +712,11 @@ npm run dev:all
 - **U11 三主题保留香槟金**：修复 dark/light 被误改为中性灰，恢复品牌金（dark `#c8a96e` / light `#8a6d2f`）。与 U8 强耦合、同一窗口改。
 - **U8 对比度修复（components.css）**：`.btn-danger`（红底+近黑字→`--color-danger-fg`）、`.bento-badge`（黑底+近黑字→`--color-overdue-fg`）、`.bento-overdue-badge`/`.drawing-del:hover`/`.drawing-svg-preview svg` 共 5 处彩色底配前景违规修正。
 - **U9 尺度阶梯 + 令牌化**：`theme.css` 新增圆角 `--radius-*`、高度 `--h-*`、字号 `--fs-*` 令牌；13 个按钮类半径/字号接令牌（类名不变，控回归风险）。
-- **U9 类名校名收敛**：**有意延后**（需改写 ≥17 处 JSX className，回归风险高），仅做令牌化，标记后续工作。
+- **U9 类名校名收敛（补做完成）**：新建 `src/styles/buttons.css` 作为按钮系统**单一来源**，收敛为 3 基类 + 修饰符：`btn--primary`（原 .btn-blue/.btn-blue-sm/.btn-add-mini/.btn-add-circle/.run-add-btn）、`btn--ghost`（原 .btn-ghost/.btn-ghost-sm/.btn-upload-pdf/.btn-mode-toggle/.op-btn/.pdf-* /.dp-act/.people-*/.run-material-btn/.run-linked-manage）、`btn--icon`（原 .btn-icon/.btn-icon-xs/.btn-icon-sm/.icon-btn/.icon-btn-danger/.btn-sort/.del-btn/.del-btn-mini/.tag-del/.dp-nav/.drawing-del/.run-del-btn），另有 `btn--danger`（实心危险，原 .btn-danger）与 `btn--ghost-danger`（幽灵危险，原 .btn-del-ghost）。旧类名保留为**分组别名**（同规则 grouped selector），实现零视觉漂移与零断链兜底。
+  - `components.css` 摘除 **71 条**已迁移的重复按钮定义（脚本化，按"首个简单选择器"判定；`.cat-item:hover .del-btn`、`.add-row-enhanced .btn-add-mini` 等上下文覆盖规则首词非按钮类，原样保留）。
+  - JSX `className` 迁移 **103 处 / 23 文件**（有序替换，避免 `btn-icon` 与 `btn-icon-sm`、`del-btn` 与 `del-btn-mini` 的前缀污染）。
+  - 顺带修复：`drawing-del` 旧写法叠加 `icon-btn-danger`，后者源序靠后会覆盖其深色底 → 收敛后只保留 `btn--icon btn--circle btn--danger-dark`，深色圆形删除按钮恢复正常；`btn-icon-sm`（4 处使用但全仓无定义）已归入 `btn--icon.btn--xs` 获得样式。
+  - **验证**：`vite build` 通过；产物孤儿检查「JSX 使用 btn-- 类 22 个 / CSS 定义 22 个 / 孤儿 0」；U10 字体回归确认 dist 含 5 个 woff2、`googleapis` 出现 0 次。
 - **U12 术语常量表**：新建 `src/constants/terms.js`，收敛 `KanbanView.RUN_STATUS_META` / `SampleRunList.RUN_STATUS` / `DesignerDashboard.STATUS_META` / `NewTaskModal.STATUS_CN` 为单一来源（`RUN_STATUS`/`RUN_STATUS_LIST`/`RUN_STATUS_RANK`/`TASK_STATUS_CN` 等）。
 - **U10 字体本地化**：npm 因沙箱 bash shim 缺失无法直装 @fontsource → 改为 node 直连 jsdelivr 下载 Inter(400/500/600) + DM Mono(400/500) 共 5 个 woff2 至 `src/assets/fonts/`；`base.css` 顶部远程 `@import googleapis` 两行替换为 5 条本地 `@font-face`。验证：dist 含 5 个哈希 woff2、`googleapis` 出现 0 次、`@font-face` 5 条且 src 指向本地。
 
@@ -722,4 +726,6 @@ npm run dev:all
 - `2e167e8` U9 尺度阶梯令牌化
 - `3593722` U10 字体本地化（自托管 woff2）
 
-**待办/遗留**：① U9 类名校名收敛（≥12 按钮类→`btn--primary/ghost/icon`）延后；② 无 e2e（缺 Chrome），运行时以 build+dist 验证替代；③ 推送远端需用户开代理。
+**待办/遗留**：① 无 e2e（缺 Chrome），运行时以 build+dist 验证替代；② `.active-mode {}` 为空规则（看板/列表切换按钮无选中态，属既有遗留，未在本轮改动）；③ 旧类名作为分组别名保留在 `buttons.css`，待有 e2e 后可整体摘除。
+
+**推送**：已推远端 `origin`（代理开启）：`39a4153..f2232aa feature/sample-run-model -> feature/sample-run-model`。

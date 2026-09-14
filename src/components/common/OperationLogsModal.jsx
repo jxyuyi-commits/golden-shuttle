@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Plus, ArrowUp, Tag, AlertCircle, CheckCircle2, Clock, FileText, Circle } from 'lucide-react';
 import { fetchLogs } from '../../api';
+import Modal from './Modal';
 
 // 动作 → 图标/颜色/短标签
 const ACTION_META = {
@@ -34,7 +35,7 @@ const OperationLogsModal = ({ onClose }) => {
   }, []);
 
   return (
-    <div className="overlay overlay-show" onClick={onClose}>
+    <Modal onClose={onClose} overlayClassName="overlay overlay-show" ariaLabel="操作日志">
       <div className="glass" style={{ width: 560, maxWidth: '90vw', maxHeight: '80vh', display: 'flex', flexDirection: 'column', borderRadius: 16, overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -69,7 +70,7 @@ const OperationLogsModal = ({ onClose }) => {
           })}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

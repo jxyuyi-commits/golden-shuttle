@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, Trash2 } from 'lucide-react';
+import Modal from './Modal';
 
 /**
  * 统一确认弹窗（REQ-006）：用于删除等危险操作二次确认，替换 window.confirm
@@ -8,8 +9,8 @@ import { AlertTriangle, Trash2 } from 'lucide-react';
  * @param {string} confirmText 确认按钮文案（默认「确认删除」）
  * @param {boolean} danger 危险样式（红色确认按钮），默认 true
  */
-const ConfirmModal = ({ title, message, confirmText = '确认删除', danger = true, onConfirm, onCancel }) => (
-  <div className="modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onCancel(); }}>
+const ConfirmModal = ({ title, message, confirmText = '确认删除', danger = true, onConfirm, onCancel, zIndex }) => (
+  <Modal onClose={onCancel} ariaLabel={title} zIndex={zIndex}>
     <div className="confirm-modal glass">
       <div className="confirm-icon" style={{ color: danger ? 'var(--color-danger-text)' : 'var(--accent)', background: danger ? 'rgba(248,113,113,0.12)' : 'var(--accent-soft)' }}>
         {danger ? <Trash2 size={20} /> : <AlertTriangle size={20} />}
@@ -21,7 +22,7 @@ const ConfirmModal = ({ title, message, confirmText = '确认删除', danger = t
         <button className={danger ? 'btn--danger' : 'btn--primary'} onClick={onConfirm}>{confirmText}</button>
       </div>
     </div>
-  </div>
+  </Modal>
 );
 
 export default ConfirmModal;

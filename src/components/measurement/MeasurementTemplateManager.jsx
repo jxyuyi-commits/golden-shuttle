@@ -3,6 +3,7 @@ import { Plus, X, Edit2, Trash2, FileText } from 'lucide-react';
 import { autoSign } from '../../utils/format';
 import { fetchMeasurementTemplates, saveMeasurementTemplate, deleteMeasurementTemplate } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
+import Modal from '../common/Modal';
 
 /** 尺寸部位预设管理（品类目录 + 部位明细表格 + 新增/编辑弹窗） */
 const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => {
@@ -148,8 +149,8 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
       </div>
 
       {editing && (
-        <div className="overlay overlay-show" style={{ zIndex: 2000 }} onClick={() => setEditing(null)}>
-          <div className="modal glass" style={{ width: 440 }} onClick={e => e.stopPropagation()}>
+        <Modal onClose={() => setEditing(null)} overlayClassName="overlay overlay-show" zIndex={2000} ariaLabel="编辑预设部位">
+          <div className="modal glass" style={{ width: 440 }}>
             <div className="modal-head">
               <span>{editing.id ? '编辑' : '新增'}预设部位</span>
               <button onClick={() => setEditing(null)}><X size={20} /></button>
@@ -191,7 +192,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
               <button className="btn--primary" onClick={saveTemplate} disabled={!editing.name.trim()}>保存</button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* REQ-006② 删除确认 */}

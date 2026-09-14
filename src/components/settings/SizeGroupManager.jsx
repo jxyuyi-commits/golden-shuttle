@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { X, Edit2, Trash2, Plus } from 'lucide-react';
 import { saveSizeGroups, updateSizeGroup, deleteSizeGroup } from '../../api';
 import ConfirmModal from '../common/ConfirmModal';
+import Modal from '../common/Modal';
 
 /** 号型规格系列管理（列表 + 新增/编辑弹窗） */
 const SizeGroupManager = ({ groups, onChange }) => {
@@ -26,16 +26,15 @@ const SizeGroupManager = ({ groups, onChange }) => {
     onChange();
   };
 
-  const modal = editing ? createPortal(
-    <div className="overlay overlay-show" onClick={() => setEditing(null)}>
-      <div className="modal glass" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+  const modal = editing ? (
+    <Modal onClose={() => setEditing(null)} overlayClassName="overlay overlay-show" ariaLabel="号型系列">
+      <div className="modal glass" style={{ maxWidth: 400 }}>
         <div className="modal-head"><span>{editing.id ? '编辑' : '新增'}号型系列</span><button className="btn--icon" onClick={() => setEditing(null)}><X size={20} /></button></div>
         <div className="field"><label>系列名称 (如: 成人女装号型)</label><input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} /></div>
         <div className="field"><label>尺码组 (英文逗号分隔, 如: S,M,L,XL)</label><textarea style={{ height: 80 }} value={editing.size_list} onChange={e => setEditing({ ...editing, size_list: e.target.value })} /></div>
         <div className="modal-foot"><button className="btn--ghost" onClick={() => setEditing(null)}>取消</button><button className="btn--primary" onClick={save}>确认保存</button></div>
       </div>
-    </div>,
-    document.body
+    </Modal>
   ) : null;
 
   return (

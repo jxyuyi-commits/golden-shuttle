@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { X, History, ArrowLeft, RotateCcw, ChevronRight } from 'lucide-react';
 import { fetchVersionHistory, fetchVersionDetail, fetchBomItems, rollbackVersion } from '../../api';
 import ConfirmModal from './ConfirmModal';
+import Modal from './Modal';
 
 const STYLE_FIELDS = [
   ['title', '款式名称'], ['category', '款式类别'], ['brand', '品牌'], ['designer', '设计师'],
@@ -95,7 +96,7 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
   const curSize = curTask.size_data || [];
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 2100 }} onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <Modal onClose={onClose} zIndex={2100} ariaLabel="历史版本" overlayClassName="modal-overlay">
       <div className="modal glass version-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-head">
           {selected ? (
@@ -234,12 +235,13 @@ const VersionHistoryModal = ({ task, onClose, onRolledBack }) => {
             title={`回滚到 V${selected?.version_no}`}
             message={`将把款式信息、尺寸表、物料清单恢复为 V${selected?.version_no} 时的内容（批次状态不受影响）。\n回滚本身会生成一条新版本，可再次回滚撤销。`}
             confirmText="确认回滚"
+            zIndex={2200}
             onConfirm={doRollback}
             onCancel={() => setConfirmRollback(false)}
           />
         )}
       </div>
-    </div>
+    </Modal>
   );
 };
 

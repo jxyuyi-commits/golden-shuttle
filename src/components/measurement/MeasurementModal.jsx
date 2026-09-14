@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { fetchMeasurementTemplates } from '../../api';
+import Modal from '../common/Modal';
 
 /** 部位预设选择弹窗（SizeTable 内部使用） */
 const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
@@ -26,8 +26,8 @@ const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div className="modal-overlay">
+  return (
+    <Modal onClose={onClose} closeOnOverlay={false} ariaLabel="选择尺寸部位">
       <div className="modal-content glass">
         <div className="modal-header">
           <div style={{ fontSize: 18, fontWeight: 800 }}>选择尺寸部位</div>
@@ -66,8 +66,7 @@ const MeasurementModal = ({ isOpen, onClose, onConfirm, categories = [] }) => {
           </div>
         </div>
       </div>
-    </div>,
-    document.body
+    </Modal>
   );
 };
 

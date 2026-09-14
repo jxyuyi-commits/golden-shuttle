@@ -2,9 +2,9 @@
 // 版本管控：参考资料(reference) 防冗余（同内容去重）；工作成果(output) 可追溯（同名迭代自动升版本）
 // 支持：点击选择 / 拖拽 / 复制粘贴 上传，不限文件格式
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { Plus, Trash2, Loader2, X, Upload, FileText, ClipboardPaste, History, AlertTriangle } from 'lucide-react';
 import ConfirmModal from '../common/ConfirmModal';
+import Modal from '../common/Modal';
 import SmartSelect from '../common/SmartSelect';
 import PdfThumb from '../common/PdfThumb';
 import {
@@ -381,11 +381,16 @@ const DrawingLibrary = ({ taskId }) => {
       )}
 
       {/* 上传弹窗 */}
-      {showUpload && createPortal(
-        <div className="overlay overlay-show" onClick={() => { if (!busy) setShowUpload(false); }} style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5vh' }}>
+      {showUpload && (
+        <Modal
+          onClose={() => { if (!busy) setShowUpload(false); }}
+          overlayClassName="overlay overlay-show"
+          overlayStyle={{ alignItems: 'center', justifyContent: 'center', padding: '5vh' }}
+          zIndex={9999}
+          ariaLabel="上传图纸资料"
+        >
           <div
             className="glass"
-            onClick={e => e.stopPropagation()}
             style={{ width: 480, maxWidth: '100%', padding: 28, maxHeight: '85vh', overflow: 'auto' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -446,13 +451,18 @@ const DrawingLibrary = ({ taskId }) => {
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </Modal>
       )}
 
       {/* 版本历史弹窗 */}
-      {groupModal && createPortal(
-        <div className="overlay overlay-show" onClick={() => setGroupModal(null)} style={{ zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5vh' }}>
+      {groupModal && (
+        <Modal
+          onClose={() => setGroupModal(null)}
+          overlayClassName="overlay overlay-show"
+          overlayStyle={{ alignItems: 'center', justifyContent: 'center', padding: '5vh' }}
+          zIndex={9999}
+          ariaLabel="版本历史"
+        >
           <div
             className="glass"
             onClick={e => e.stopPropagation()}
@@ -509,8 +519,7 @@ const DrawingLibrary = ({ taskId }) => {
               </div>
             )}
           </div>
-        </div>,
-        document.body
+        </Modal>
       )}
 
       {/* REQ-006② 删除确认 */}
@@ -528,6 +537,7 @@ const DrawingLibrary = ({ taskId }) => {
         <ConfirmModal
           title="删除版本记录"
           message="确认删除该版本记录？\n删除后不可恢复。"
+          zIndex={10000}
           onConfirm={doDeleteVersion}
           onCancel={() => setConfirmVerId(null)}
         />

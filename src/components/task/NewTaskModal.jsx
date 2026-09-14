@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, FolderOpen } from 'lucide-react';
 import { fetchStyleByNo, fetchTasks, createTask } from '../../api';
 import SmartSelect from '../common/SmartSelect';
+import Modal from '../common/Modal';
 import { TASK_STATUS_CN as STATUS_CN } from '../../constants/terms';
 
 /** 新建打样需求单弹窗（款号自动带出款式信息 + 分类联动号型 + 同款查重） */
@@ -76,7 +77,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
   };
 
   return (
-    <div className="overlay overlay-show" onClick={onClose}>
+    <Modal onClose={onClose} overlayClassName="overlay overlay-show" ariaLabel="新建打样需求单">
       <form className="modal glass" onSubmit={submit} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
           <span>新建打样需求单</span>
@@ -174,7 +175,7 @@ const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 };
 

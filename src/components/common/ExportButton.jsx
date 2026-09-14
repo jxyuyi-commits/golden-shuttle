@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Download, X, CheckCircle2, AlertCircle, Loader2, FileSpreadsheet } from 'lucide-react';
+import Modal from './Modal';
 
 /**
  * @param {string} label 按钮文字（如"导出"/"导出工艺单"）
@@ -56,9 +57,15 @@ const ExportButton = ({ label, title, confirmText, fileName, onExport, style, di
       </button>
 
       {/* 导出确认对话框 */}
-      {showConfirm && createPortal(
-        <div className="overlay overlay-show" onClick={() => setShowConfirm(false)} style={{ zIndex: 9999, alignItems: 'center', justifyContent: 'center' }}>
-          <div className="modal glass" onClick={e => e.stopPropagation()} style={{ width: 440, padding: 28, gap: 14 }}>
+      {showConfirm && (
+        <Modal
+          onClose={() => setShowConfirm(false)}
+          overlayClassName="overlay overlay-show"
+          overlayStyle={{ alignItems: 'center', justifyContent: 'center' }}
+          zIndex={9999}
+          ariaLabel={title}
+        >
+          <div className="modal glass" style={{ width: 440, padding: 28, gap: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>
                 <FileSpreadsheet size={18} color="var(--accent)" /> {title}
@@ -87,8 +94,7 @@ const ExportButton = ({ label, title, confirmText, fileName, onExport, style, di
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </Modal>
       )}
 
       {/* 结果 toast */}

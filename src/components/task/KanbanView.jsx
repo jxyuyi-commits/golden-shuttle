@@ -8,6 +8,7 @@ import ExportButton from '../common/ExportButton';
 import SmartSelect from '../common/SmartSelect';
 import { exportTasksToExcel, getTaskListFileName } from '../../utils/exportTasks';
 import { peopleByRole } from '../../utils/people';
+import { RUN_STATUS, RUN_STATUS_LIST } from '../../constants/terms';
 
 const getNodeIcon = (status) => {
   if (status === 'done' || status === 'completed') return <CheckCircle2 size={14} color="var(--run-done)" />;
@@ -15,14 +16,7 @@ const getNodeIcon = (status) => {
   return <Circle size={14} color="var(--text-4)" />;
 };
 
-// 版次批次状态元数据（与 SampleRunList / 后端 sampleRuns.cjs 保持一致）
-const RUN_STATUS_META = {
-  waiting_material: { label: '待安排', color: 'var(--text-2)' }, // REQ-030 改词
-  pattern_making: { label: '打版中', color: 'var(--accent)' },
-  sample_making: { label: '样衣中', color: 'var(--run-sample)' },
-  pending_confirm: { label: '待审版', color: 'var(--color-info)' }, // REQ-030 改词
-  done: { label: '已完成', color: 'var(--run-done)' },
-};
+// 版次批次状态元数据收敛至 src/constants/terms.js → RUN_STATUS / RUN_STATUS_LIST
 const PRIO_RANK = { 'S': 3, 'A': 2, 'B': 1, 'C': 0 }; // REQ-030 优先级 S/A/B/C
 /** 取任务的批次列表（兼容迁移前旧字段，无 runs 时用 task 顶层字段拼一条） */
 const taskRuns = (t) => {
@@ -316,7 +310,7 @@ const KanbanView = ({
           <SmartSelect
             className="filter-sel"
             placeholder="全部版次状态"
-            options={[{ key: '', label: '全部版次状态' }, ...Object.entries(RUN_STATUS_META).map(([k, m]) => ({ key: k, label: m.label }))]}
+            options={[{ key: '', label: '全部版次状态' }, ...RUN_STATUS_LIST.map((s) => ({ key: s.key, label: s.label }))]}
             value={filters.run_status || ''}
             onChange={v => setFilters({ ...filters, run_status: v })}
             allowCustom={false}

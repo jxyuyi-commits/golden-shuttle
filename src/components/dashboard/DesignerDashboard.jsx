@@ -1,19 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Plus, Layout, BarChart3, PieChart, CheckCircle2, Clock, AlertCircle, XCircle } from 'lucide-react';
+import { RUN_STATUS, RUN_STATUS_ORDER, RUN_STATUS_RANK } from '../../constants/terms';
 
-// 款级聚合状态元数据（与后端 tasks.cjs DERIVED_STATUS_LABEL 一致）
-const STATUS_META = {
-  not_started:      { label: '未开始', color: 'var(--text-3)' },
-  waiting_material: { label: '待安排', color: 'var(--text-2)' }, // REQ-030 改词
-  pattern_making:   { label: '打版中', color: 'var(--accent)' },
-  sample_making:    { label: '样衣中', color: 'var(--run-sample)' },
-  pending_confirm:  { label: '待审版', color: 'var(--color-info)' }, // REQ-030 改词
-  done:             { label: '已完成', color: 'var(--run-done)' },
-};
-const STATUS_ORDER = ['not_started', 'waiting_material', 'pattern_making', 'sample_making', 'pending_confirm', 'done'];
-
-// 批次状态优先级（数值越大越先进，用于找「最先进批次」）
-const RUN_STATUS_RANK = { waiting_material: 1, pattern_making: 2, sample_making: 3, pending_confirm: 4, done: 5 };
+// 款级聚合状态元数据收敛至 src/constants/terms.js（U12）
+const STATUS_META = RUN_STATUS;
+const STATUS_ORDER = RUN_STATUS_ORDER;
 
 // 统计卡点击筛选：key 对应卡片，match 判定款式是否命中（与 stats 计算口径完全一致，保证卡片数字=筛选结果数）
 // REQ-003④：进行中=打版中+样衣中（待确认独立成卡，分类互斥）

@@ -5,18 +5,10 @@ import ConfirmModal from '../common/ConfirmModal';
 import DatePicker from '../common/DatePicker';
 import { fetchRuns, createRun, updateRun, deleteRun, fetchDrawings } from '../../api';
 import { peopleByRole } from '../../utils/people';
+import { RUN_STATUS_LIST } from '../../constants/terms';
 
-// 批次状态（板师手动推进）
-// RUN_STATUS 为本文件 UI 与同模块共用的常量；拆分为独立文件会引入无谓的循环/跨文件耦合，
-// 故保留同文件导出并说明：此处禁用 fast-refresh 的「仅导出组件」约束（不影响生产构建/HMR 行为正确性）。
-// eslint-disable-next-line react-refresh/only-export-components
-export const RUN_STATUS = [
-  { key: 'waiting_material', label: '待安排', color: 'var(--text-2)' }, // REQ-030 改词
-  { key: 'pattern_making', label: '打版中', color: 'var(--accent)' },
-  { key: 'sample_making', label: '样衣中', color: 'var(--run-sample)' },
-  { key: 'pending_confirm', label: '待审版', color: 'var(--color-info)' }, // REQ-030 改词
-  { key: 'done', label: '已完成', color: 'var(--run-done)' },
-];
+// 批次状态枚举收敛至 src/constants/terms.js → RUN_STATUS_LIST（U12）
+const RUN_STATUS = RUN_STATUS_LIST;
 // 阻塞原因（独立字段）
 const BLOCKERS = [
   { key: 'none', label: '无阻塞' },

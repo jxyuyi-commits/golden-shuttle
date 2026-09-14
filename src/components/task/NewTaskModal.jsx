@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, FolderOpen } from 'lucide-react';
 import { fetchStyleByNo, fetchTasks, createTask } from '../../api';
 import SmartSelect from '../common/SmartSelect';
-
-const STATUS_CN = { todo: '待处理', doing: '打版中', done: '已完结' };
+import { TASK_STATUS_CN as STATUS_CN } from '../../constants/terms';
 
 /** 新建打样需求单弹窗（款号自动带出款式信息 + 分类联动号型 + 同款查重） */
 const NewTaskModal = ({ settings, onClose, onSuccess, onOpenExisting }) => {

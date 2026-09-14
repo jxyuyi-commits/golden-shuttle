@@ -759,3 +759,9 @@ npm run dev:all
 - **可撤销范围（重要决策）**：仅版本回滚接了「撤销回滚」（复用现有 rollbackVersion API，撤销=再回滚一次，不新增后端接口）；其余删除类服务端无恢复接口，按约束保持 danger 确认、不做假撤销。
 - **验证**：主理人独立复验（grep 原生弹窗=0、三道门实跑 eslint 0 / test 全绿 / build 通过、关键 diff 逐行过目）；无 Chrome，Esc/焦点陷阱/堆叠等运行时行为待用户界面点验。
 - **下一单元**：U14 可点击 div→button → U15 空态骨架 → U16 保存指示器 → U18-U22。
+
+### 运行时点验通道建立（Chrome 就位，"无 e2e" 遗留解除，2026-09-14 深夜）
+- 用户提供本机便携 Chrome：`D:/Chrome131_AllNew_2024.11.15/App/chrome.exe`（131.0.6778.70，Chrome++ 封装）。
+- 方法：Playwright（装于受管 node 工作区 `~/.workbuddy/binaries/node/workspace`，**未进项目依赖**、跳过浏览器下载）手动 spawn + `--remote-debugging-port` + `connectOverCDP`（Chrome++ 壳与 remote-debugging-pipe 不兼容，executablePath 直启会立即退出）；点验脚本 `uiprobe-runtime.cjs`（gitignored，本机保留复用）。
+- **U17 运行时点验 11/11 通过**：看板加载(6 卡)/ToastHost 挂载/3 toast 并存/右上定位避开 76px 顶栏(x:1202,y:88)/pre-line 多行/≤8s 自动消失/详情「删除单据」→ danger 红钮+「删除打样单」标题/取消关闭/Esc 关最上层/**零 console 错误**；截图 `.uiprobe/runtime-toasts.png`、`runtime-danger-confirm.png`、`runtime-toasts-dark/light.png`。
+- U17 交付时标注的"运行时行为待用户界面点验"至此已由真浏览器自动点验覆盖；后续单元（U14-U16 等）的交互验证可直接复用此通道。

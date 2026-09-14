@@ -703,3 +703,23 @@ npm run dev:all
 - **验证（亲测）**：`vite build` 通过（1784 modules）；运行时实测 `.col` 计算宽 **600px**、`flex:0 0 600px`、无 `720px/400px/!important`；5173 重启后 S3 确认生效，控制台零错误。
 - **文档清洗**：`docs/TECHNICAL.md` 迁移史补 v15–v21；`docs/PROJECT_HANDBOOK.md` §11 提交 SHA 更新 + `scripts/doc-stats.cjs` 刷新 STATS 区块。
 - **提交**：于 `feature/sample-run-model` 最新提交（见 `git log`）。
+
+### 批3 U8–U12 收尾（UI 治本，2026-09-14）
+
+按路线图 `docs/roadmap/批3-UI治本-锚点侦察-20260914.md` 推进，全部 build 自测通过；无 Chrome 故以「生产 build + 编译后 dist 验证」为自测结论（符合 AGENTS.md 实测精神）。
+
+- **U8 状态色 token 化**：`theme.css` 三主题（custom/dark/light）新增语义色令牌 `--color-success/-danger/-danger-strong/-danger-soft/-danger-fg/-warn/-warn-soft/-info/-overdue/-overdue-soft/-overdue-fg` 及 run 状态色 `--run-*`；`:root` 额外固定扩展令牌（green-500/danger-rose/orange-400 等）供三主题继承不漂移。15 个 JSX 文件约 93 处硬编码 hex → `var(--token)`（DrawingLibrary 调色板 + 第 335 行 hex 拼 alpha 例外，保留硬编码避免 `var()22` 断裂）。
+- **U11 三主题保留香槟金**：修复 dark/light 被误改为中性灰，恢复品牌金（dark `#c8a96e` / light `#8a6d2f`）。与 U8 强耦合、同一窗口改。
+- **U8 对比度修复（components.css）**：`.btn-danger`（红底+近黑字→`--color-danger-fg`）、`.bento-badge`（黑底+近黑字→`--color-overdue-fg`）、`.bento-overdue-badge`/`.drawing-del:hover`/`.drawing-svg-preview svg` 共 5 处彩色底配前景违规修正。
+- **U9 尺度阶梯 + 令牌化**：`theme.css` 新增圆角 `--radius-*`、高度 `--h-*`、字号 `--fs-*` 令牌；13 个按钮类半径/字号接令牌（类名不变，控回归风险）。
+- **U9 类名校名收敛**：**有意延后**（需改写 ≥17 处 JSX className，回归风险高），仅做令牌化，标记后续工作。
+- **U12 术语常量表**：新建 `src/constants/terms.js`，收敛 `KanbanView.RUN_STATUS_META` / `SampleRunList.RUN_STATUS` / `DesignerDashboard.STATUS_META` / `NewTaskModal.STATUS_CN` 为单一来源（`RUN_STATUS`/`RUN_STATUS_LIST`/`RUN_STATUS_RANK`/`TASK_STATUS_CN` 等）。
+- **U10 字体本地化**：npm 因沙箱 bash shim 缺失无法直装 @fontsource → 改为 node 直连 jsdelivr 下载 Inter(400/500/600) + DM Mono(400/500) 共 5 个 woff2 至 `src/assets/fonts/`；`base.css` 顶部远程 `@import googleapis` 两行替换为 5 条本地 `@font-face`。验证：dist 含 5 个哈希 woff2、`googleapis` 出现 0 次、`@font-face` 5 条且 src 指向本地。
+
+提交链（`feature/sample-run-model`）：
+- `d598286` U8+U11 状态色 token 化 + 三主题保留香槟金
+- `266b5a9` U12 术语常量表
+- `2e167e8` U9 尺度阶梯令牌化
+- `3593722` U10 字体本地化（自托管 woff2）
+
+**待办/遗留**：① U9 类名校名收敛（≥12 按钮类→`btn--primary/ghost/icon`）延后；② 无 e2e（缺 Chrome），运行时以 build+dist 验证替代；③ 推送远端需用户开代理。

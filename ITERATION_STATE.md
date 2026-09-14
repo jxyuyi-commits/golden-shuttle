@@ -695,3 +695,11 @@ npm run dev:all
 - **侦察成果落档（只读，未改码）**：
   - `docs/roadmap/批3-UI治本-锚点侦察-20260914.md`（U1–U12 锚点全景 + 依赖顺序 + 明确否定结论）
   - `docs/audit/U7-CSS分层重构-施工设计-20260914.md`（U7 分层方案 / 72 组 179 条冲突清单 / `!important` 三分法 7+16+156 / `.col` 单源方案 / S0–S8 施工顺序 / 风险与验证协议）
+
+### U7 CSS 分层重构收尾（S3 单源 + S7 删死文件，2026-09-14）
+
+- **S3 `.col` 单源**：`src/styles/theme.css` 新增 `--board-col-w: 600px`；`src/styles/views.css` 三处冲突 `.col`（720px / 600px!important / 400px）合并为 token 驱动单源（含 `box-sizing:border-box`），`.board` padding 收敛；`src/components/task/KanbanView.jsx:480` 删除内联 `style`（宽度全交 token）。
+- **S7 删死文件**：删除 `src/index.css`（1425 行）、`src/styles/app.css`（685 行）、`src/App.css`（42 行，零引用）；`src/components/task/TaskCard.jsx` 此前已删（Glob 全局确认）。备份 `backups/u7-s7-deadfiles-20260914.zip`（19,336B，可回撤）。
+- **验证（亲测）**：`vite build` 通过（1784 modules）；运行时实测 `.col` 计算宽 **600px**、`flex:0 0 600px`、无 `720px/400px/!important`；5173 重启后 S3 确认生效，控制台零错误。
+- **文档清洗**：`docs/TECHNICAL.md` 迁移史补 v15–v21；`docs/PROJECT_HANDBOOK.md` §11 提交 SHA 更新 + `scripts/doc-stats.cjs` 刷新 STATS 区块。
+- **提交**：于 `feature/sample-run-model` 最新提交（见 `git log`）。

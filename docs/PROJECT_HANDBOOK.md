@@ -35,7 +35,7 @@
 **机器可验证计数（防漂移）**：
 
 <!-- STATS:BEGIN (由 scripts/doc-stats.cjs 生成，请勿手改) -->
-> 以下计数由 `node scripts/doc-stats.cjs` 从源码实测生成（生成于 2026-09-14 06:17）；手工改动会被 `--check` 判为漂移。
+> 以下计数由 `node scripts/doc-stats.cjs` 从源码实测生成（生成于 2026-09-14 11:22）；手工改动会被 `--check` 判为漂移。
 
 | 计数项 | 值 |
 | --- | --- |
@@ -350,7 +350,7 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 * 远端：`https://github.com/jxyuyi-commits/golden-shuttle.git`（HTTPS）
 
-* 提交历史：以 `git log --oneline` 为准（不手写）。截至 2026-09-14：`feature/sample-run-model` = `5f630c8`，`main` = `c694305`
+* 提交历史：以 `git log --oneline` 为准（不手写）。截至 2026-09-14：`feature/sample-run-model` = `39a4153`，`main` = `93ef9ff`
 
 * 本机 push GitHub 需要**代理环境**（直连 443 不通，用户开代理后成功）
 

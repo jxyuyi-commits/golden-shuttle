@@ -138,6 +138,13 @@ PATCH /api/tasks/:id 的 STYLE_KEYS 白名单：style_no, title, brand, designer
 | v12 | 清理 tasks 旧批次字段（sample_type/sample_color/size/sample_count/fabric_date，权威数据已在 sample_runs；API 层改为从首个批次兼容投影） |
 | v13 | 批次负责人拆分版师/样衣工（sample_runs 加 pattern_maker/sample_maker；旧 assignee 值并入版师后删除，REQ-003②） |
 | v14 | REQ-004 单号/审核下沉版次：sample_runs 加 order_no（自动生成 PO-款号-Vn，V0 起一位）、audit_status、audit_comment；旧款级审核迁至最先进批次；tasks 级 order_no/audit 清空（列保留兼容） |
+| v15 | REQ-011 历史版本快照：task_versions 表（每次自动保存记录，5 分钟编辑会话合并） |
+| v16 | REQ-005 尺寸表归属版次：sample_runs 加 size_data 列，tasks.size_data 迁移到各款首个批次后清空（列保留兼容） |
+| v17 | REQ-015 版师上移款级：styles 加 pattern_maker；取该款最近非空版师批次回填（用户拍板：最近的非空版师批次） |
+| v18 | REQ-018 版次数据模型补全：sample_runs 加 pattern_date（纸样完成时间）、accessory_date（辅料到库时间），覆盖样衣制作全流程 |
+| v19 | REQ-004 补强：sample_runs.order_no 唯一索引（服务端只读化配套，防重复单号；部分索引排除空串） |
+| v20 | REQ-030 优先级体系替换：低/中/高/紧急 → C/B/A/S（存量迁移，S 最高） |
+| v21 | G10+G13 款级状态一次性归位（纯 SQL）+ 物理删除 tasks 5 个死列（order_no/audit_status/audit_comment/size_data/priority，权威数据已下沉 sample_runs） |
 
 迁移通过 `_migrations` 表记录已执行版本，每个版本只执行一次；v10 执行前数据库自动备份为 `server/database.backup_before_v10.sqlite`。
 

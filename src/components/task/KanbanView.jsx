@@ -477,7 +477,7 @@ const KanbanView = ({
               return true;
             });
             return (
-              <div key={col.id} className="col" style={{ width: 500, flex: '0 0 500px', boxSizing: 'border-box' }}>
+              <div key={col.id} className="col">
                 <div className="col-title" style={{
                   position: 'sticky', top: 0, zIndex: 50,
                   background: 'var(--bg)', width: '100%',

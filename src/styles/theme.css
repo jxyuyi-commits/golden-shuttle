@@ -36,6 +36,7 @@
   --scroll-thumb: rgba(160, 150, 140, 0.2);
   --shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
   --card-bg: rgba(22, 23, 25, 0.75);
+  --board-col-w: 600px; /* U7·S3 .col 单源：看板分栏统一宽度（改宽度只动此处） */
   --app-bg: radial-gradient(circle at 22% 0%, rgba(200,169,110,0.10), transparent 52%), radial-gradient(circle at 78% 100%, rgba(200,169,110,0.06), transparent 55%), var(--bg);
   color-scheme: dark;
 }

@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { X, FolderOpen, Check } from 'lucide-react';
 import { fetchDrawings } from '../../api';
 import PdfThumb from './PdfThumb';
 import Modal from './Modal';
 import EmptyState from './EmptyState';
+import useSoftRetry from '../../hooks/useSoftRetry';
 
 /**
  * 从图纸资料库选择设计稿：
@@ -12,28 +13,23 @@ import EmptyState from './EmptyState';
  */
 const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [selected, setSelected] = useState(null);
 
-  useEffect(() => {
-    // 无 taskId 时立即结束加载态（初始化同步），属合理用法，故禁用该规则并说明
-    if (!taskId) { setLoading(false); return; } // eslint-disable-line react-hooks/set-state-in-effect
-    fetchDrawings(taskId)
-      .then(list => {
-        // 按 group_id 聚合：每组取最新版本（无 group_id 的记录独立显示）
-        const map = new Map();
-        for (const d of list || []) {
-          if (d.category !== '设计稿') continue;
-          const key = d.group_id ?? `single-${d.id}`;
-          const cur = map.get(key);
-          if (!cur || (d.version || 0) >= (cur.version || 0)) map.set(key, d);
-        }
-        setItems([...map.values()].sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || '')));
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+  // U16 柔性超时：加载失败自动递减倒计时重试（5s/10s/15s），超过 3 次转「立即重试」手动兜底，永不硬失败
+  const loadDesigns = useCallback(async () => {
+    if (!taskId) { setItems([]); return; } // 无 taskId 时（初始化同步）直接给空列表，立即结束加载态
+    const list = await fetchDrawings(taskId);
+    // 按 group_id 聚合：每组取最新版本（无 group_id 的记录独立显示）
+    const map = new Map();
+    for (const d of list || []) {
+      if (d.category !== '设计稿') continue;
+      const key = d.group_id ?? `single-${d.id}`;
+      const cur = map.get(key);
+      if (!cur || (d.version || 0) >= (cur.version || 0)) map.set(key, d);
+    }
+    setItems([...map.values()].sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || '')));
   }, [taskId]);
+  const { loading, error, countdown, retry } = useSoftRetry(loadDesigns, { baseDelay: 5, maxAttempts: 3 });
 
   return (
     <Modal onClose={onClose} overlayClassName="overlay overlay-show" ariaLabel="从图纸资料选择设计稿">
@@ -48,7 +44,23 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
         </div>
         <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
           {loading && <div style={{ padding: 28, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>加载中…</div>}
-          {error && <div style={{ padding: 28, textAlign: 'center', color: 'var(--color-danger-text)', fontSize: 13 }}>加载失败：{error}</div>}
+          {!loading && error && (
+            <div style={{ padding: 28, textAlign: 'center', fontSize: 13 }}>
+              <div style={{ color: 'var(--color-danger-text)' }}>加载失败：{error.message || '未知错误'}</div>
+              {countdown > 0 ? (
+                <div style={{ marginTop: 8, color: 'var(--text-2)' }}>{countdown} 秒后自动重试…</div>
+              ) : (
+                <button
+                  type="button"
+                  className="btn--ghost btn--sm"
+                  style={{ marginTop: 8, display: 'inline-flex', border: '1px solid var(--border-weak)', borderRadius: 8, padding: '4px 12px' }}
+                  onClick={retry}
+                >
+                  立即重试
+                </button>
+              )}
+            </div>
+          )}
           {!loading && !error && items.length === 0 && (
             <EmptyState
               title="暂无「设计稿」分类的图纸资料"
@@ -99,7 +111,7 @@ const PdfPickerModal = ({ taskId, currentUrl, onSelect, onClose }) => {
             <button className="btn" style={{ padding: '7px 14px', fontSize: 13 }} onClick={onClose}>取消</button>
             <button
               className="btn--primary"
-              style={{ padding: '7px 14px', fontSize: 13, opacity: selected ? 1 : 0.45, cursor: selected ? 'pointer' : 'not-allowed' }}
+              style={{ padding: '7px 14px', fontSize: 13, opacity: selected ? 1 : 'var(--control-disabled-opacity)', cursor: selected ? 'pointer' : 'var(--control-disabled-cursor)' }}
               disabled={!selected}
               onClick={() => { if (selected) { onSelect(selected); onClose(); } }}
             >

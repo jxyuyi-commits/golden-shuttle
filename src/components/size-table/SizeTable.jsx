@@ -351,7 +351,8 @@ const SizeTable = ({
               批量删除 ({selectedIndices.length})
             </button>
           )}
-          <button className="btn--ghost" onClick={() => setConfirmClear(true)}>清空</button>
+          {/* U16 次级弱化：primary「从预设加入」旁的「清空」降一档视觉权重（.btn--quiet） */}
+          <button className="btn--ghost btn--quiet" onClick={() => setConfirmClear(true)}>清空</button>
           <button
             className={`btn--ghost btn--toggle ${isActualMode ? 'active' : ''}`}
             onClick={() => setIsActualMode(!isActualMode)}

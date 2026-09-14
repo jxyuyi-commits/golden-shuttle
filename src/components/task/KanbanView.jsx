@@ -339,11 +339,13 @@ const KanbanView = ({
           />
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
-            {/* 一键清除所有筛选条件 */}
+            {/* 一键清除所有筛选条件；U16 次级弱化：强调色「导出」旁的次级动作降一档视觉权重（.btn--quiet，
+                底色/边框/文字色交由令牌类接管，内联只保留布局属性） */}
             <button
+              className="btn--ghost btn--quiet"
               onClick={() => setFilters({ keyword: '', category: '', sample_type: '', designer: '', priority: '', run_status: '' })}
               title="清除所有筛选条件"
-              style={{ padding: '7px 12px', borderRadius: 8, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, whiteSpace: 'nowrap', cursor: 'pointer' }}
+              style={{ padding: '7px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, whiteSpace: 'nowrap', cursor: 'pointer' }}
             >
               <FilterX size={14} /> 清除筛选
             </button>

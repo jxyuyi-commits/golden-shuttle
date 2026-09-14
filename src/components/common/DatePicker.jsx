@@ -96,7 +96,8 @@ const DatePicker = ({ value, onChange, className, placeholder = '年/月/日', w
             ))}
           </div>
           <div className="dp-foot">
-            <button type="button" className="btn--ghost btn--block" onClick={() => { onChange(''); setOpen(false); }}>清除</button>
+            {/* U16 次级弱化：强调色「今天」旁的「清除」降一档视觉权重（.btn--quiet） */}
+            <button type="button" className="btn--ghost btn--block btn--quiet" onClick={() => { onChange(''); setOpen(false); }}>清除</button>
             <button type="button" className="btn--ghost btn--block btn--active" onClick={() => { onChange(fmt(today.getFullYear(), today.getMonth(), today.getDate())); setOpen(false); }}>今天</button>
           </div>
         </div>

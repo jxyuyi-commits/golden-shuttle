@@ -70,6 +70,10 @@
   --color-pink-400: #f472b6;
   --color-danger-deep: #b91c1c; /* .btn-danger hover 深红 */
   --color-warn-fg: #1a1a1a; /* 琥珀底之上的深色前景，保证对比度 */
+  /* U16 控件禁用态令牌（三主题共享固定值）：disabled 统一为 opacity 0.55 + not-allowed 光标
+     （由 0.4/0.5 两档收敛为单档）；read-only（非 disabled，如款号只读输入框）不套用本令牌 */
+  --control-disabled-opacity: 0.55;
+  --control-disabled-cursor: not-allowed;
   /* U9 尺度阶梯令牌（三主题共享，固定值）：统一圆角/高度/字号，消除 11 种零散取值 */
   --radius-sm: 6px;
   --radius-md: 8px;

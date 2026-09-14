@@ -25,7 +25,8 @@
   transition: 0.2s;
 }
 .btn--primary:hover, .btn-blue:hover { opacity: 0.9; }
-.btn--primary:disabled, .btn-blue:disabled { opacity: 0.4; cursor: not-allowed; }
+/* U16：disabled 态统一走 --control-disabled-* 令牌（theme.css），0.4 → 0.55 单档 */
+.btn--primary:disabled, .btn-blue:disabled { opacity: var(--control-disabled-opacity); cursor: var(--control-disabled-cursor); }
 
 .btn--primary.btn--sm,
 .btn-blue-sm {
@@ -75,6 +76,13 @@
   font-size: var(--fs-sm); color: var(--text-2);
   background: none; border: none; cursor: pointer; padding: 6px 0;
 }
+
+/* U16 次级弱化（.btn--quiet）：primary/强调按钮旁的次级动作（清除/清空类）降一档视觉权重——
+   透明底 + 弱边框 + 三级文字色，与主操作拉开层级；不改布局尺寸，避免挤压相邻元素 */
+.btn--ghost.btn--quiet {
+  background: transparent; color: var(--text-3); border-color: var(--border-weak);
+}
+.btn--ghost.btn--quiet:hover { background: var(--bg-hover); color: var(--text); border-color: var(--border); }
 
 /* 强调色幽灵（原 .run-material-btn / .run-linked-manage） */
 .btn--ghost.btn--sm.btn--accent,
@@ -180,6 +188,8 @@
 }
 .btn--icon.btn--xs.btn--sort:hover:not(:disabled),
 .btn-sort:hover:not(:disabled) { color: var(--accent); }
+/* U16 盘点结论：排序步进按钮 disabled（0.2/default）是「到边界不可再移」的弱提示语义，
+   非 busy/disabled 控件态，刻意不套用 --control-disabled-* 令牌（避免边界提示过重） */
 .btn--icon.btn--xs.btn--sort:disabled,
 .btn-sort:disabled { opacity: 0.2; cursor: default; }
 
@@ -218,7 +228,8 @@
   cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;
 }
 .btn--danger:hover, .btn-danger:hover { background: var(--color-danger-deep); }
-.btn--danger:disabled, .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+/* U16：disabled 态统一走 --control-disabled-* 令牌（theme.css），0.5 → 0.55 单档 */
+.btn--danger:disabled, .btn-danger:disabled { opacity: var(--control-disabled-opacity); cursor: var(--control-disabled-cursor); }
 
 /* ============ PDF 操作（原 .pdf-action-btn / .pdf-enlarge-btn） ============ */
 .btn--ghost.btn--sm.btn--pdf,

@@ -53,7 +53,7 @@ const App = () => {
   const [pdfSyncState, setPdfSyncState] = useState(null); // null | 'syncing' | 'ok' | { error }
 
   // 业务数据 hooks
-  const { tasks, loadTasks, error: tasksError } = useTasks();
+  const { tasks, loadTasks, error: tasksError, countdown: tasksCountdown } = useTasks();
   const { settings, loadSettings, saveSetting } = useSettings();
 
   // REQ-010 主题系统：三套配色 custom(自定义深蓝黑) / dark(系统深) / light(系统浅)
@@ -258,7 +258,7 @@ const App = () => {
   return (
     <div className="app">
 
-      {/* G7：任务加载失败态——明确提示而非空白列表，提供重试 */}
+      {/* G7：任务加载失败态——明确提示而非空白列表，提供重试；U16 柔性超时：失败自动递减倒计时重试，永不硬失败 */}
       {tasksError && (
         <div style={{
           margin: '12px 16px 0',
@@ -274,6 +274,9 @@ const App = () => {
         }}>
           <AlertCircle size={16} color="var(--color-danger-text)" />
           <span>加载打样数据失败：{tasksError.message || '未知错误'}（可能是本地服务未启动或数据库被占用）</span>
+          {tasksCountdown > 0 && (
+            <span style={{ color: 'var(--text-2)', whiteSpace: 'nowrap' }}>{tasksCountdown} 秒后自动重试…</span>
+          )}
           <button
             type="button"
             className="btn--ghost btn--sm"

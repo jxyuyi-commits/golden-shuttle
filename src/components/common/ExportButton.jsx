@@ -48,8 +48,9 @@ const ExportButton = ({ label, title, confirmText, fileName, onExport, style, di
         title={title}
         style={{
           ...style,
-          opacity: busy || disabled ? 0.6 : 1,
-          cursor: busy || disabled ? 'not-allowed' : 'pointer'
+          // U16：busy/disabled 态统一走 --control-disabled-* 令牌（theme.css），0.6 → 0.55
+          opacity: busy || disabled ? 'var(--control-disabled-opacity)' : 1,
+          cursor: busy || disabled ? 'var(--control-disabled-cursor)' : 'pointer'
         }}
       >
         {busy ? <Loader2 size={14} className="spin" /> : <Download size={14} />}

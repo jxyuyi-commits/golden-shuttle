@@ -68,6 +68,20 @@
   --color-pink-400: #f472b6;
   --color-danger-deep: #b91c1c; /* .btn-danger hover 深红 */
   --color-warn-fg: #1a1a1a; /* 琥珀底之上的深色前景，保证对比度 */
+  /* U9 尺度阶梯令牌（三主题共享，固定值）：统一圆角/高度/字号，消除 11 种零散取值 */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+  --h-sm: 28px;
+  --h-md: 32px;
+  --h-lg: 36px;
+  --h-xl: 40px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-lg: 14px;
   --app-bg: radial-gradient(circle at 22% 0%, rgba(200,169,110,0.10), transparent 52%), radial-gradient(circle at 78% 100%, rgba(200,169,110,0.06), transparent 55%), var(--bg);
   color-scheme: dark;
 }

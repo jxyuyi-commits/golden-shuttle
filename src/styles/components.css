@@ -817,3 +817,23 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
    桌面常规宽度（≥1440）内容本就放得下，不触发省略，视觉零漂移。 */
 .bento-style-no { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
+/* ==========================================================================
+   U22 补修：窄宽度下逾期卡「款号」被截成 SS…（垂直分层修复）
+   根因：≤1366 右栏仅 136~196px，24px 款号与徽标在 .bento-tr 同排争宽，徽标预留 104px 后款号可用不足 → ellipsis 截断。
+   修复：① TaskCard 把徽标移入 .bento-tr 内（.bento-tr 无 position → 定位祖先仍是 .bento-card）；
+        ② ≤1366 让 .bento-tr 改列方向 + 徽标 static → 徽标独占一行、款号整行可用；
+        ③ ≤1200/≤1024 再收小款号字号，使非逾期/逾期卡款号均完整可读。
+   约束：全部落在 ≤1366 媒体查询内，≥1367 一像素不变（徽标 absolute → 零漂移）；不改既有规则体，源序在后、同特异性自然胜出。
+   徽标 background / color / box-shadow / z-index:8 未在此重设 → 沿用原规则；today/soon 内联 background/color 亦保留。
+   ========================================================================== */
+@media (max-width: 1366px) {
+  /* tr 由行改列后，两行高度必须 ≈ 原单行(42) + 右栏 gap 节省(-4) 才不撑高卡片（验收 238±8）。
+     故收紧 tr 内边距/行距与徽标 pill（font 10 / line-height 1 / padding 2 → pill 高 14），
+     tr 高度 = 2+14+2+24(款号) ≈ 44 → 内容卡（如 SS26-DR002）高度仍 ≤246。 */
+  .bento-card:has(.bento-overdue-badge) .bento-tr { flex-direction: column; align-items: flex-end; justify-content: center; padding: 2px 16px; gap: 2px; }
+  .bento-card:has(.bento-overdue-badge) .bento-overdue-badge { position: static; font-size: 10px; line-height: 1; padding: 2px 8px; }
+  .bento-right-col { gap: 8px; } /* 抵消逾期卡 tr 行增高，保住卡片高度 */
+}
+@media (max-width: 1200px) { .bento-style-no { font-size: 20px; } }
+@media (max-width: 1024px) { .bento-style-no { font-size: 18px; } }
+

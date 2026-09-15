@@ -62,17 +62,6 @@ const TaskCard = ({ task, onTaskClick }) => {
       onKeyDown={keyboardActivate(() => onTaskClick(task))}
       style={{ position: 'relative', ...(ov.state === 'overdue' ? { borderColor: 'rgba(239,68,68,0.55)' } : {}) }}
     >
-      {/* 逾期/到期徽标（常驻） */}
-      {ov.state === 'overdue' && (
-        <div className="bento-overdue-badge" title={`期望交期 ${ov.due}（最新版次），已逾期`}>⚠ 逾期 {ov.days} 天</div>
-      )}
-      {ov.state === 'today' && (
-        <div className="bento-overdue-badge" style={{ background: 'rgba(245,158,11,0.92)' }} title="今日为期望交期（最新版次）">今日到期</div>
-      )}
-      {ov.state === 'soon' && (
-        <div className="bento-overdue-badge" style={{ background: 'rgba(234,179,8,0.85)', color: 'var(--color-warn-fg)' }} title={`期望交期 ${ov.due}（最新版次）`}>{ov.days} 天后到期</div>
-      )}
-
       {/* ── 主信息层（常驻）── */}
       <div className="bento-upper">
         <div className="bento-box bento-left">
@@ -83,6 +72,19 @@ const TaskCard = ({ task, onTaskClick }) => {
         </div>
         <div className="bento-right-col">
           <div className="bento-box bento-tr">
+            {/* U22 补修：逾期/到期徽标由卡片级移入 .bento-tr，并作为**第一个**子元素。
+                桌面：徽标仍 position:absolute，且 .bento-tr 无 position → 定位祖先仍是 .bento-card，
+                脱离文档流 → 1440 零视觉漂移（徽标坐标与基线逐像素一致）。
+                ≤1366：媒体查询把 .bento-tr 改列方向，徽标 static 独占一行、款号整行可用（修截断）。 */}
+            {ov.state === 'overdue' && (
+              <div className="bento-overdue-badge" title={`期望交期 ${ov.due}（最新版次），已逾期`}>⚠ 逾期 {ov.days} 天</div>
+            )}
+            {ov.state === 'today' && (
+              <div className="bento-overdue-badge" style={{ background: 'rgba(245,158,11,0.92)' }} title="今日为期望交期（最新版次）">今日到期</div>
+            )}
+            {ov.state === 'soon' && (
+              <div className="bento-overdue-badge" style={{ background: 'rgba(234,179,8,0.85)', color: 'var(--color-warn-fg)' }} title={`期望交期 ${ov.due}（最新版次）`}>{ov.days} 天后到期</div>
+            )}
             <span className="bento-style-no">{task.style_no || '—'}</span>
           </div>
 

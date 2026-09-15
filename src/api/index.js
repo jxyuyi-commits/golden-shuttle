@@ -4,7 +4,12 @@
 import { apiGet, apiPost, apiPut, apiPatch, apiDelete, apiUrl, API } from './client';
 
 /* ── 打样单 Tasks ── */
-export const fetchTasks = () => apiGet('/api/tasks');
+// 无参：返回全量数组（看板默认用法）；传 params（{limit,offset,light}）走 G19 分页/裁剪
+export const fetchTasks = (params) => {
+  if (!params) return apiGet('/api/tasks');
+  const qs = new URLSearchParams(params).toString();
+  return apiGet(`/api/tasks?${qs}`);
+};
 export const fetchTask = (id) => apiGet(`/api/tasks/${id}`);
 export const createTask = (data) => apiPost('/api/tasks', data);
 // 后端使用 PATCH 局部更新（REST 语义），修复此前 PUT→404 的保存失败 bug

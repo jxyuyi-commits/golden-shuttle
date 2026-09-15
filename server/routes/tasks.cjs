@@ -13,8 +13,19 @@ function registerTaskRoutes(app) {
   });
 
   app.get('/api/tasks', (req, res) => {
-    try { res.json(taskService.list()); }
-    catch (err) { res.status(500).json({ error: err.message }); }
+    try {
+      const { limit, offset, light } = req.query;
+      // 批5 G19 轻量实现：仅当调用方显式传参时才走分页/裁剪，默认仍返回全量数组（看板零影响）
+      if (limit != null || offset != null || light != null) {
+        res.json(taskService.listPaged({
+          limit: limit != null ? Number(limit) : undefined,
+          offset: offset != null ? Number(offset) : undefined,
+          light: light != null && light !== 'false',
+        }));
+      } else {
+        res.json(taskService.list());
+      }
+    } catch (err) { res.status(500).json({ error: err.message }); }
   });
 
   app.get('/api/tasks/:id', (req, res) => {

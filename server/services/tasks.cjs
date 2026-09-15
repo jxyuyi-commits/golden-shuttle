@@ -173,6 +173,65 @@ function list() {
 }
 
 /**
+ * 获取打样单（分页 + 字段裁剪版，批5 G19 轻量实现）
+ * - 默认 limit=50、offset=0；limit 钳制到 [1,200]，offset 非负，防止越界/滥用
+ * - light=true：丢弃完整 runs 数组，仅保留 top_run + runs_count（看板卡片级信息），缩小响应体
+ * - 默认（无参）list() 行为完全不变，看板等现有调用方零影响
+ * @param {{limit?:number, offset?:number, light?:boolean}} [opts]
+ * @returns {{items:Array<object>, total:number}}
+ */
+function listPaged({ limit, offset, light } = {}) {
+  const lim = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 200);
+  const off = Math.max(parseInt(offset, 10) || 0, 0);
+  const rows = getDb()
+    .prepare(`${TASK_JOIN_SELECT} ORDER BY t.created_at DESC LIMIT ? OFFSET ?`)
+    .all(lim, off)
+    .map(t => ({ ...t, progress_nodes: safeParse(t.progress_nodes, []) }));
+  let items = attachRuns(rows);
+  if (light) items = items.map(toTaskSummary);
+  const total = getDb().prepare('SELECT COUNT(*) AS c FROM tasks').get().c;
+  return { items, total };
+}
+
+/**
+ * 把完整任务对象裁剪为「看板卡片级」摘要（G19 light 模式）：
+ * 保留款级聚合 / 顶部批次 / 进度节点等看板必需字段，丢弃完整 runs 数组。
+ */
+function toTaskSummary(t) {
+  return {
+    id: t.id,
+    style_id: t.style_id,
+    style_no: t.style_no,
+    title: t.title,
+    brand: t.brand,
+    designer: t.designer,
+    year: t.year,
+    season: t.season,
+    month: t.month,
+    category: t.category,
+    pdf_url: t.pdf_url,
+    pattern_maker: t.pattern_maker,
+    progress_nodes: t.progress_nodes,
+    derived_status: t.derived_status,
+    derived_status_label: t.derived_status_label,
+    sample_type: t.sample_type,
+    sample_color: t.sample_color,
+    size: t.size,
+    sample_count: t.sample_count,
+    fabric_date: t.fabric_date,
+    order_no: t.order_no,
+    audit_status: t.audit_status,
+    audit_comment: t.audit_comment,
+    size_data: t.size_data,
+    priority: t.priority,
+    top_run: t.top_run,
+    runs_count: (t.runs || []).length,
+    created_at: t.created_at,
+    updated_at: t.updated_at,
+  };
+}
+
+/**
  * 获取单个打样单
  * @param {number|string} id
  * @returns {object|null}
@@ -408,4 +467,4 @@ function remove(id) {
   return { success: true };
 }
 
-module.exports = { list, get, versions, create, update, remove, logAction, listLogs, recalcAllTaskStatus };
+module.exports = { list, listPaged, get, versions, create, update, remove, logAction, listLogs, recalcAllTaskStatus };

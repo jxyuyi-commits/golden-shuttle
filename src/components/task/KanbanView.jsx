@@ -377,9 +377,6 @@ const KanbanView = ({
           if (col.id === 'category') stopSticky = true;
           return { ...col, isSticky, left: colLeft, width: w };
         });
-        // REQ-038：最后一个冻结列加右侧投影，横向滚动时在列边缘形成干净裁剪遮罩
-        let lastStickyId = null;
-        stickyCols.forEach(c => { if (c.isSticky) lastStickyId = c.id; });
 
         return (
           <div style={{ flex: 1, overflow: 'auto', padding: '0 32px 32px' }}>
@@ -400,8 +397,7 @@ const KanbanView = ({
                         left: col.isSticky ? col.left : 'auto',
                         zIndex: col.isSticky ? 12 : 10,
                         background: 'var(--bg-elev)',
-                        borderBottom: '2px solid var(--border)',
-                        boxShadow: col.id === lastStickyId ? '4px 0 10px rgba(0,0,0,0.25)' : undefined
+                        borderBottom: '2px solid var(--border)'
                       }}
                       onClick={() => {
                         const isAsc = sortConfig.key === col.id && sortConfig.direction === 'asc';
@@ -440,8 +436,7 @@ const KanbanView = ({
                           left: col.isSticky ? col.left : 'auto',
                           zIndex: col.isSticky ? 10 : 1,
                           background: col.isSticky ? 'var(--bg-elev)' : 'transparent',
-                          borderRight: col.isSticky ? '1px solid var(--border-weak)' : 'none',
-                          boxShadow: col.id === lastStickyId ? '4px 0 10px rgba(0,0,0,0.25)' : undefined
+                          borderRight: col.isSticky ? '1px solid var(--border-weak)' : 'none'
                         }}>
                           {col.id === 'image' ? (
                             <div style={{ width: 80, height: 110, borderRadius: 6, overflow: 'hidden', background: 'var(--bg-elev-2)' }}>

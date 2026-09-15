@@ -55,7 +55,7 @@
 .cell-pulse { animation: pulse-update 0.6s ease-out; }
 
 /* 冻结列样式基础 */
-.sticky-col { position: sticky; z-index: 20; background-color: var(--bg-elev); /* 确保不透明 */ box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2); /* 右侧阴影增加区分度 */ }
+.sticky-col { position: sticky; z-index: 20; background-color: var(--bg-elev); /* 确保不透明（不加深色阴影，用户明确否决） */ }
 .sticky-th { z-index: 30; /* 表头优先级更高 */ }
 .sticky-col-1 { left: 0; width: 36px; }
 .sticky-col-2 { left: 36px; width: 56px; }
@@ -185,9 +185,9 @@ em.audit-wait { color: var(--text-2); }
 .active-cat-badge {background: var(--accent); color: var(--accent-text); font-size: 11px; font-weight: 900; padding: 3px 10px; border-radius: 6px; text-transform: uppercase; }
 .header-title {font-size: 16px; font-weight: 800; color: var(--text); }
 
-.tpl-table-wrapper {flex: 1; overflow-y: auto; border-radius: 16px; border: 1px solid var(--bg-hover-2); background: var(--bg-panel); width: 100%; }
+.tpl-table-wrapper {flex: 1; overflow-y: auto; border-radius: 16px; border: 1px solid var(--bg-hover-2); background: var(--bg-elev); width: 100%; }
 .tpl-table-v4 {width: 100%; border-collapse: collapse; table-layout: fixed; }
-.tpl-table-v4 th {position: sticky; top: 0; background: var(--bg-elev-2); padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; z-index: 10; }
+.tpl-table-v4 th {position: sticky; top: 0; background: var(--bg-elev); padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; z-index: 10; border-bottom: 1px solid var(--bg-hover); }
 .tpl-table-v4 td {padding: 16px 20px; border-bottom: 1px solid var(--bg-hover); font-size: 14px; color: var(--text-2); }
 .tpl-table-v4 tr:hover {background: var(--bg-hover); }
 /* REQ-037：wrapper 顶部去 padding 后 sticky 表头贴齐滚动区顶缘，首尾 th 圆角补齐容器圆角 */

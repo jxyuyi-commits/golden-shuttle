@@ -4,6 +4,7 @@ import SmartSelect from '../common/SmartSelect';
 import ConfirmModal from '../common/ConfirmModal';
 import DatePicker from '../common/DatePicker';
 import EmptyState from '../common/EmptyState';
+import { toast } from '../common/Toast';
 import { fetchRuns, createRun, updateRun, deleteRun, fetchDrawings } from '../../api';
 import { peopleByRole } from '../../utils/people';
 import { RUN_STATUS_LIST } from '../../constants/terms';
@@ -80,6 +81,8 @@ const SampleRunList = ({ taskId, settings, category, onStatusSync, onRunsChanged
       if (patchData.status) onStatusSync?.();
     } catch (e) {
       console.error('批次保存失败', e);
+      // U19：失败回滚 + 用户可见反馈（复用 U17 toast，不新造一套）
+      toast.error('批次保存失败，已还原为服务端数据' + (e?.message ? '：' + e.message : ''));
       load(); // 失败回滚为服务端状态
     } finally {
       setSavingId(null);

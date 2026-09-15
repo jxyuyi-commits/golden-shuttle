@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   Layout, Plus, FileText, Database, CheckCircle2, Circle,
   GripVertical, ChevronUp, ChevronDown, FilterX
@@ -62,7 +62,8 @@ const KanbanView = ({
     toast.success(`已保存视图「${name}」`);
   };
 
-  const filterTasks = (list) => list.filter(t => {
+  // U19：筛选结果 useMemo（依赖 tasks + filters 全字段，精确到对象引用）
+  const filteredTasks = useMemo(() => (tasks || []).filter(t => {
     if (filters.keyword && !(t.title?.includes(filters.keyword) || t.style_no?.includes(filters.keyword))) return false;
     if (filters.category && t.category !== filters.category) return false;
     if (filters.sample_type && !taskRunTypes(t).includes(filters.sample_type)) return false;
@@ -71,9 +72,10 @@ const KanbanView = ({
     // REQ-031 版次状态筛选：存在处于该状态的版次（与分栏口径解耦，存在性匹配）
     if (filters.run_status && !taskRuns(t).some(r => r.status === filters.run_status)) return false;
     return true;
-  });
+  }), [tasks, filters]);
 
-  const getActiveCols = () => {
+  // U19：分栏定义 useMemo（依赖分组维度 + 版次库）
+  const activeCols = useMemo(() => {
     if (kanbanGroupBy === 'all') {
       return [{ id: 'all', name: '全部', color: 'var(--accent)' }];
     }
@@ -106,7 +108,22 @@ const KanbanView = ({
       ];
     }
     return [];
-  };
+  }, [kanbanGroupBy, settings.sampleTypes]);
+
+  // U19：分组结果 useMemo（分栏 × 已筛选任务；分栏口径与卡片/列表一致）
+  const groupedTasks = useMemo(() => activeCols.map(col => ({
+    col,
+    tasks: filteredTasks.filter(t => {
+      if (kanbanGroupBy === 'status' && derivedCol(t) !== col.id) return false;
+      if (kanbanGroupBy === 'sample_type' && !taskRunTypes(t).includes(col.id)) return false;
+      if (kanbanGroupBy === 'priority' && taskTopPriority(t) !== col.id) return false;
+      if (kanbanGroupBy === 'overdue' && (getOverdueInfo(t).state === 'none' ? 'none' : getOverdueInfo(t).state) !== col.id) return false;
+      return true;
+    }),
+  })), [activeCols, filteredTasks, kanbanGroupBy]);
+
+  // U19：卡片点击回调稳定化（TaskCard memo 生效的前提）
+  const handleTaskClick = useCallback((task) => onTaskClick(task), [onTaskClick]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
@@ -187,11 +204,11 @@ const KanbanView = ({
             <ExportButton
               label="导出"
               title="导出打样单列表"
-              confirmText={`将导出当前筛选结果（共 ${filterTasks(tasks).length} 条打样单）为 Excel 文件，包含 30 项业务字段。`}
+              confirmText={`将导出当前筛选结果（共 ${filteredTasks.length} 条打样单）为 Excel 文件，包含 30 项业务字段。`}
               fileName={getTaskListFileName()}
               onExport={() => {
-                if (!filterTasks(tasks).length) throw new Error('当前筛选结果为空，无可导出数据');
-                return exportTasksToExcel(filterTasks(tasks));
+                if (!filteredTasks.length) throw new Error('当前筛选结果为空，无可导出数据');
+                return exportTasksToExcel(filteredTasks);
               }}
               style={{ padding: '7px 12px', borderRadius: 8, background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, whiteSpace: 'nowrap' }}
             />
@@ -322,19 +339,11 @@ const KanbanView = ({
           display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(500px, 1fr))', // REQ-032 卡片最小宽度 500px
           gap: 24, alignContent: 'start',
         }}>
-          {filterTasks(tasks).map(task => <TaskCard key={task.id} task={task} onTaskClick={onTaskClick} />)}
+          {filteredTasks.map(task => <TaskCard key={task.id} task={task} onTaskClick={handleTaskClick} />)}
         </div>
       ) : (
         <div className="board custom-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '0 32px 32px' }}>
-          {getActiveCols().map(col => {
-            const colTasks = filterTasks(tasks).filter(t => {
-              if (kanbanGroupBy === 'status' && derivedCol(t) !== col.id) return false;
-              if (kanbanGroupBy === 'sample_type' && !taskRunTypes(t).includes(col.id)) return false;
-              if (kanbanGroupBy === 'priority' && taskTopPriority(t) !== col.id) return false;
-              if (kanbanGroupBy === 'overdue' && (getOverdueInfo(t).state === 'none' ? 'none' : getOverdueInfo(t).state) !== col.id) return false;
-              return true;
-            });
-            return (
+          {groupedTasks.map(({ col, tasks: colTasks }) => (
             <div key={col.id} className="col">
               <div className="col-title" style={{
                 position: 'sticky', top: 0, zIndex: 50,
@@ -348,11 +357,10 @@ const KanbanView = ({
                 <span className="badge">{colTasks.length}</span>
               </div>
               <div className="col-body">
-                {colTasks.map(task => <TaskCard key={task.id} task={task} onTaskClick={onTaskClick} />)}
+                {colTasks.map(task => <TaskCard key={task.id} task={task} onTaskClick={handleTaskClick} />)}
               </div>
             </div>
-            );
-          })}
+          ))}
         </div>
       ))}
 
@@ -405,7 +413,8 @@ const KanbanView = ({
                 </tr>
               </thead>
               <tbody>
-                {filterTasks(tasks)
+                {/* 注意：filteredTasks 是 useMemo 缓存数组，排序前必须浅拷贝，避免就地排序污染缓存 */}
+                {[...filteredTasks]
                   .sort((a, b) => {
                     const valA = a[sortConfig.key] || '';
                     const valB = b[sortConfig.key] || '';

@@ -148,4 +148,5 @@ const TaskCard = ({ task, onTaskClick }) => {
   );
 };
 
-export default TaskCard;
+// U19：memo 生效前提——调用方传的 onTaskClick 必须 useCallback 稳定；task 引用来自 tasks 列表
+export default React.memo(TaskCard);

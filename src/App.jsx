@@ -53,7 +53,7 @@ const App = () => {
   const [pdfSyncState, setPdfSyncState] = useState(null); // null | 'syncing' | 'ok' | { error }
 
   // 业务数据 hooks
-  const { tasks, loadTasks, error: tasksError, countdown: tasksCountdown } = useTasks();
+  const { tasks, setTasks, loadTasks, error: tasksError, countdown: tasksCountdown } = useTasks();
   const { settings, loadSettings, saveSetting } = useSettings();
 
   // REQ-010 主题系统：三套配色 custom(自定义深蓝黑) / dark(系统深) / light(系统浅)
@@ -236,8 +236,9 @@ const App = () => {
     persistPdfUrl('');
   };
 
-  // 批次状态变化后，款级 status 已被后端自动同步——重新拉取当前任务更新详情页显示
-  // 同上：只依赖 editingTask?.id + 稳定的 loadTasks，避免每次字段变化重建回调
+  // 批次状态变化后，款级 status 已被后端自动同步——单条拉取当前任务更新详情页显示，
+  // 并就地合并进 tasks 列表（U19 乐观更新：不再触发全量 GET /api/tasks 重拉）。
+  // 只依赖 editingTask?.id + 稳定的 setTasks，避免每次字段变化重建回调
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleStatusSync = useCallback(async () => {
     if (!editingTask?.id) return;
@@ -250,10 +251,12 @@ const App = () => {
         }
         if (!Array.isArray(parsed.size_data)) parsed.size_data = [];
         setEditingTask(parsed);
+        // U19 乐观更新：单条 GET 结果就地合并进 tasks 列表，不再触发全量 GET /api/tasks 重拉
+        // （切回看板时由 REQ-029 的 view 变化 effect 兜底刷新）
+        setTasks(prev => prev.map(t => (t.id === parsed.id ? { ...t, ...parsed } : t)));
       }
     } catch (e) { console.error('刷新款单状态失败', e); }
-    loadTasks();
-  }, [editingTask?.id, loadTasks]);
+  }, [editingTask?.id, setTasks]);
 
   return (
     <div className="app">

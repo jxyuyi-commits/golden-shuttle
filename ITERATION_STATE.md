@@ -910,3 +910,16 @@ npm run dev:all
   - 038 同类：注入 `.sticky-col` 行真实悬停 → 计算背景 rgb(22,23,25)（修复前为 transparent）。
   - 门禁：`eslint src` exit 0；复现临时模板（id 13-20，「穿透复现A1~A8」）已通过 HTTP API 全部删除恢复（剩余 0 条临时数据）。
 - **登记**：docs/roadmap/待开发文档.md REQ-037/038 状态 → 已完成；REQ-039（看板按钮文字换行，P2）待开发另拍板。
+
+## 批7 REQ-037/038 用户反馈修复（2026-09-15，提交 `90f17c0`）
+- **背景**：用户在验收 REQ-037 修复后上传 4 张截图投诉：①表格内部配色"奇怪"，要求改为左侧绿框标注区域（--bg-elev）同色；②系统深色主题下表头"像补丁"；③冻结列边界"明显的黑色阴影"（= 批6 为列表末冻结列加的 `boxShadow: 4px 0 10px rgba(0,0,0,0.25)`，用户第 N 次强调禁止黑色阴影）；④REQ-038 列表视图要求"仔细看图"（旧截图标注首列边缘，穿透检查）。
+- **像素证据（用户截图逐点采样 + 饱和色连通域扫描）**：
+  - 图1 绿线 x=396px 纵贯 = 页面背景 #141517 与目录容器 #161719（--bg-elev）分界；"左侧绿框内"= --bg-elev 区域。
+  - 系统深色 token：页面 Canvas、表头 #232327、表格容器 rgba(255,255,255,0.06) 叠 Canvas ≈ #2C2C30 → 表头夹在亮主体与页面之间 = "补丁"感。
+  - 图3 蓝竖线 x≈918px = category 冻结列右缘（900px）+ boxShadow 阴影带（900-914px）→ 黑色阴影实证。
+- **修复（components.css + KanbanView.jsx）**：
+  - 移除 KanbanView 末冻结列 th/td `boxShadow: 4px 0 10px rgba(0,0,0,0.25)`（含 lastStickyId 计算）。
+  - 移除 `.sticky-col` 既有 `box-shadow: 2px 0 5px rgba(0,0,0,0.2)`（用户否决黑色阴影）。
+  - 037 表格配色统一：`.tpl-table-wrapper` background `--bg-panel` → `--bg-elev`；`.tpl-table-v4 th` background `--bg-elev-2` → `--bg-elev` + border-bottom 1px var(--bg-hover)（表头/主体区分线）。dark=Canvas=页面色、custom=#161719=目录容器色。
+- **验证（headless Chrome CDP，系统深色 + custom 双主题）**：dark 下 wrapper/th/page 均 rgb(18,18,18)（同色，补丁消失）；custom 下 wrapper/th rgb(22,23,25)=目录容器色；038 列表冻结列 bg Canvas/#161719 不透明、boxShadow none；037 thShadow none。
+- **门禁**：`npx eslint src --max-warnings 0` exit 0；提交 `90f17c0`（仅 KanbanView.jsx + components.css）。

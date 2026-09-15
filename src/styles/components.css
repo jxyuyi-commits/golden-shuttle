@@ -805,5 +805,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
    - .bento-style-no 允许收缩省略，超长款号不越界。
    均为新增覆盖块，未改原规则体。 */
 .bento-card:has(.bento-overdue-badge) .bento-tr { padding-right: 104px; }
-.bento-card:has(.bento-overdue-badge) .bento-style-no { overflow: hidden; text-overflow: ellipsis; }
+/* U22 修订：款号溢出省略对「所有卡片」统一生效（原仅逾期卡生效 → 窄列下非逾期款号会溢出卡外）。
+   桌面常规宽度（≥1440）内容本就放得下，不触发省略，视觉零漂移。 */
+.bento-style-no { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 

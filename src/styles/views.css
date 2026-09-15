@@ -87,9 +87,9 @@
   .size-table-container .data-table { min-width: 720px; }
 }
 
-/* —— 窄笔记本（≤1200）：详情改单栏（侧栏下沉）、看板再收窄 —— */
+/* —— 窄笔记本（≤1200）：详情改单栏（侧栏下沉）、看板再收窄（仍 ≥360 下限） —— */
 @media (max-width: 1200px) {
-  :root { --board-col-w: 360px; }
+  :root { --board-col-w: 380px; }
   .board { gap: 20px; padding: 0 16px 16px; }
   .tab-bar { padding: 0 24px; gap: 28px; }
   .detail-content { grid-template-columns: 1fr; gap: 20px; }
@@ -98,9 +98,9 @@
   .size-group-table-wrapper { overflow-x: auto; }
 }
 
-/* —— 紧凑（≤1024，等于 .app 最小宽度）：单列布局 —— */
+/* —— 紧凑（≤1024，等于 .app 最小宽度）：列宽触及 360 下限，超出屏宽交由 .board 自身横向滚动 —— */
 @media (max-width: 1024px) {
-  :root { --board-col-w: 300px; }
+  :root { --board-col-w: 360px; }
   .board { gap: 16px; padding: 0 14px 14px; }
   .top-settings-grid { grid-template-columns: 1fr; }
   .detail-content { padding: 20px; }

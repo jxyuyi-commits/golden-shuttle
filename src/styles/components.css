@@ -187,15 +187,17 @@ em.audit-wait { color: var(--text-2); }
 
 .tpl-table-wrapper {flex: 1; overflow-y: auto; border-radius: 10px; border: none; background: var(--bg-elev); width: 100%; /* 批9：去外框（融入 v4 卡）、圆角16→10 */ }
 .tpl-table-v4 {width: 100%; border-collapse: collapse; table-layout: fixed; }
-.tpl-table-v4 th {position: sticky; top: 0; background: var(--bg-elev-2); /* 批9 D1：表头亮一档 */ padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; z-index: 10; border-bottom: 1px solid var(--bg-hover); }
-.tpl-table-v4 td {padding: 16px 20px; border-bottom: 1px solid var(--bg-hover); font-size: 14px; color: var(--text-2); }
-.tpl-table-v4 tr:hover {background: var(--bg-hover); }
+.tpl-table-v4 th {position: sticky; top: 0; background: var(--bg-elev); /* 批10：表头与容器同色不透明（防滚动穿透 + 无补丁亮条），与参考纯列表一致；分隔靠文字层级+弱线 */ padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; z-index: 10; border-bottom: 1px solid var(--border-weak); }
+.tpl-table-v4 td {padding: 16px 20px; background: var(--bg-elev-2); /* 批10：数据行=参考式胶囊行（bg-elev-2 圆角块），行间用容器同色间隙分隔 */ border-bottom: 4px solid var(--bg-elev); font-size: 14px; color: var(--text-2); }
+.tpl-table-v4 td:first-child {border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+.tpl-table-v4 td:last-child {border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+.tpl-table-v4 td[colspan] {background: transparent; border-bottom: none; border-radius: 0; }
+.tpl-table-v4 tr:hover td {background: var(--bg-hover-2); /* 批10：行 hover 整行胶囊高亮（原 tr 透明 hover 被 td 实色遮挡失效） */ }
 /* REQ-037：wrapper 顶部去 padding 后 sticky 表头贴齐滚动区顶缘，首尾 th 圆角补齐容器圆角 */
-.tpl-table-v4 th:first-child {border-top-left-radius: 6px; }
-.tpl-table-v4 th:last-child {border-top-right-radius: 6px; }
+.tpl-table-v4 tbody td {border-top: none; }
 .tpl-name-cell {display: flex; align-items: center; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tpl-method-cell {color: var(--text-2); font-size: 13px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tpl-tag-blue {background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block; }
+.tpl-tag-blue {background: transparent; color: var(--text-3); padding: 0; border-radius: 0; font-size: 12px; font-weight: 500; display: inline-block; /* 批10：公差/放码=参考纯文字小字（原金色弱底标签改透明） */ }
 .row-ops-v4 {display: flex; gap: 10px; justify-content: center; }
 
 .empty-state-v4 {display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0; color: var(--text-4); }
@@ -705,7 +707,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
    ========================================================================== */
 
 /* —— A. 整块未迁移：系统设置页（紧凑卡/标签/人员预设）app.css:290-322 —— */
-.setting-card-compact {padding: 18px; display: flex; flex-direction: column; gap: 12px; transition: border-color 0.2s, box-shadow 0.2s; }
+.setting-card-compact {padding: 18px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-elev); /* 批10：设置小卡与参考卡片同色 bg-elev（覆盖 glass-inner 的 elev-2 亮一档） */ transition: border-color 0.2s, box-shadow 0.2s; }
 .setting-card-compact:hover {border-color: var(--border-strong); box-shadow: var(--shadow); /* 批9 D4：hover 才浮起，去上移/金边 */ }
 .card-mini-head {display: flex; justify-content: space-between; align-items: center; }
 .card-mini-title {font-size: 13px; font-weight: 800; color: var(--text-3); letter-spacing: 0.5px; }

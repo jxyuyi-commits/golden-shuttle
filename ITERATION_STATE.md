@@ -954,3 +954,14 @@ npm run dev:all
   - 影响面：仪表盘 KPI 卡零阴影、dash-table 表头 elev-2、状态胶囊弱底；详情 5 Tab 幽灵激活、表单卡实色；操作日志等浮层实色+浮起阴影；顶栏/Tab 通栏无圆角无阴影、logo 纯色。
   - 门禁：`npx eslint src --max-warnings 0` exit 0（pdfTechPackVfs.js BABEL deoptimised 为已知无碍提示）。截图存会话工作区 shots/_b9*。
 
+
+## 批10 抄参考收口：设置页"干净"对齐（2026-09-16，用户两轮反馈后）
+- **背景**：批9 后用户上传实测截图（custom 1989x1306）质问"难道我们看的不是一个界面"，随后上传参考页面截图（ui_ref 原型设置页）说"你再看看参考代码的页面多干净？？？？抄都不会吗？？？？？？"。**先做了像素级实测自证**：headless Chrome 加载当前源码 5173、导航到同一设置页同尺寸（1989x1306）截图，与用户截图逐像素比对，差异 <0.1%（仅右缘滚动条与渲染噪声），表头 #1E2023/容器 #161719/页面 #0E0F11 采样一致——**我们和用户看的是同一个界面**，问题不在"版本不一致"，而在批9 抄参考抄错了点。
+- **参考实证（ui_ref/src/components/SettingsView.tsx + index.css 重读）**：参考设置页干净的真正配方 = ①每个模块是**独立卡片**（bg-elev + 1px var(--border) + 圆角10 + padding 18/20，页面 --bg 露出的 gap 14）；②卡片内列表项是 **bg-elev-2 圆角6 胶囊行**（padding 8/10，gap 6），不是透明行+底线；③**根本没有表头行**（尺寸部位=分类树+部位胶囊行，行内"部位名 + ±1cm 小字"）；④添加按钮 1px dashed+border+text-3+圆角6（我们 D5 已对齐）；⑤选中分类=accent-soft 底+accent 字（我们 cat-item.active 已对齐）；⑥角色标签 11px 状态色+同色 22% 底+999 胶囊（我们徽标已对齐）。**批9 抄错的点**：把表头做成 bg-elev-2 横贯亮条（参考根本没表头）→ 深色主题下就是用户从批7 起一直在否决的"补丁"；数据行做成透明+底线（参考是胶囊行）；设置小卡 bg-elev-2 亮一档（参考卡片是 bg-elev）。
+- **改动（components.css 4 处 + JSX 1 行，纯视觉）**：
+  - `.tpl-table-v4 th`：background bg-elev-2 → **bg-elev（与容器同色不透明）**，border-bottom 改 1px var(--border-weak)，删 th 首尾圆角；分隔靠文字层级（text-3/600/uppercase）+弱线，**补丁亮条消除**；sticky 不透明背景继续保证 037 滚动穿透裁剪。
+  - `.tpl-table-v4 td`：透明+强底线 → **bg-elev-2 胶囊行**（td 首列左圆角/末列右圆角 6px，行间 4px solid var(--bg-elev) 容器同色间隙）；`td[colspan]`（空态）排除透明；`tr:hover td` 整体 bg-hover-2（原 tr 透明 hover 被 td 实色遮挡失效，改 td 层）。
+  - `.tpl-tag-blue`（公差/放码标签）：金色弱底标签 → **透明 + text-3 12px 纯文字小字**（对齐参考"±1cm"小字）；JSX 删放码规则 span 的内联金底 style。
+  - `.setting-card-compact`：加 background var(--bg-elev)（覆盖 glass-inner 的 bg-elev-2，设置三小卡与参考卡片同色）。
+- **验证（CDP 1989x1306 三主题冷加载 + 真实指针）**：th 背景三主题 = 容器色（custom rgb(22,23,25)/dark rgb(18,18,18)/light rgb(255,255,255)）——补丁消除；td 背景 bg-elev-2（30,32,35/35,35,39/238,240,243）+ 首尾圆角 6px + 行间 4px 间隙；行 hover 真实指针（Input.dispatchMouseEvent）td 变 bg-hover-2（.07/.1/.08 半透明层）整行高亮；滚动到底（scrollTop=233）数据行在 sticky 表头处被不透明表头裁剪（037 穿透保持）；设置小卡 bg-elev。ESLint exit 0。截图 shots/_u10_*（custom/dark/light 设置页、hover、滚动穿透）。
+- **边界**：仍保留 5 列表格功能（部位名称/测量方法说明/公差范围/放码规则/操作）与编辑/删除操作——只抄视觉（胶囊行/同色表头/纯文字），不砍功能/列顺序/交互；表格 padding/行高/字号未动（用户批9 密度边界）。

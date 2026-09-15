@@ -923,3 +923,14 @@ npm run dev:all
   - 037 表格配色统一：`.tpl-table-wrapper` background `--bg-panel` → `--bg-elev`；`.tpl-table-v4 th` background `--bg-elev-2` → `--bg-elev` + border-bottom 1px var(--bg-hover)（表头/主体区分线）。dark=Canvas=页面色、custom=#161719=目录容器色。
 - **验证（headless Chrome CDP，系统深色 + custom 双主题）**：dark 下 wrapper/th/page 均 rgb(18,18,18)（同色，补丁消失）；custom 下 wrapper/th rgb(22,23,25)=目录容器色；038 列表冻结列 bg Canvas/#161719 不透明、boxShadow none；037 thShadow none。
 - **门禁**：`npx eslint src --max-warnings 0` exit 0；提交 `90f17c0`（仅 KanbanView.jsx + components.css）。
+
+## 批8 REQ-037 用户反馈修复（2026-09-15，提交 `1cb9870`）
+- **背景**：用户在验收批7 后再次投诉"037 没完善解决"+"你留个表头不改"，上传截图 `7ecc9b0a`（custom 主题 1947x904），红框横跨右侧标签栏整行（"上装"徽标 + "部位预设明细" + "新增部位"按钮，y 207-236）。
+- **像素证据（千分比换算后逐点采样，修正此前坐标误用）**：
+  - 标签栏容器背景 #1E2022（=--bg-elev-2 亮一档）；表格表头/数据行 #161719（=--bg-elev）→ **标签栏比表格亮一档 = 用户所指"表头没改"**。
+  - "上装"徽标与"新增部位"按钮为香槟金 #C8A96E（=--accent/--accent-btn，品牌色，用户未要求改）。
+  - 根因：`.content-header-v4` 挂 `glass-inner`（base.css `background: var(--bg-panel)` 半透明白 2.5%），叠加 `.template-manager-v4`（components.css 732 行同样 --bg-panel）→ 双层半透明 ≈ #1E2022；表格 `.tpl-table-wrapper`/`.tpl-table-v4 th` 为 --bg-elev 不透明 #161719。
+- **中间过程（用户要求还原）**：批8 初版曾把徽标/按钮改深色（active-cat-badge --bg-elev-2、按钮 --bg-hover-2），用户指令"还原上一步"后完全还原（git 工作树回到 90f17c0），徽标/按钮保持品牌金。
+- **最终修复（按用户明确指示）**：`.content-header-v4 { ... background: var(--bg-elev); }`——只改标签栏容器背景，与表格同色；徽标/按钮不动。
+- **验证（headless Chrome CDP，双主题）**：custom 下 headerBg=wrapperBg=thBg=rgb(22,23,25)；dark 下三者=pageBg=rgb(18,18,18)——标签栏与表格同色，无亮一档补丁。截图 `_r8_037_custom_header.png` / `_r8_037_dark_header.png`。
+- **门禁**：`npx eslint src --max-warnings 0` exit 0；提交 `1cb9870`（仅 components.css 1 行）。

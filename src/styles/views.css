@@ -65,3 +65,46 @@
 
 /* —— 设计师仪表盘骨架 —— */
 .dashboard-view { min-height: 100vh; }
+
+/* ==========================================================================
+   U22 响应式断点（笔记本常见窄宽度可用）· 2026-09-15
+   - 仅在 ≤1366 / ≤1200 / ≤1024 生效；桌面常规宽度（≥1440）视觉零漂移
+   - 沿用既有令牌（--board-col-w 等），不引入新硬编码色值
+   - 不动既有 .overdue / .bento-* 语义；不改动任何原规则体（覆盖式追加，靠源序胜出）
+   - 体例：① 看板列宽/列数 ② 详情双栏→单栏 ③ 尺寸表宽表可横向滚动 ④ 弹窗不溢出 ⑤ 设置网格收敛
+   ========================================================================== */
+
+/* —— 中等笔记本（≤1366）：列宽收敛到 3 列一屏可见，间距收紧 —— */
+@media (max-width: 1366px) {
+  :root { --board-col-w: 420px; }
+  .board { gap: 24px; padding: 0 20px 20px; }
+  .top-bar { padding: 0 24px; }
+  .detail-content { grid-template-columns: 1fr 300px; gap: 24px; padding: 24px; }
+  .top-settings-grid { grid-template-columns: repeat(2, 1fr); }
+  .settings-container { padding: 24px; }
+  .modal { max-width: 92vw; }
+  .modal-content { width: min(900px, 92vw); }
+  .size-table-container .data-table { min-width: 720px; }
+}
+
+/* —— 窄笔记本（≤1200）：详情改单栏（侧栏下沉）、看板再收窄 —— */
+@media (max-width: 1200px) {
+  :root { --board-col-w: 360px; }
+  .board { gap: 20px; padding: 0 16px 16px; }
+  .tab-bar { padding: 0 24px; gap: 28px; }
+  .detail-content { grid-template-columns: 1fr; gap: 20px; }
+  .size-table-container { overflow-x: auto; }
+  .size-table-container .table-wrapper { overflow-x: auto; }
+  .size-group-table-wrapper { overflow-x: auto; }
+}
+
+/* —— 紧凑（≤1024，等于 .app 最小宽度）：单列布局 —— */
+@media (max-width: 1024px) {
+  :root { --board-col-w: 300px; }
+  .board { gap: 16px; padding: 0 14px 14px; }
+  .top-settings-grid { grid-template-columns: 1fr; }
+  .detail-content { padding: 20px; }
+  .main-settings-area { padding: 20px; }
+  .modal { max-width: 94vw; }
+}
+

@@ -190,6 +190,9 @@ em.audit-wait { color: var(--text-2); }
 .tpl-table-v4 th {position: sticky; top: 0; background: var(--bg-elev-2); padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; z-index: 10; }
 .tpl-table-v4 td {padding: 16px 20px; border-bottom: 1px solid var(--bg-hover); font-size: 14px; color: var(--text-2); }
 .tpl-table-v4 tr:hover {background: var(--bg-hover); }
+/* REQ-037：wrapper 顶部去 padding 后 sticky 表头贴齐滚动区顶缘，首尾 th 圆角补齐容器圆角 */
+.tpl-table-v4 th:first-child {border-top-left-radius: 6px; }
+.tpl-table-v4 th:last-child {border-top-right-radius: 6px; }
 .tpl-name-cell {display: flex; align-items: center; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tpl-method-cell {color: var(--text-2); font-size: 13px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tpl-tag-blue {background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block; }
@@ -267,11 +270,10 @@ em.audit-wait { color: var(--text-2); }
 .data-table tr.row-selected td {background: var(--accent-soft); }
 .data-table tr:hover td {background: transparent; }
 /* §3(b) 成对修正：冻结列 .sticky-col 的固定底（原 index.css:1054 background-color:bg-elev !important）
-   必须压过表格行态底。原 !important 一并决定了三态：常态/选中行 = bg-elev、hover = transparent。
-   去 ! 后 .data-table tr.row-selected td(0,2,1) 会翻掉 .sticky-col(0,1,0) → 补两条同域高特异性规则还原：
-   规则A 选中行冻结列保持 bg-elev；规则B hover 冻结列透明（排 A 之后，覆盖"选中且 hover"）。 */
+   原 !important 恒不透明（含 hover）；去 ! 后行态规则(0,2,1)会翻掉 .sticky-col(0,1,0) → 补同域高特异性规则：
+   规则A 选中行冻结列保持 bg-elev；规则B hover 冻结列也保持 bg-elev（REQ-038 同根因：hover 透明会致横向滚动内容穿透） */
 .data-table tr.row-selected td.sticky-col { background-color: var(--bg-elev); }
-.data-table tr:hover td.sticky-col { background: transparent; }
+.data-table tr:hover td.sticky-col { background-color: var(--bg-elev); }
 
 /* 表格内 SmartSelect：常态透明（与表格零底衬规章一致）、打开时显示输入底 */
 .data-table .tbl-ss .ss-display {background: transparent; border: 1px solid transparent; padding: 6px 24px 6px 6px; min-height: 0; font-size: 13px; color: var(--text-2); }
@@ -741,7 +743,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 /* 简写获胜：既有 overflow:hidden（app:152）仍应胜出，故 overflow 写在 overflow-x 之后 */
 .table-wrapper {overflow-x: auto; overflow: hidden; }
 .side-nav-item.active {font-weight: 600; }
-.tpl-table-wrapper {padding: 12px; }
+.tpl-table-wrapper {padding: 0 12px 12px; /* REQ-037：顶部不留缝隙，防 sticky 表头上方数据行穿透 */ }
 .tpl-table td {font-size: 13px; }
 .tcard-name {margin-bottom: 6px; }
 .cat-name {flex: 1; }

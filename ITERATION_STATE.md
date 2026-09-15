@@ -852,3 +852,17 @@ npm run dev:all
 - **门禁**：`npx eslint src server` 0 / `doc:check` 一致 / `npm test` 98/98 / `vite build` 9.26s。
 - **⚠️ 裁决记录（§D② 口径，已回写 roadmap）**：§D② 的"读码确认"（称 openLocally 为 `exec('start "" ...')`）**已过期**——G2 之后实际已是 `shell.openPath` + 无 Electron 时 `rundll32` 回退。§D 字面要求"无 shell 即返回不支持/降级"会**改变开发态单跑后端的行为、违反行为等价红线**。**裁决：采纳工程师的三级能力方案**（既保行为等价，又为服务器端预留 `unsupported` 降级分支）。再次印证：**计划文档的读码结论会随改造过期，落地前必须重核现状。**
 - **下一单元**：G18 `extraResources` 改空白示例库（安装包不含开发者数据）→ G19 `GET /api/tasks` 分页/字段裁剪（按需）。
+
+## 批5 G18 安装包脱敏——`extraResources` 改空白示例库（2026-09-15，提交 `e796c86` 已推远端）
+
+- **背景（安全/隐私）**：打包配置此前通过 `build.extraResources` 直接随安装包分发**开发者真实生产库** `server/database.sqlite`（6 款/6 任务/10 批次/94 操作日志等业务数据）+ **真实设计稿** `server/uploads`，导致私有生产数据随安装包外泄。改造后随包仅分发一个「表结构齐全、业务数据 0 行」的空白示例库，用户首次安装得到干净空环境。
+- **交付（3 处改动）**：
+  - **① `package.json` extraResources 改空白库**：`from` 由 `server/database.sqlite` 改为 `server/seed/database.sqlite`、`to` 仍为 `server/database.sqlite`；**移除原 `server/uploads` 条目**（真实上传目录不再随包分发）。`files` 数组新增排除项：`!server/database.sqlite` / `!server/database.sqlite.bak-*` / `!server/database.backup_*.sqlite` / `!server/uploads` / `!server/uploads/**` / `!server/seed` / `!server/seed/**` / `!server/backup_empty/**`，确保真实库与构建期种子源都不进 asar。新增 `npm run sample:db` 脚本入口。
+  - **② 新增 `scripts/make-sample-db.cjs`（幂等 + 自校验）**：复用 `server/db.cjs` 的 `initDatabase(dbPath, uploadsPath)` 从零跑完整 migrations 建库，**绝不复制真实库**；用 `os.tmpdir()` 临时目录作 uploads 参数，不污染仓库与真实数据；生成前先清旧产物（主库 + `-journal/-wal/-shm` 侧车 + `.bak-*` 备份）保证幂等；生成后只读重开自校验，断言 `_migrations` 最大版本与代码一致、全部业务表（`styles/tasks/sample_runs/drawings/bom_items/process_items/operation_logs`）行数严格为 0，失败 `process.exit(1)`。
+  - **③ `main.js` 注释更正**：生产环境首次启动的拷贝说明由「示例数据库与上传文件」改为「空白示例库（仅表结构，不含任何业务数据）与上传目录」（`sampleUploads` 缺失时走 `mkdirSync` 自建空目录，行为不变）。
+- **主理人独立验证（不依赖工程师脚本，自跑自测）**：
+  - **seed 库生成 + 脚本自校验**：`npm run sample:db` 跑通全部 21 个迁移（v1→v21），打印各表行数全部为 0，`_migrations=21` 与代码 `migrations` 数组最大版本一致，输出 `✅ 空白示例库已生成并通过校验（业务数据 0 行）`。
+  - **独立双库比对（electron-as-node 直连 better-sqlite3）**：`server/seed/database.sqlite` → 12 表业务数据**全 0 行**；`server/database.sqlite`（真实库，266240 B 未改动）→ `styles=6 / tasks=6 / sample_runs=10 / drawings=1 / bom_items=16 / process_items=15 / operation_logs=94 / size_groups=4 / measurement_templates=97`，**真实生产数据完好、未被触及**。
+  - **配置面核对**：`git check-ignore server/seed/database.sqlite` 返回非忽略 → 种子库可随仓库分发（纳入 git）；`build.extraResources` 仅含种子库、不含真实 uploads；proxy 7897 存活、git 身份 `jxyuyi-commits` 就绪。
+- **关键风险点（已排除）**：`initDatabase` 签名为 `initDatabase(dbPath, uploadsPath)`（`server/db.cjs:664`，`DB_PATH = dbPath || process.env.DB_PATH || ...`），脚本显式传入种子路径，**不会**误改真实库；`backupBeforeMigration` 仅对非空库备份（`db.cjs:586` `stat.size === 0` 提前返回），空白库无残留备份。
+- **下一单元**：G19 `GET /api/tasks` 分页/字段裁剪（标注按需，未启动）。

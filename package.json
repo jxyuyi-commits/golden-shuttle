@@ -17,6 +17,7 @@
     "electron:start": "cross-env NODE_ENV=development concurrently \"npm run dev:client\" \"wait-on http://localhost:5173 && electron .\"",
     "rebuild:node": "npm rebuild better-sqlite3",
     "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
+    "sample:db": "cross-env ELECTRON_RUN_AS_NODE=1 electron scripts/make-sample-db.cjs",
     "build:exe": "npm run rebuild:electron && npm run build && electron-builder"
   },
   "dependencies": {
@@ -58,18 +59,23 @@
     "files": [
       "dist/**/*",
       "server/**/*",
+      "!server/database.sqlite",
+      "!server/database.sqlite.bak-*",
+      "!server/database.backup_*.sqlite",
+      "!server/uploads",
+      "!server/uploads/**",
+      "!server/seed",
+      "!server/seed/**",
+      "!server/backup_empty",
+      "!server/backup_empty/**",
       "main.js",
       "preload.js",
       "package.json"
     ],
     "extraResources": [
       {
-        "from": "server/database.sqlite",
+        "from": "server/seed/database.sqlite",
         "to": "server/database.sqlite"
-      },
-      {
-        "from": "server/uploads",
-        "to": "server/uploads"
       }
     ],
     "win": {

@@ -96,15 +96,16 @@ async function createWindow() {
         dbPath = path.join(userDataPath, 'database.sqlite');
         uploadsPath = path.join(userDataPath, 'uploads');
 
-        // 首次启动时，从打包资源 (extraResources) 拷贝示例数据库与上传文件，
-        // 保证安装版也能看到示例数据。仅当目标不存在时才拷贝，避免覆盖用户已有数据。
+        // 首次启动时，从打包资源 (extraResources) 拷贝空白示例库（仅表结构，不含任何
+        // 业务数据）与上传目录，保证安装版启动即为干净可用的空环境。仅当目标不存在时
+        // 才拷贝，避免覆盖用户已有数据。
         const sampleDir = path.join(process.resourcesPath, 'server');
         const sampleDb = path.join(sampleDir, 'database.sqlite');
         const sampleUploads = path.join(sampleDir, 'uploads');
 
         if (!fs.existsSync(dbPath) && fs.existsSync(sampleDb)) {
             fs.copyFileSync(sampleDb, dbPath);
-            console.log('[DB] 已从安装包拷贝示例数据库至:', dbPath);
+            console.log('[DB] 已从安装包拷贝空白示例库（仅表结构）至:', dbPath);
         }
 
         if (!fs.existsSync(uploadsPath)) {

@@ -28,7 +28,7 @@
 | 模块   | 看板（Kanban）/ 打样需求单详情（Detail）/ 设置，路由 12 个 + services 12 个（含 drawings.cjs / thumbs.cjs）；计数由 `scripts/doc-stats.cjs` 生成，见本节末 STATS 区块                                                                                                                                                |
 | 关键文件 | `server/index.cjs`（Express 入口）+ `routes/` + `services/`（含 drawings.cjs / thumbs.cjs）+ `db.cjs`（迁移版本与内容以源码 `migrations` 数组为准）；`src/App.jsx` + `src/components/**`（含 drawing/DrawingLibrary.jsx）；`src/utils/exportTechPack.js`（Excel 导出）+ `exportTechPackPdf.js`（PDF 导出）+ `pdfTechPackVfs.js`（字体 vfs） |
 | 当前版本 | `package.json` version 1.0.0（Electron-builder 用）                                                                                                                                                                     |
-| Git  | 重构分支 `feature/sample-run-model`（`main` 保持稳定待合并）；受管文件数见 git（不手写）；远端 `https://github.com/jxyuyi-commits/golden-shuttle.git`                                                                                                                                           |
+| Git  | 双视角重构（feature/sample-run-model）已合入 main（2774f52，本地=远端）；当前工作分支 `feature/next-milestone`；受管文件数见 git（不手写）；远端 `https://github.com/jxyuyi-commits/golden-shuttle.git`                                                                                                                                           |
 
 **API 路由备忘**：BOM 是 `/api/bom?task_id=N`（不是 /api/bom-items），工艺 `/api/process?task_id=N`，图纸 `/api/drawings?task_id=N`，均需 task\_id 参数。
 
@@ -350,7 +350,7 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 * 远端：`https://github.com/jxyuyi-commits/golden-shuttle.git`（HTTPS）
 
-* 提交历史：以 `git log --oneline` 为准（不手写）。截至 2026-09-14：`feature/sample-run-model` = `39a4153`，`main` = `93ef9ff`
+* 提交历史：以 `git log --oneline` 为准（不手写）。截至 2026-09-15：`main` = `2774f52`（本地=远端）、`feature/sample-run-model` = `fc61635`；当前工作分支 `feature/next-milestone`（基线 main 2774f52）
 
 * 本机 push GitHub 需要**代理环境**（直连 443 不通，用户开代理后成功）
 

@@ -879,3 +879,18 @@ npm run dev:all
   - 隔离 Express 实例（新代码）HTTP 实测：`GET /api/tasks`→数组 6 条；`?limit=2`→`{items:2,total:6}`；`?limit=2&offset=2`→`{items:2}` 不同 ids；`?light=true`→无 `runs`、`runs_count=3`、有 `top_run`。（注：常驻 dev 后端 PID 4992 在改码前启动、仍为旧路由，故直连 dev 的 `?limit` 返回数组——重启 dev 即生效；隔离实例已证新路由正确。）
   - `eslint server src` exit 0。
 - **未做（按需 defer）**：前端看板未切换为分页模式（当前 6 条无痛点）；如需上量，后续让看板/列表调用 `fetchTasks({limit, offset})` 并渲染 total 分页器即可，后端能力已就绪。
+
+---
+
+## 分支里程碑：双视角重构合入 main + 新分支建立 + REQ-035~039 登记（2026-09-15）
+
+- **分支状态**：`feature/sample-run-model` 全部提交已合入 main（main=远端=`2774f52`，收官提交 fc61635）；新工作分支 `feature/next-milestone`（基线 main 2774f52）已建立并切换，**后续提交只走新分支**；`feature/sample-run-model` 保留不再提交。
+- **git 教训（本次）**：本地 remote-tracking 引用过期（origin/main 停在旧提交、缺 feature 分支引用）会误导"领先 N 个提交/分支已删除"的判断——涉及远端状态必须先 `git fetch`（本项目需代理 127.0.0.1:7890）实时核对再汇报。
+- **文档同步（防漂移）**：AGENTS.md / docs/PROJECT_HANDBOOK.md（§1 Git 行、§11 提交历史）/ docs/BUSINESS_LOGIC.md（§0、§5.5）的分支现状表述更新为"已合入 main + 当前工作分支 feature/next-milestone"。
+- **需求登记**：docs/roadmap/待开发文档.md 新增 **REQ-035~REQ-039**（截图归档 docs/archive/req-screenshots/_req_screenshot_037/038/039.png）：
+  - REQ-035（P1）安装包首次运行初始化：品牌名称 + 数据库存储位置
+  - REQ-036（P2）关闭按钮行为可选：直接退出 / 最小化到任务栏
+  - REQ-037（P1）设置页部位预设表数据穿透（截图 037）
+  - REQ-038（P1）看板列表视图数据穿透（截图 038，与 037 同根因）
+  - REQ-039（P2）看板按钮文字换行（截图 039）
+- **待复核**：037/038 的"数据穿透"具体现象（疑似近透明表格样式下行内容相互透出/重叠）、039 具体按钮与复现宽度——实施前在真实界面复核复现再定位。

@@ -7,7 +7,7 @@
 ## 0. 当前开发状态快照（2026-09-08）
 
 ### 分支与提交
-- 当前分支：`feature/sample-run-model`（双视角重构分支，main 保持稳定待合并）
+- 当前分支：`feature/next-milestone`（双视角重构已合入 main，main=远端 2774f52；新里程工作分支）
 - 最近提交：`eb09fea`（REQ-005 六次修订：空表对比预览）
 - 远端：github.com/jxyuyi-commits/golden-shuttle.git（推送需代理 127.0.0.1:7897；推送时直连 GitHub 不可达）
 
@@ -148,7 +148,7 @@ styles（款，style_no 唯一）
 - **款级状态**：自动从最先进版次聚合，不手动维护
 - **默认视图**：按角色/用户记忆（设计师默认仪表盘，板师默认工作台）
 - **版次级状态枚举**：待配料 / 打版中 / 样衣中 / 待确认 / 已完成；阻塞标记先独立字段（欠面辅料/待设计师确认/待工艺单/其他）
-- **开发分支**：`feature/sample-run-model`（重大重构隔离，main 保持稳定）
+- **开发分支**：重构期 `feature/sample-run-model`（重大重构隔离，main 保持稳定），2026-09-15 已合入 main；当前新工作分支 `feature/next-milestone`
 
 ## 6. 状态机设计演进
 

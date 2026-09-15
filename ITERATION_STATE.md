@@ -894,3 +894,19 @@ npm run dev:all
   - REQ-038（P1）看板列表视图数据穿透（截图 038，与 037 同根因）
   - REQ-039（P2）看板按钮文字换行（截图 039）
 - **缺陷定义（用户 2026-09-15 确认，截图逐像素复核）**：数据穿透=数据行/列滚动时在标题栏或首列边缘显示出来（037=纵向滚动穿透表头——截图红框内首行「胸围」位于表头行上方；038=横向滚动穿透首列——截图红竖线标注首列边缘）；039=看板右上「关注点:任务状态」按钮/面板文字折成「关注点:/任务/状态」三行（截图红框，含「全部分派设计师」筛选框待一并复核）。
+
+---
+
+## 批6 REQ-037/038 修数据穿透（2026-09-15，提交 `2aa8997` 已在本地分支 feature/next-milestone）
+- **根因（真实 Chrome CDP 复现/排查）**：
+  - **REQ-037（设置页部位预设明细表，确定性复现）**：`.tpl-table-wrapper`（components.css:744）顶部 `padding:12px` 在滚动区顶缘与 sticky 表头之间留下 **12px 缝隙**（th `top:0` 定位在 padding 内缘）；wrapper 背景 `--bg-panel` 为半透明 rgba(255,255,255,0.024)，纵向滚动时滚过表头的数据行内容在缝隙中穿透显示。实测 scrollTop=250、「穿透复现A2」行 12px 高内容相交缝隙（thTop−wrapperTop=12）。
+  - **REQ-038（看板列表视图）**：当前代码实测无穿透——列表冻结列均为内联不透明 `var(--bg-elev)`（hover+横向滚动下计算背景 rgb(22,23,25)），用户截图对应旧版列布局；但排查到**同类根因活缺陷**：`.data-table tr:hover td.sticky-col { background: transparent }`（components.css:274，U7 去 !important 时"还原"误写成透明）→ 使用 `.sticky-col` 冻结列的表格（SizeTable 尺寸表）在 hover 时冻结列变透明、横向滚动内容可穿透。合成行真实悬停实测命中该规则（计算背景 transparent）。
+- **修复（改动最小、不回退既有验收样式）**：
+  - 037：`.tpl-table-wrapper` padding `12px` → `0 12px 12px`（顶部不留缝，sticky 表头贴齐滚动区顶缘）；`.tpl-table-v4 th:first-child/last-child` 补 `border-top-left/right-radius:6px` 对齐容器圆角。
+  - 038 同类：`.data-table tr:hover td.sticky-col` 改 `background-color: var(--bg-elev)`（hover 冻结列保持不透明，恢复原 `!important` 恒不透明语义）；看板列表最后一个冻结列（th/td）加 `boxShadow: 4px 0 10px rgba(0,0,0,0.25)` 右侧投影，横向滚动时列边缘形成干净裁剪遮罩（与 `.sticky-col` 既有 `2px 0 5px` 阴影模式一致）。
+- **验证（headless Chrome CDP，1180×760）**：
+  - 037：修复前 thTop−wrapperTop=12（缝隙穿透）→ 修复后 =1（仅 1px 边框）；缝隙区 4x 截图显示表头本体文字（部位名称/测量方法说明），无任何数据行文字穿透。
+  - 038 列表：hover+横向滚动下冻结列背景全部 rgb(22,23,25) 不透明；末冻结列 th/td 投影生效（rgba(0,0,0,0.25)）。
+  - 038 同类：注入 `.sticky-col` 行真实悬停 → 计算背景 rgb(22,23,25)（修复前为 transparent）。
+  - 门禁：`eslint src` exit 0；复现临时模板（id 13-20，「穿透复现A1~A8」）已通过 HTTP API 全部删除恢复（剩余 0 条临时数据）。
+- **登记**：docs/roadmap/待开发文档.md REQ-037/038 状态 → 已完成；REQ-039（看板按钮文字换行，P2）待开发另拍板。

@@ -10,9 +10,16 @@
 // 注：preload.js 与 main.js 中的 IPC 注册（contextBridge 白名单）作为已交付的既有能力
 //      原样保留，仅前端不再调用它们。
 
-export const API = window.location.origin.includes('5173')
-  ? 'http://localhost:3001'
-  : window.location.origin;
+// G17：优先使用构建期注入的 VITE_API_BASE（供将来前后端拆分 / 独立部署）。
+// 未配置（默认单机版）时回退到原有判定，**零行为变化**：
+//   Vite dev(5173) → 本机后端 http://localhost:3001；否则 → 同源（生产由后端 3001 托管前端）。
+const ENV_API_BASE = import.meta.env.VITE_API_BASE;
+
+export const API = ENV_API_BASE
+  ? ENV_API_BASE
+  : (window.location.origin.includes('5173')
+    ? 'http://localhost:3001'
+    : window.location.origin);
 
 // 拼接完整 URL
 export const apiUrl = (path) => (path.startsWith('http') ? path : `${API}${path}`);

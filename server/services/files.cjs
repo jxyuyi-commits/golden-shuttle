@@ -2,8 +2,9 @@
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const { execFile } = require('child_process');
 const { getUploadsDir } = require('../db.cjs');
+// G17：本机打开已抽为可替换能力（capabilities/localOpen.cjs）；安全断言仍由本层先行把关（复用 G2）。
+const localOpen = require('../capabilities/localOpen.cjs');
 
 // 上传扩展名白名单（大小写不敏感）。已包含需求指定集合，
 // 并补充本行业（服装打版/设计）常见专业格式，避免误伤用户既有上传能力：
@@ -119,6 +120,11 @@ function resolvePath(url) {
 
 /**
  * 用本地默认程序打开文件
+ *
+ * G17：真正的"打开"动作委托给可替换能力 `capabilities/localOpen.openLocal(absPath)`；
+ * 本函数保留 G2 的全部安全断言（路径硬化 resolvePath + 危险扩展名拒绝）作为**前置把关**，
+ * 能力模块不得绕过或放宽这些断言。响应形状仍为 `{success: boolean}`（业务接口保持稳定）。
+ *
  * @param {string} url - 如 /uploads/xxx.pdf
  * @returns {{success: boolean}}
  */
@@ -129,30 +135,9 @@ function openLocally(url) {
   if (BLOCKED_OPEN_EXTENSIONS.has(path.extname(absolutePath).toLowerCase())) {
     throw badRequest('安全策略：不允许用本地程序打开该类型文件');
   }
-  // 优先使用 Electron shell.openPath（无 shell 注入面）；非 Electron 环境回退 execFile + 数组参数，
-  // 彻底消除 exec(`start "" "${path}"`) 的引号/&/| 字符串拼接注入面。
-  let electronShell = null;
-  try {
-    // Electron 主进程可用；ELECTRON_RUN_AS_NODE 或纯 Node 下为 undefined/抛错，回退 execFile
-    electronShell = require('electron').shell;
-  } catch {
-    electronShell = null;
-  }
-  if (electronShell && typeof electronShell.openPath === 'function') {
-    electronShell.openPath(absolutePath)
-      .then((errMsg) => { if (errMsg) console.error('[Open Native Error]', errMsg); })
-      .catch((err) => console.error('[Open Native Error]', err));
-    return { success: true };
-  }
-  // 非 Electron 环境（如纯 Node 单跑后端）回退：使用 rundll32 的 FileProtocolHandler
-  // 调起系统默认程序。刻意 NOT 使用 `cmd.exe /c start "" <path>`——Node 在 Windows 下
-  // 的参数转义不处理 `&`/`^`/`|` 等 cmd 元字符，路径一旦落到 cmd 命令行就仍存在二次解析面
-  // （本目录下文件名虽由 safeFileName 生成、不含此类字符，但不把安全性建立在调用方约束上）。
-  // execFile + 数组参数经 CreateProcess 直接传递 argv，不经过任何 shell。
-  execFile('rundll32.exe', ['url.dll,FileProtocolHandler', absolutePath], (err) => {
-    if (err) console.error('[Open Native Error]', err);
-  });
-  return { success: true };
+  // 委托本机能力模块：Electron shell.openPath / 无 Electron 时本机回退 / 均无 → 降级(ok=false)。
+  const result = localOpen.openLocal(absolutePath);
+  return { success: result.ok };
 }
 
 module.exports = { save, resolvePath, openLocally };

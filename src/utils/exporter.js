@@ -16,8 +16,13 @@ function downloadBlob(blob, fileName) {
   a.download = fileName;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // 撤销时机：不能在 click() 后**同步** revoke —— 部分浏览器/下载管理器此时尚未把
+  // blob 内容读完，同步 revoke 会导致下载被取消（或落盘 0 字节）。延迟清理，
+  // 给下载通道留出读取窗口；到点后再移除元素并归还 blob URL。
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 1000);
 }
 
 /** sheet 名最多 31 字符，去除 Excel 非法字符 */

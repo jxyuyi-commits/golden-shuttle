@@ -62,7 +62,7 @@
 .sticky-col-3 { left: 92px; min-width: 140px; }
 
 /* 核心部位标签 */
-.badge-req { background: rgba(244, 63, 94, 0.15); color: #fb7185; font-size: 10px; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(244, 63, 94, 0.2); vertical-align: middle; }
+.badge-req { background: rgba(244, 63, 94, 0.15); color: #fb7185; font-size: 10px; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: none; /* 批11：去边框（弱底无框，对齐参考弱标签） */ vertical-align: middle; }
 
 /* 输入非法字符时的抖动反馈（§3(a)：提特异性替代 !important） */
 .cell-shake { animation: shake 0.3s ease-in-out; }
@@ -173,7 +173,7 @@ em.audit-wait { color: var(--text-2); }
 .sidebar-list {flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
 .cat-item {display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: all 0.25s; border: 1px solid transparent; }
 .cat-item:hover {background: var(--bg-hover); color: var(--text); }
-.cat-item.active {background: var(--accent-soft); border-color: var(--accent-soft-2); }
+.cat-item.active {background: var(--accent-soft); border-color: transparent; /* 批11：选中无边框（参考选中=弱底+accent字，无线框） */ }
 .cat-item-content {flex: 1; min-width: 0; display: flex; align-items: center; }
 .cat-edit-input {width: 100%; background: var(--input-bg); border: 1px solid var(--accent); color: var(--text); padding: 4px 8px; border-radius: 6px; font-size: 13px; outline: none; }
 .cat-item.active .cat-name {color: var(--accent); }
@@ -187,7 +187,7 @@ em.audit-wait { color: var(--text-2); }
 
 .tpl-table-wrapper {flex: 1; overflow-y: auto; border-radius: 10px; border: none; background: var(--bg-elev); width: 100%; /* 批9：去外框（融入 v4 卡）、圆角16→10 */ }
 .tpl-table-v4 {width: 100%; border-collapse: collapse; table-layout: fixed; }
-.tpl-table-v4 th {position: sticky; top: 0; background: var(--bg-elev); /* 批10：表头与容器同色不透明（防滚动穿透 + 无补丁亮条），与参考纯列表一致；分隔靠文字层级+弱线 */ padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; z-index: 10; border-bottom: 1px solid var(--border-weak); }
+.tpl-table-v4 th {position: sticky; top: 0; background: var(--bg-elev); /* 批11：表头与容器同色不透明（防滚动穿透+无补丁亮条），去底线=无线框，分隔靠文字层级 */ padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; z-index: 10; border-bottom: none; }
 .tpl-table-v4 td {padding: 16px 20px; background: var(--bg-elev-2); /* 批10：数据行=参考式胶囊行（bg-elev-2 圆角块），行间用容器同色间隙分隔 */ border-bottom: 4px solid var(--bg-elev); font-size: 14px; color: var(--text-2); }
 .tpl-table-v4 td:first-child {border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
 .tpl-table-v4 td:last-child {border-top-right-radius: 6px; border-bottom-right-radius: 6px; }

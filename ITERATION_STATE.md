@@ -814,3 +814,22 @@ npm run dev:all
 - **门禁**：`eslint src` 0 / `doc:check` STATS 一致 / `npm test` 98/98（含 U20 新增 thumbQueue 3 用例）/ `vite build` 11.41s；远端 = 本地 = `0757662`。
 - **⚠️ 遗留冲突（已登记 REQ-033）**：U22 把**分组视图**列宽降到 420/380/360px，与 **REQ-032（2026-09-11 已拍板「看板卡片最小宽度不得低于 500px」）冲突**（「全部」视图的 `minmax(500px,1fr)` 未动、仍合规）。窄列是「款号压字号 / 徽标被迫垂直分层 / meta 行拥挤」一串补丁的共同根因 —— 用户 2026-09-15 指示：先记录、跳过，另立「看板卡片布局重构专项」。
 - **下一单元**：批5 演进预备（G16 移除 xlsx → G17 前后端拆分留缝 → G18 extraResources 改空白示例库 → G19 分页按需）。
+
+---
+
+## 批5 G16 移除 xlsx 依赖·导出引擎迁 exceljs（2026-09-15，提交 `ef4edf6` + 补修 `4fc8b0d`，均已推远端）
+
+- **交付**：
+  - `src/utils/exporter.js` 全面改用 `exceljs`（移除 `import * as XLSX`）：新增 `normalizeCell` 保型——`number→number`、`null/undefined/''→null`（写为**空白单元格**）、其余 `String`；`autoWidthCols` 直接产出 `{width}`（与旧 `!cols[].wch` 同为字符数量纲，口径沿用）；`exportExcel` 改 `async`（`workbook.xlsx.writeBuffer()` → `downloadBlob`）；删除零调用的死导出 `exportCSV`/`exportJSON`。
+  - `src/utils/exportTasks.js`：`exportTasksToExcel` 随之 async + await，返回文件名与签名语义不变。调用方无需改动——`KanbanView` 的 `onExport` 本就是 `return exportTasksToExcel(...)`，`ExportButton.handleConfirm` 已 `await onExport()`，无悬挂 Promise。
+  - 依赖清理：`package.json` 删 `xlsx`；lock 移除根依赖 + `node_modules/xlsx` + 其独有传递闭包（adler-32/cfb/codepage/ssf/wmf/word/frac），**保留 crc-32**（仍被 crc32-stream 引用）。`node_modules/xlsx` 已不存在。
+- **主理人独立等价复核（自写 `_lead_g16check.cjs`，逐单元格「值 + 数据类型」比对）**：两 sheet 名一致；「打样单」7×26 + 「类型探针」3×26 共 **260 格全等**——`sample_count` 仍是 `number`（含 0）、`"=SUM(A1:A2)"` 仍为 `String`（未被误判公式）、空值仍是**空白单元格**（未落 0/NaN/undefined）；列宽最大偏差 9.4%（阈值 20%）。verdict = **PASS**。
+- **体积**：`dist/assets/index-*.js` 1,632,959 → 1,347,182 B（**−285,777 B ≈ −279 KB**）；其余分块（pdfTechPackVfs / pdf.worker / pdfmake / pdf）不变 → 确认 xlsx 已不在包内。
+- **门禁**：`eslint src` 0 / `doc:check` STATS 一致 / `npm test` 98/98 / `vite build` 9–11s。
+- **补修 `4fc8b0d`（downloadBlob 撤销时机）**：`downloadBlob` 原为 `a.click()` 后**同步** `document.body.removeChild(a)` + `URL.revokeObjectURL(url)`；改为 `setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000)`。属清理时机的最佳实践改进（避免过早释放 blob 致下载中断），零副作用、签名不变；`docs/PROJECT_HANDBOOK.md` STATS 源码行数 11549 → 11554 同步回填。
+- **⚠️ 重要排查教训（主理人自证伪，勿再踩）**：主理人曾据 CDP 探针观测把「点导出后 toast 提示成功、下载事件却 `canceled`、磁盘无文件」判为**产品缺陷**并归因 `downloadBlob` 过早 revoke —— **该判断错误**。同脚本 A/B 对照（`_lead_dl_verify.cjs`，唯一变量＝是否调用 `Browser.setDownloadBehavior`）实测：
+  - **A｜不调用 setDownloadBehavior（默认下载行为）** → `C:\Users\Administrator\Downloads\打样单列表_20260915_1243.xlsx` **真实落盘 8389 B**，toast 正常；
+  - **B｜调用 `Browser.setDownloadBehavior{behavior:'allow',downloadPath,eventsEnabled:true}`** → 事件链 `willBegin → inProgress 8389/8389 → canceled`，downloadPath 与系统 Downloads **双双无文件**。
+  - 工程师侧更硬证据：把 `URL.revokeObjectURL` 打桩为 no-op / 延迟至 6s 仍 canceled；**纯 Blob（28 B）与 `data:` URL 在 setDownloadBehavior 下同样 canceled**（与项目代码无关）；headful 与 headless 表现一致。
+  - **结论：本机 Chrome 142.0.7444.60（FEIMAN 打包版）在 CDP 覆写下载行为时会取消下载，属环境限制、非产物问题；用户真实使用（Electron/常规浏览器，不经 CDP）导出全程正常**（Downloads 中 9/8 两个真实导出件即佐证）。**今后自动化验证下载落盘：禁用 setDownloadBehavior，改用默认下载行为 + 轮询系统下载目录做目录 diff。**
+- **下一单元**：G17 前后端拆分「留缝」（3 项，见 `docs/roadmap/统一实施路径与任务分解-20260914.md` §D）。

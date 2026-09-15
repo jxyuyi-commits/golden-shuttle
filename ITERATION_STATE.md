@@ -866,3 +866,16 @@ npm run dev:all
   - **配置面核对**：`git check-ignore server/seed/database.sqlite` 返回非忽略 → 种子库可随仓库分发（纳入 git）；`build.extraResources` 仅含种子库、不含真实 uploads；proxy 7897 存活、git 身份 `jxyuyi-commits` 就绪。
 - **关键风险点（已排除）**：`initDatabase` 签名为 `initDatabase(dbPath, uploadsPath)`（`server/db.cjs:664`，`DB_PATH = dbPath || process.env.DB_PATH || ...`），脚本显式传入种子路径，**不会**误改真实库；`backupBeforeMigration` 仅对非空库备份（`db.cjs:586` `stat.size === 0` 提前返回），空白库无残留备份。
 - **下一单元**：G19 `GET /api/tasks` 分页/字段裁剪（标注按需，未启动）。
+
+## 批5 G19 `GET /api/tasks` 分页/字段裁剪（轻量版，2026-09-15，提交 `aa6eba4` 已推远端）
+
+- **定位（路线图 §D，line 86）**：`GET /api/tasks` 分页/字段裁剪，落点 `tasks.cjs:154-158`，验收「上量后响应恒定」，标「按需」。原 `list()` 一次性 `SELECT *` 全部 task + `attachRuns` 挂全部 `sample_runs`，随数据量增长响应体与序列化成本线性上涨。
+- **轻量实现（默认零行为变更，看板零影响）**：
+  - `server/services/tasks.cjs` 新增 `listPaged({limit, offset, light})`：limit 钳制 [1,200]、offset 非负；`LIMIT ? OFFSET ?` 切片 + 单独 `COUNT(*)` 返回 `{items, total}`；`light=true` 经 `toTaskSummary` 丢弃完整 `runs` 数组，仅留 `top_run + runs_count` 等看板卡片级字段。`list()` 保持原样（返回数组），现有调用方不受影响。
+  - `server/routes/tasks.cjs` `/api/tasks` 分流：仅当 `?limit`/`?offset`/`?light` 任一显式传入才走 `listPaged`，否则仍 `list()`（数组）。
+  - `src/api/index.js` `fetchTasks(params?)` 可带参构建 query string，无参时保持原 `apiGet('/api/tasks')` 行为。
+- **主理人独立验证（不依赖脚本自述）**：
+  - 服务层直连真实库：默认 `list()` 仍返回数组 6 条；`listPaged({limit:2})`→items=2/total=6/ids=[8,7]；`{limit:2,offset:2}`→items=2/ids=[1,3]，两页**无重叠**；`limit:9999` 钳制到 ≤200；`light:true` 无 `runs` 键、`runs_count=3`、保留 `top_run`+`derived_status`+`style_no`。
+  - 隔离 Express 实例（新代码）HTTP 实测：`GET /api/tasks`→数组 6 条；`?limit=2`→`{items:2,total:6}`；`?limit=2&offset=2`→`{items:2}` 不同 ids；`?light=true`→无 `runs`、`runs_count=3`、有 `top_run`。（注：常驻 dev 后端 PID 4992 在改码前启动、仍为旧路由，故直连 dev 的 `?limit` 返回数组——重启 dev 即生效；隔离实例已证新路由正确。）
+  - `eslint server src` exit 0。
+- **未做（按需 defer）**：前端看板未切换为分页模式（当前 6 条无痛点）；如需上量，后续让看板/列表调用 `fetchTasks({limit, offset})` 并渲染 total 分页器即可，后端能力已就绪。

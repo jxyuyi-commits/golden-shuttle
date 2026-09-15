@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Layout, Plus, FileText, Database, CheckCircle2, Circle,
-  GripVertical, ChevronUp, ChevronDown, AlertCircle, FilterX
+  GripVertical, ChevronUp, ChevronDown, FilterX
 } from 'lucide-react';
 import PdfThumb from '../common/PdfThumb';
 import ExportButton from '../common/ExportButton';
@@ -11,86 +11,18 @@ import { toast } from '../common/Toast';
 import { keyboardActivate } from '../../hooks/useKeyboardActivate';
 import { exportTasksToExcel, getTaskListFileName } from '../../utils/exportTasks';
 import { peopleByRole } from '../../utils/people';
-import { RUN_STATUS, RUN_STATUS_LIST } from '../../constants/terms';
-
-const getNodeIcon = (status) => {
-  if (status === 'done' || status === 'completed') return <CheckCircle2 size={14} color="var(--run-done)" />;
-  if (status === 'active') return <AlertCircle size={14} color="var(--accent)" />;
-  return <Circle size={14} color="var(--text-4)" />;
-};
-
-// 版次批次状态元数据收敛至 src/constants/terms.js → RUN_STATUS / RUN_STATUS_LIST
-const PRIO_RANK = { 'S': 3, 'A': 2, 'B': 1, 'C': 0 }; // REQ-030 优先级 S/A/B/C
-/** 取任务的批次列表（兼容迁移前旧字段，无 runs 时用 task 顶层字段拼一条） */
-const taskRuns = (t) => {
-  if (Array.isArray(t.runs) && t.runs.length) return t.runs;
-  if (t.sample_type) return [{ sample_type: t.sample_type, size: t.size, sample_color: t.sample_color, sample_count: t.sample_count, priority: t.priority, status: '' }];
-  return [];
-};
-/** 任务涉及的全部版次 */
-const taskRunTypes = (t) => [...new Set(taskRuns(t).map(r => r.sample_type).filter(Boolean))];
-/** 任务的最高优先级（批次中取最高，无批次回退顶层 priority）
- *  G11 优先级单主：权威数据在 sample_runs.priority；后端 attachRuns 已按「批次最高档 S>A>B>C，无批次回退 B」
- *  投影出 `t.priority`。前端此处规则与之**完全一致**，故看板分组/筛选（走批次）与列表/技术包导出
- *  （走投影后的 t.priority）结果必然相同，不再出现「看板与导出优先级不一致」。 */
-const taskTopPriority = (t) => {
-  const ps = taskRuns(t).map(r => r.priority).filter(Boolean);
-  if (!ps.length) return t.priority || 'B'; // REQ-030 默认 B（后端同口径投影，非旧 tasks 列）
-  return ps.sort((a, b) => (PRIO_RANK[b] ?? 1) - (PRIO_RANK[a] ?? 1))[0];
-};
-
-/** REQ-027：款级分栏口径 = 后端 derived_status（最新未完成版次，sort_order 最大）实时推导，不再依赖可能过期的 task.status
- *  done=全部批次已完成 / doing=最新版次打版中·样衣中·待审版 / todo=未开始·待安排·无批次 */
-const derivedCol = (t) => {
-  const d = t.derived_status;
-  if (d === 'done') return 'done';
-  if (d === 'pattern_making' || d === 'sample_making' || d === 'pending_confirm') return 'doing';
-  return 'todo';
-};
+import { RUN_STATUS_LIST } from '../../constants/terms';
+import TaskCard from './TaskCard';
+import { taskRuns, taskRunTypes, taskTopPriority, derivedCol, getOverdueInfo } from '../../utils/taskView';
 
 /**
- * 逾期判定（REQ-027 权威口径：交期基准 = 最新未完成版次预期完成时间）
- * 基准优先级：最新版次 top_run.expected_date → 该款全部批次中最早的预期 → 款级 expected_date（旧数据兜底）→ 无则 none
- * 完成判定（REQ-025）：款级 derived_status=done（全部批次已完成）→ 不算逾期
- * state: overdue(已逾期) / today(今日到期) / soon(3天内到期) / ok(正常) / none(无交期或已完结)
+ * 容器层（U18 两层层级重构）：筛选器 + 看板分组/布局/滚动 + 列表视图 + 列配置/视图保存。
+ * 单卡片渲染移交卡片层 src/components/task/TaskCard.jsx（React.memo）。
+ *
+ * U19 性能：
+ * - filterTasks / activeCols / 分组结果（groupedTasks）全部 useMemo，依赖精确到 filters/tasks/分组维度；
+ * - 传给 TaskCard 的 onTaskClick 用 useCallback 稳定引用，保证 memo 真正生效（否则每次父渲染都重建回调）。
  */
-function getOverdueInfo(task) {
-  if (task.status === 'done' || task.status === 'completed') return { state: 'none', days: 0 };
-  if (task.derived_status === 'done') return { state: 'none', days: 0 };
-  let dueStr = task.top_run?.expected_date || '';
-  if (!dueStr && Array.isArray(task.runs) && task.runs.length) {
-    const dates = task.runs.map(r => r.expected_date).filter(Boolean).sort();
-    dueStr = dates[0] || '';
-  }
-  if (!dueStr) dueStr = task.expected_date || '';
-  if (!dueStr) return { state: 'none', days: 0, due: '' };
-  const m = String(dueStr).match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-  if (!m) return { state: 'none', days: 0, due: dueStr };
-  const due = new Date(+m[1], +m[2] - 1, +m[3]);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diff = Math.round((today - due) / 86400000);
-  if (diff > 0) return { state: 'overdue', days: diff, due: dueStr };
-  if (diff === 0) return { state: 'today', days: 0, due: dueStr };
-  if (diff >= -3) return { state: 'soon', days: -diff, due: dueStr };
-  return { state: 'ok', days: 0, due: dueStr };
-}
-
-/** REQ-027 底部进度节点：从最新未完成版次（top_run）真实数据派生（不再展示手填工作动态，与版次条同源 runs）
- *  配料=面料到库 / 跟版=任务开始 / 版师=纸样完成（负责人=款级版师）/ 样衣=实际完工（负责人=批次样衣工）/ 工艺=无对应批次字段 */
-function buildRunNodes(task) {
-  const top = task.top_run;
-  const mk = (label, date, by) => ({ label, date: date || '', by: by || '', status: date ? 'done' : 'pending' });
-  return [
-    mk('配料', top?.fabric_date, ''),
-    mk('跟版', top?.start_date, ''),
-    mk('版师', top?.pattern_date, task.pattern_maker),
-    mk('样衣', top?.finish_date, top?.sample_maker),
-    mk('工艺', '', ''),
-  ];
-}
-
-/** 看板/列表双视图：筛选器 + 看板三列 + 任务卡片 + 可配置列表视图 */
 const KanbanView = ({
   tasks,
   filters,
@@ -153,7 +85,7 @@ const KanbanView = ({
       ];
     }
     if (kanbanGroupBy === 'sample_type') {
-      const cols = settings.sampleTypes.map(s => ({ id: s, name: s, color: 'var(--color-indigo-500)' }));
+      const cols = (settings.sampleTypes || []).map(s => ({ id: s, name: s, color: 'var(--color-indigo-500)' }));
       return cols.length ? cols : [{ id: 'none', name: '常规版', color: 'var(--color-indigo-500)' }];
     }
     if (kanbanGroupBy === 'priority') {
@@ -174,104 +106,6 @@ const KanbanView = ({
       ];
     }
     return [];
-  };
-  // 打样单卡片（REQ-024 重开：全部视图与分组视图共用同一卡片渲染，全部视图下卡片直排 grid）
-  // U14 B 案：卡片内含 PdfThumb 等潜在交互子元素，禁改 button（嵌套禁令）；Tab 聚焦卡片、Enter/Space 进详情
-  const renderBentoCard = (task) => {
-    const ov = getOverdueInfo(task);
-    return (
-      <div
-        key={task.id}
-        className="card glass bento-card"
-        role="button"
-        tabIndex={0}
-        aria-label={`打开打样单：${task.style_no || ''} ${task.title || '未命名款式'}`}
-        onClick={() => onTaskClick(task)}
-        onKeyDown={keyboardActivate(() => onTaskClick(task))}
-        style={{ position: 'relative', ...(ov.state === 'overdue' ? { borderColor: 'rgba(239,68,68,0.55)' } : {}) }}
-      >
-        {ov.state === 'overdue' && (
-          <div className="bento-overdue-badge" title={`期望交期 ${ov.due}（最新版次），已逾期`}>⚠ 逾期 {ov.days} 天</div>
-        )}
-        {ov.state === 'today' && (
-          <div className="bento-overdue-badge" style={{ background: 'rgba(245,158,11,0.92)' }} title="今日为期望交期（最新版次）">今日到期</div>
-        )}
-        {ov.state === 'soon' && (
-          <div className="bento-overdue-badge" style={{ background: 'rgba(234,179,8,0.85)', color: 'var(--color-warn-fg)' }} title={`期望交期 ${ov.due}（最新版次）`}>{ov.days} 天后到期</div>
-        )}
-        <div className="bento-upper">
-          <div className="bento-box bento-left">
-            <div className="bento-img-wrap">
-              <PdfThumb pdfUrl={task.pdf_url} />
-              <div className="bento-badge">👤 {task.designer || '未分配'}</div>
-            </div>
-          </div>
-          <div className="bento-right-col">
-            <div className="bento-box bento-tr">
-              <span className="bento-style-no">{task.style_no || '—'}</span>
-            </div>
-            <div className="bento-info-row">
-              <div className="bento-box bento-info">
-                <div className="bento-title-main" title={task.title}>{task.title || '未命名款式'}</div>
-                <div className="bento-row" title={task.style_no}><span>款号：</span>{task.style_no || '—'}</div>
-                <div className="bento-row" title={task.category}><span>类别：</span>{task.category || '—'}</div>
-                <div className="bento-row" title={task.brand}><span>品牌：</span>{task.brand || '—'}</div>
-                <div className="bento-row" title={[task.year, task.season, task.month].filter(Boolean).join(' ')}><span>时段：</span>{[task.year, task.season, task.month].filter(Boolean).join(' ') || '—'}</div>
-              </div>
-              <div className="bento-box bento-info">
-                <div className="bento-order-no" title={task.order_no}>版单：{task.order_no || '—'}</div>
-                {(() => {
-                  const rs = taskRuns(task);
-                  if (!rs.length) return <div className="bento-row"><span>批次：</span><em>未建批次</em></div>;
-                  const shown = rs.slice(0, 3);
-                  const hidden = rs.length - shown.length;
-                  return (
-                    <>
-                      {shown.map((r, i) => {
-                        const meta = RUN_STATUS[r.status];
-                        const who = r.sample_maker ? [r.sample_maker].filter(Boolean).join(' / ') : '';
-                        return (
-                          <div className="bento-row bento-run-row" key={i}
-                            title={`${r.sample_type || '未命名版次'}${meta ? ' · ' + meta.label : ''}${who ? ' · ' + who : ''}`}>
-                            {meta && <span className="bento-run-dot" style={{ background: meta.color }} />}
-                            <em>{r.sample_type || '—'}</em>
-                            <span className="bento-run-sub">
-                              {meta ? meta.label : ''}{r.sample_color ? `·${r.sample_color}` : ''}{r.sample_count ? `·${r.sample_count}件` : ''}{r.size ? `·${r.size}码` : ''}
-                            </span>
-                          </div>
-                        );
-                      })}
-                      {hidden > 0 && <div className="bento-row"><span></span><em>+{hidden} 个批次</em></div>}
-                    </>
-                  );
-                })()}
-                <div className="bento-row"><span>优先：</span><em className={`prio-${taskTopPriority(task) === 'S' ? 'high' : taskTopPriority(task) === 'A' ? 'mid' : 'low'}`}>{taskTopPriority(task)}</em></div>
-                <div className="bento-row" title={task.audit_status}><span>审核：</span><em className={`audit-${task.audit_status === '已通过' ? 'pass' : 'wait'}`}>{task.audit_status || '待审核'}</em></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bento-box bento-bottom">
-          <div className="bento-nodes">
-            {(() => {
-              // REQ-027：底部节点=最新未完成版次（top_run）真实数据
-              const nodes = buildRunNodes(task);
-              return (
-                <>
-                  {nodes.map((n, i) => (
-                    <div key={i} className="bento-node-cell" title={`${n.label}${n.by ? ' · 负责人:' + n.by : ''}${n.date ? '' : ' · 未填'}`}>
-                      {getNodeIcon(n.status)}
-                      <span className="bento-node-label">{n.label}</span>
-                      <span className="bento-node-date">{n.date || '--'}</span>
-                    </div>
-                  ))}
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      </div>
-    );
   };
 
   return (
@@ -356,9 +190,8 @@ const KanbanView = ({
               confirmText={`将导出当前筛选结果（共 ${filterTasks(tasks).length} 条打样单）为 Excel 文件，包含 30 项业务字段。`}
               fileName={getTaskListFileName()}
               onExport={() => {
-                const list = filterTasks(tasks);
-                if (!list.length) throw new Error('当前筛选结果为空，无可导出数据');
-                return exportTasksToExcel(list);
+                if (!filterTasks(tasks).length) throw new Error('当前筛选结果为空，无可导出数据');
+                return exportTasksToExcel(filterTasks(tasks));
               }}
               style={{ padding: '7px 12px', borderRadius: 8, background: 'var(--accent-soft)', border: '1px solid var(--accent-soft-2)', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, whiteSpace: 'nowrap' }}
             />
@@ -489,7 +322,7 @@ const KanbanView = ({
           display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(500px, 1fr))', // REQ-032 卡片最小宽度 500px
           gap: 24, alignContent: 'start',
         }}>
-          {filterTasks(tasks).map(task => renderBentoCard(task))}
+          {filterTasks(tasks).map(task => <TaskCard key={task.id} task={task} onTaskClick={onTaskClick} />)}
         </div>
       ) : (
         <div className="board custom-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '0 32px 32px' }}>
@@ -502,22 +335,22 @@ const KanbanView = ({
               return true;
             });
             return (
-              <div key={col.id} className="col">
-                <div className="col-title" style={{
-                  position: 'sticky', top: 0, zIndex: 50,
-                  background: 'var(--bg)', width: '100%',
-                  padding: '24px 0 16px', margin: 0,
-                  boxSizing: 'border-box',
-                  borderBottom: '1px solid var(--border-weak)'
-                }}>
-                  <span className="dot" style={{ background: col.color }} />
-                  {col.name}
-                  <span className="badge">{colTasks.length}</span>
-                </div>
-                <div className="col-body">
-                  {colTasks.map(task => renderBentoCard(task))}
-                </div>
+            <div key={col.id} className="col">
+              <div className="col-title" style={{
+                position: 'sticky', top: 0, zIndex: 50,
+                background: 'var(--bg)', width: '100%',
+                padding: '24px 0 16px', margin: 0,
+                boxSizing: 'border-box',
+                borderBottom: '1px solid var(--border-weak)'
+              }}>
+                <span className="dot" style={{ background: col.color }} />
+                {col.name}
+                <span className="badge">{colTasks.length}</span>
               </div>
+              <div className="col-body">
+                {colTasks.map(task => <TaskCard key={task.id} task={task} onTaskClick={onTaskClick} />)}
+              </div>
+            </div>
             );
           })}
         </div>

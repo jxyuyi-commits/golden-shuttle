@@ -762,3 +762,39 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 /* ── U17 InputModal 输入框（基座复用 .confirm-modal，仅补输入样式） ── */
 .input-modal-input { width: 100%; box-sizing: border-box; background: var(--input-bg); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 9px 12px; color: var(--text); font-size: var(--fs-md); outline: none; }
 .input-modal-input:focus { border-color: var(--accent); }
+
+/* ==========================================================================
+   U18 看板卡片两层层级重构 / U19 memo 性能（2026-09-15）
+   - 卡片层 TaskCard：主信息层常驻 + 次级详情层（hover/键盘聚焦浮层，绝对定位不占布局）
+   - 密度：取消独立底部节点行，节点并入右栏，卡片高度显著下降（同屏容量上升）
+   - 本块为**覆盖块**：源序在既有 .bento-* 之后，同特异性自然胜出，不改原规则本体。
+   ========================================================================== */
+
+/* 卡片外框收紧（原 .bento-card padding/gap 12 → 10） */
+.bento-card { padding: 10px; gap: 10px; }
+
+/* 右栏间距收紧（原 12 → 10） */
+.bento-right-col { gap: 10px; }
+
+/* 主信息层（常驻）：款名 + 优先级/状态/类别/版次/审核 元信息行 */
+.bento-primary { padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--card-bg); }
+.bento-meta-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; font-size: 11px; color: var(--text-2); line-height: 1.2; }
+.bento-meta-line em { font-style: normal; font-weight: 800; }
+.bento-status { display: inline-flex; align-items: center; gap: 4px; color: var(--text-2); }
+.bento-status-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.bento-chipline { font-size: 10.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 进度节点行：由独立整行改为右栏内一行（收紧内边距 + 便当盒边框） */
+.bento-nodes { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--card-bg); }
+
+/* 次级详情层（按需呈现）：hover / 键盘聚焦浮出，不参与布局；0.25s 延迟防扫过误触 */
+.bento-detail { position: absolute; inset: 0; z-index: 6; padding: 12px 14px; border-radius: inherit; background: var(--bg-elev-2); display: flex; flex-direction: column; gap: 6px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .16s ease, visibility .16s ease; overflow: hidden; }
+.bento-card:hover .bento-detail, .bento-card:focus-within .bento-detail { opacity: 1; visibility: visible; transition-delay: .25s; }
+.bento-detail-head { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--text-3); margin-bottom: 2px; }
+.bento-detail .bento-row { font-size: 11px; }
+.bento-detail-runs { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bento-detail-run { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 逾期徽标始终压在最上层（原 z-index:5 低于次级浮层 z-index:6） */
+.bento-overdue-badge { z-index: 8; }
+

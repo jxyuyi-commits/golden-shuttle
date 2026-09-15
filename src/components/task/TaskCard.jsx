@@ -131,7 +131,9 @@ const TaskCard = ({ task, onTaskClick }) => {
               {shownRuns.map((r, i) => {
                 const meta = RUN_STATUS[r.status];
                 const who = r.sample_maker || '';
-                const label = `${r.sample_type || '未命名版次'}${meta ? '·' + meta.label : ''}${who ? '·' + who : ''}`;
+                // U18 修订：次级层补回「颜色 / N件 / 尺码码」（与重构前 KanbanView 口径逐字一致）；
+                // 主信息层常驻区不受影响，卡片高度与 +37% 密度目标保持不变。
+                const label = `${r.sample_type || '未命名版次'}${meta ? '·' + meta.label : ''}${r.sample_color ? '·' + r.sample_color : ''}${r.sample_count ? '·' + r.sample_count + '件' : ''}${r.size ? '·' + r.size + '码' : ''}${who ? '·' + who : ''}`;
                 return (
                   <span key={i} className="bento-detail-run" title={label}>
                     {meta && <span className="bento-run-dot" style={{ background: meta.color }} />}

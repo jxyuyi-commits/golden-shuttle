@@ -798,3 +798,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 /* 逾期徽标始终压在最上层（原 z-index:5 低于次级浮层 z-index:6） */
 .bento-overdue-badge { z-index: 8; }
 
+/* U18 修订：修逾期/到期徽标压款号（既有缺陷）。
+   徽标绝对定位于卡片右上（top:10px right:10px，宽约 104px），与主层右上「款号」框 .bento-tr 垂直重叠。
+   仅对**含徽标的卡片**（:has 命中 overdue/today/soon 三态，非逾期卡片零变化）：
+   - .bento-tr 右侧预留 104px，使右对齐的大号款号整体左移，落在徽标外侧；
+   - .bento-style-no 允许收缩省略，超长款号不越界。
+   均为新增覆盖块，未改原规则体。 */
+.bento-card:has(.bento-overdue-badge) .bento-tr { padding-right: 104px; }
+.bento-card:has(.bento-overdue-badge) .bento-style-no { overflow: hidden; text-overflow: ellipsis; }
+

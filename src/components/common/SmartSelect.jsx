@@ -36,27 +36,61 @@ const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择�
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // 弹层 fixed 定位：rAF 持续跟随锚点——弹窗/容器布局变化（如查重提示插入、居中重排）时弹层实时同步，不再跑偏
+  // 弹层 fixed 定位（U21 事件驱动）：仅在打开时绑定 scroll(捕获)/resize/ResizeObserver，
+  // 用 rAF 节流把同一帧的多次触发合并为一次测量；关闭即全部解绑。
+  // 覆盖场景：祖先容器滚动、窗口缩放、锚点/页面尺寸变化（如查重提示插入、居中重排）。
+  // 定位口径（top=锚点下沿+6、left=锚点左缘、width=max(锚宽,140)、bottom=锚点上沿-6）与旧实现逐字一致，视觉无漂移。
   useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
     const el = ref.current;
-    if (!el) return;
-    let raf;
-    const tick = () => {
+    if (!el) return undefined;
+
+    let raf = 0;
+    let disposed = false;
+
+    const measure = () => {
+      if (disposed) return;
       const r = el.getBoundingClientRect();
       setPos(prev => {
         const next = { top: r.bottom + 6, left: r.left, width: Math.max(r.width, 140), bottom: r.top - 6 };
         return (prev && prev.top === next.top && prev.left === next.left && prev.width === next.width) ? prev : next;
       });
-      raf = requestAnimationFrame(tick);
     };
-    tick();
-    return () => cancelAnimationFrame(raf);
+    // rAF 节流：同一帧内多次触发（滚动+缩放+尺寸变化）合并为一次测量，读→写解耦，消除强制同步布局抖动
+    const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; measure(); }); };
+
+    measure(); // 打开即定位一次
+    window.addEventListener('scroll', schedule, true); // 捕获阶段：覆盖任意祖先滚动容器
+    window.addEventListener('resize', schedule);
+
+    let ro = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(schedule);
+      ro.observe(el); // 锚点尺寸变化
+      if (document.body) ro.observe(document.body); // 页面尺寸变化（提示插入等导致的锚点位移）
+    }
+
+    return () => {
+      disposed = true;
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', schedule, true);
+      window.removeEventListener('resize', schedule);
+      if (ro) ro.disconnect();
+    };
   }, [open]);
 
   const select = (v) => { onChange(v); setOpen(false); };
   // U14 键盘可达：ss-display 触发器支持 Enter/Space 展开（B 案：保留 div，元素限定选择器 .compare-run-ss .ss-display > span 禁改标签）
-  const onDisplayKeyDown = useKeyboardActivate(() => setOpen(o => !o));
+  const activateDisplay = useKeyboardActivate(() => setOpen(o => !o));
+  // U21：面板自身拥有 Esc 语义——打开时 Esc 只关面板（stopPropagation 不再向上冒泡），
+  // 与 U13 Modal 基座「.ss-dropdown 存在则让位、不关弹窗」的约定互补；未改动 Modal 的 Esc 栈。
+  const onDisplayKeyDown = (e) => {
+    if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); return; }
+    activateDisplay(e);
+  };
+  const onDropdownKeyDown = (e) => {
+    if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); }
+  };
   const matched = value !== undefined && value !== null && value !== '' ? options.find(o => optKey(o) === value) : null;
   const display = matched ? optLabel(matched) : (value || placeholder);
 
@@ -73,7 +107,7 @@ const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择�
         <ChevronDown size={14} />
       </div>
       {open && pos && createPortal(
-        <div ref={dropRef} className="ss-dropdown" style={{ position: 'fixed', top: pos.top, left: pos.left, right: 'auto', minWidth: pos.width, maxWidth: '90vw', zIndex: 10000 }}>
+        <div ref={dropRef} className="ss-dropdown" onKeyDown={onDropdownKeyDown} style={{ position: 'fixed', top: pos.top, left: pos.left, right: 'auto', minWidth: pos.width, maxWidth: '90vw', zIndex: 10000 }}>
           {allowCustom && (
             <input
               className="ss-custom-input"

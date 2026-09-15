@@ -833,3 +833,22 @@ npm run dev:all
   - 工程师侧更硬证据：把 `URL.revokeObjectURL` 打桩为 no-op / 延迟至 6s 仍 canceled；**纯 Blob（28 B）与 `data:` URL 在 setDownloadBehavior 下同样 canceled**（与项目代码无关）；headful 与 headless 表现一致。
   - **结论：本机 Chrome 142.0.7444.60（FEIMAN 打包版）在 CDP 覆写下载行为时会取消下载，属环境限制、非产物问题；用户真实使用（Electron/常规浏览器，不经 CDP）导出全程正常**（Downloads 中 9/8 两个真实导出件即佐证）。**今后自动化验证下载落盘：禁用 setDownloadBehavior，改用默认下载行为 + 轮询系统下载目录做目录 diff。**
 - **下一单元**：G17 前后端拆分「留缝」（3 项，见 `docs/roadmap/统一实施路径与任务分解-20260914.md` §D）。
+
+---
+
+## 批5 G17 前后端拆分"留缝"（2026-09-15，提交 `ffc5adf` 已推远端）
+
+- **交付（3 项低成本留缝，行为逐字等价、不改任何业务接口签名）**：
+  - **① config 外置 + 鉴权占位**：新增 `server/config.cjs` 集中 `DEFAULT_PORT(3001)` / `ALLOWED_HOSTS(['localhost','127.0.0.1'])` / `ALLOWED_PORTS(['','5173','3001'])` / `UPLOADS_MOUNT_PATH('/uploads')` / `API_PATH_PREFIX('/api/')` / `UPLOADS_PATH_PREFIX('/uploads/')` / `DIST_DIR_REL('../dist')` / `JSON_BODY_LIMIT('100mb')` / `LOG_BODY_MAX_BYTES(2000)`；`server/index.cjs` 全量改读 config。**新增 no-op 鉴权前置中间件占位**（`app.use((req,res,next)=>next())`，位于 CORS 之后、body 解析之前，注释标明"未来接认证只改这一处"）——不引入真实鉴权、放行行为不变。
+  - **② `openLocally` 能力接口化**：新增 `server/capabilities/localOpen.cjs`，接口 `openLocal(absPath) -> {ok, mode}`，mode ∈ `electron-shell`（Electron `shell.openPath`）/ `windows-fallback`（无 Electron 时 `rundll32 url.dll,FileProtocolHandler`，**execFile + argv、不经 shell**）/ `unsupported`（均无 → 供将来服务器端降级为下载）。`services/files.cjs` 的 `openLocally` **原样保留 G2 全部安全断言**（拒 `\`/`..` → basename → `startsWith(uploadsDir+sep)` 断言 → `BLOCKED_OPEN_EXTENSIONS` 33 项）后委托能力模块，响应仍为 `{success:boolean}`；该文件不再直接依赖 `child_process`。
+  - **③ `VITE_API_BASE` 外置**：`src/api/client.js` 改为优先读 `import.meta.env.VITE_API_BASE`，未配置时回退原 `5173` 判定，零行为变化。
+  - `docs/PROJECT_HANDBOOK.md` STATS 回填（77→79 文件 / 11554→11676 行）。
+- **主理人独立复核（自写 `_lead_g17check.cjs` + `_lead_g17ui.cjs`，不复用工程师脚本）——四项全绿**：
+  - **CORS 谓词等价**：旧实现（`148e174` 内联）vs 新实现（config 常量）在 **32 个 origin** 上逐一比对，**0 处不一致**（21 放行；覆盖大小写主机、前导零端口 `:05173`、userinfo、`file://`、空/无 Origin、非法 URL、`[::1]`、`evil.com`、`localhost.evil.com`）。
+  - **CORS 实机**：`localhost:5173` / `127.0.0.1:5173` / `file://` / `https://127.0.0.1:3001` → 回显 ACAO；`evil.com`、`localhost:5174` → **无 ACAO**；无 Origin → 200。
+  - **G2 安全断言零削弱（关键回归面）**：`.exe`（文件真实存在）→ **400「安全策略」**；`..\..\` 与 `../../` → **400「非法文件路径」**；缺失 → 404；合法存在文件 → 200 `{success:true}`。
+  - **能力模块不经 shell**：monkeypatch `child_process.execFile` 后调用 → `{ok:true, mode:'windows-fallback'}`，参数为 `rundll32.exe` + **argv 数组**（无字符串拼接、无 cmd 解释面）。
+  - **前端侧**：CDP 实机加载看板，**15 个业务请求全部归因 `localhost:3001`**、`.bento-card` = 6、**consoleErrors = 0 / exceptions = 0**。
+- **门禁**：`npx eslint src server` 0 / `doc:check` 一致 / `npm test` 98/98 / `vite build` 9.26s。
+- **⚠️ 裁决记录（§D② 口径，已回写 roadmap）**：§D② 的"读码确认"（称 openLocally 为 `exec('start "" ...')`）**已过期**——G2 之后实际已是 `shell.openPath` + 无 Electron 时 `rundll32` 回退。§D 字面要求"无 shell 即返回不支持/降级"会**改变开发态单跑后端的行为、违反行为等价红线**。**裁决：采纳工程师的三级能力方案**（既保行为等价，又为服务器端预留 `unsupported` 降级分支）。再次印证：**计划文档的读码结论会随改造过期，落地前必须重核现状。**
+- **下一单元**：G18 `extraResources` 改空白示例库（安装包不含开发者数据）→ G19 `GET /api/tasks` 分页/字段裁剪（按需）。

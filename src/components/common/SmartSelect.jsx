@@ -79,18 +79,23 @@ const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择�
     };
   }, [open]);
 
+  // U21 修订：面板打开期间于 **document 捕获阶段** 监听 Esc——焦点无论在触发器 / 遮罩(.overlay) / 下拉选项，
+  // Esc 都只关面板；因 Modal 基座同为 document 捕获监听且「.ss-dropdown 存在则让位」，弹窗不受影响（U13 栈未动）。
+  // open 变 false 即解绑；stopPropagation 阻断继续传播，避免后续 Esc 处理器误触。
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKeyDown = (e) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      setOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
+  }, [open]);
+
   const select = (v) => { onChange(v); setOpen(false); };
   // U14 键盘可达：ss-display 触发器支持 Enter/Space 展开（B 案：保留 div，元素限定选择器 .compare-run-ss .ss-display > span 禁改标签）
-  const activateDisplay = useKeyboardActivate(() => setOpen(o => !o));
-  // U21：面板自身拥有 Esc 语义——打开时 Esc 只关面板（stopPropagation 不再向上冒泡），
-  // 与 U13 Modal 基座「.ss-dropdown 存在则让位、不关弹窗」的约定互补；未改动 Modal 的 Esc 栈。
-  const onDisplayKeyDown = (e) => {
-    if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); return; }
-    activateDisplay(e);
-  };
-  const onDropdownKeyDown = (e) => {
-    if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); }
-  };
+  const onDisplayKeyDown = useKeyboardActivate(() => setOpen(o => !o));
   const matched = value !== undefined && value !== null && value !== '' ? options.find(o => optKey(o) === value) : null;
   const display = matched ? optLabel(matched) : (value || placeholder);
 
@@ -107,7 +112,7 @@ const SmartSelect = ({ value, onChange, options = [], placeholder = '请选择�
         <ChevronDown size={14} />
       </div>
       {open && pos && createPortal(
-        <div ref={dropRef} className="ss-dropdown" onKeyDown={onDropdownKeyDown} style={{ position: 'fixed', top: pos.top, left: pos.left, right: 'auto', minWidth: pos.width, maxWidth: '90vw', zIndex: 10000 }}>
+        <div ref={dropRef} className="ss-dropdown" style={{ position: 'fixed', top: pos.top, left: pos.left, right: 'auto', minWidth: pos.width, maxWidth: '90vw', zIndex: 10000 }}>
           {allowCustom && (
             <input
               className="ss-custom-input"

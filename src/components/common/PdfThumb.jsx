@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Upload, FileText, FolderOpen } from 'lucide-react';
 import { API } from '../../api/client';
 import { openFileLocally } from '../../api';
 import { renderPdfThumb, isImageFile } from '../../utils/pdf';
+import { thumbQueue } from '../../utils/thumbQueue';
 
 const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'avif', 'tif', 'tiff'];
 
@@ -14,19 +15,34 @@ function getExt(url) {
   return clean.includes('.') ? clean.split('.').pop().toLowerCase() : '';
 }
 
+/** XML 文本响应是否为真实 SVG（用于内联渲染） */
+const isSvgText = (t) => typeof t === 'string' && t.trimStart().startsWith('<svg');
+
 /**
  * 图纸/设计稿缩略图：
- * - 图片：直接显示
- * - PDF：pdf.js 渲染首页，单击放大、双击本地打开
+ * - 图片：直接显示（原生 loading="lazy"，进入视口交由浏览器惰性加载）
+ * - PDF：pdf.js 渲染首页（U20：**进入视口才渲染**，走并发 ≤2 队列；离开视口保留结果）；
+ *        渲染失败/文件缺失优雅降级为文件占位，不刷 console
  * - 其他专业格式（dxf/pla/prj 等）：通用文件占位（图标+扩展名），单击用系统默认软件打开
+ *
+ * U20 生命周期：
+ * 1. 用 IntersectionObserver 观察本组件根节点，**首次进入视口**置 inView 并解绑观察；
+ * 2. PDF 渲染经 thumbQueue 入队（并发 ≤2），排队/渲染中显示轻占位；
+ * 3. 卸载时解绑观察并 cancel() 队列位置，避免内存泄漏与悬挂 Promise。
  */
 const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive = true }) => {
   const [thumb, setThumb] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [enlarged, setEnlarged] = useState(false);
   const [thumbFailed, setThumbFailed] = useState(false);
+  const [pdfFailed, setPdfFailed] = useState(false);
+  const [inView, setInView] = useState(false);
   const [svgText, setSvgText] = useState('');
   const clickTimeout = useRef(null);
+  // 根节点引用（供 IntersectionObserver 观察；回调 ref 保证跨分支切换稳定）
+  const hostRef = useRef(null);
+  const setHost = useCallback((node) => { hostRef.current = node; }, []);
+  // 已入队/已处理的 URL（URL 变化时重新渲染；与 thumb 状态解耦，避免闭包陈旧与死循环）
+  const handledUrlRef = useRef(null);
 
   const fullUrl = pdfUrl ? (pdfUrl.startsWith('http') ? pdfUrl : `${API}${pdfUrl}`) : '';
   const ext = getExt(fullUrl);
@@ -36,29 +52,49 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
   const isGeneric = !!fullUrl && !isImage && !isPdf && !isVectorThumb;
   const thumbUrl = isVectorThumb ? `${API}/api/drawing-thumb?url=${encodeURIComponent(fullUrl)}` : '';
 
-  // 渲染 PDF 首页缩略：effect 内同步置 loading（请求前的即时态）属合理用法；
-  // fullUrl 由 pdfUrl 派生，纳入依赖会因引用重建重复拉取，故保留 [pdfUrl,...] 并说明。
-  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+  // ── U20-1：PDF 缩略图惰性渲染门控 ──
+  // 效果仅在 isPdf 时观察；首次可见即解绑（离开视口不再回退占位、不重复解码）。
+  // 无 IntersectionObserver 的环境（旧环境/测试）回退为立即渲染。
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (!pdfUrl || isImage || isGeneric || isVectorThumb) return; // 图片直显，矢量/专业格式走缩略图或占位
-    setLoading(true);
-    renderPdfThumb(fullUrl)
-      .then(setThumb)
-      .catch(() => setThumb(null))
-      .finally(() => setLoading(false));
-  }, [pdfUrl, isImage, isGeneric, isVectorThumb]);
+    if (!isPdf) return undefined;
+    if (typeof IntersectionObserver === 'undefined') { setInView(true); return undefined; }
+    const el = hostRef.current;
+    if (!el) { setInView(true); return undefined; }
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) { setInView(true); io.disconnect(); }
+    }, { root: null, rootMargin: '0px', threshold: 0 });
+    io.observe(el);
+    return () => { io.disconnect(); setInView(false); };
+  }, [isPdf]);
+
+  // ── U20-2：进入视口后经队列渲染 PDF 首页 ──
+  // handledUrlRef 记录已处理 URL：URL 变化时重新入队；同 URL 不重复。
+  // 渲染成功后离开视口不再重排队列（结果保留）。
+  useEffect(() => {
+    if (!isPdf || !inView) return undefined;
+    if (handledUrlRef.current === fullUrl) return undefined;
+    handledUrlRef.current = fullUrl;
+    const job = thumbQueue.enqueue(() => renderPdfThumb(fullUrl));
+    let alive = true;
+    job.promise
+      .then((data) => { if (!alive) return; if (data) setThumb(data); else setPdfFailed(true); });
+    return () => { alive = false; job.cancel(); };
+  }, [isPdf, inView, fullUrl]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // DXF 缩略图为 SVG：拉取文本用于内联渲染（img 对 SVG 在 flex 中固有尺寸异常）
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!isVectorThumb || ext !== 'dxf' || !thumbUrl) { setSvgText(''); return; }
     let alive = true;
     fetch(thumbUrl)
       .then(r => (r.ok ? r.text() : ''))
-      .then(t => { if (alive && t.startsWith('<svg')) setSvgText(t); })
+      .then(t => { if (alive && isSvgText(t)) setSvgText(t); })
       .catch(() => {});
     return () => { alive = false; };
   }, [isVectorThumb, ext, thumbUrl]);
-  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const openNative = () => openFileLocally(fullUrl).catch(console.error);
 
@@ -92,18 +128,23 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
   return (
     <>
       {isImage ? (
-        <img src={fullUrl} alt="图纸预览（单击放大，双击编辑）" style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, cursor: pdfUrl ? 'pointer' : 'default' }} {...interactiveProps} />
+        <img src={fullUrl} loading="lazy" alt="图纸预览（单击放大，双击编辑）" ref={setHost} style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, cursor: pdfUrl ? 'pointer' : 'default' }} {...interactiveProps} />
       ) : isPdf ? (
-        loading ? (
-          <div className="pdf-loading">渲染中…</div>
-        ) : thumb ? (
-          <img src={thumb} alt="PDF 预览（单击放大，双击编辑）" style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, cursor: pdfUrl ? 'pointer' : 'default' }} {...interactiveProps} />
-        ) : (
-          <div className="pdf-empty">
-            <Upload size={22} className="pdf-empty-icon" />
-            <span className="pdf-empty-text">请上传设计稿</span>
-            <span className="pdf-empty-hint">进入详情可上传</span>
+        thumb ? (
+          <img src={thumb} loading="lazy" data-thumb-state="ready" alt="PDF 预览（单击放大，双击编辑）" ref={setHost} style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, cursor: pdfUrl ? 'pointer' : 'default' }} {...interactiveProps} />
+        ) : pdfFailed ? (
+          /* 文件缺失/解析失败：优雅降级为文件占位（无点击交互，不刷 console） */
+          <div className="pdf-empty" data-thumb-state="failed" title="设计稿文件不可用（服务器缺失或解析失败），可在详情重新上传" ref={setHost}>
+            <FileText size={22} className="pdf-empty-icon" />
+            <span className="pdf-empty-text">设计稿缺失</span>
+            <span className="pdf-empty-hint">文件不可用，可重新上传</span>
           </div>
+        ) : !inView ? (
+          /* 未进入视口：轻占位（复用既有 .pdf-empty 样式，无额外视觉噪音） */
+          <div className="pdf-empty" data-thumb-state="idle" aria-hidden="true" ref={setHost} />
+        ) : (
+          /* 已进入视口、排队/渲染中 */
+          <div className="pdf-loading" data-thumb-state="loading" ref={setHost}>渲染中…</div>
         )
       ) : isVectorThumb ? (
         thumbFailed ? (
@@ -115,6 +156,7 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
         ) : (
           <img
             src={thumbUrl}
+            loading="lazy"
             alt={`${ext.toUpperCase()} 预览（单击放大，双击本地打开）`}
             onError={() => setThumbFailed(true)}
             style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, background: 'var(--bg-elev)', cursor: pdfUrl ? 'pointer' : 'default' }}

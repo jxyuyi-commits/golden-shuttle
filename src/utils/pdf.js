@@ -18,7 +18,14 @@ export const loadPdfJs = async () => {
   return pdfjsLoading;
 };
 
-/** 渲染 PDF 首页为 Data URL（PNG，目标宽度 1200px） */
+/**
+ * 渲染 PDF 首页为 Data URL（PNG，目标宽度 1200px）。
+ *
+ * 失败（含设计稿文件缺失 404 / 解析异常）一律**静默降级**返回 null，不抛错、不刷 console
+ * —— 由调用方（PdfThumb）据此展示占位。U20 收敛既有「MissingPDFException 控制台报错」。
+ * @param {string} pdfUrl 绝对 URL
+ * @returns {Promise<string|null>} 成功返回 Data URL，失败返回 null
+ */
 export const renderPdfThumb = async (pdfUrl) => {
   try {
     const lib = await loadPdfJs();
@@ -35,8 +42,7 @@ export const renderPdfThumb = async (pdfUrl) => {
       viewport: page.getViewport({ scale }),
     }).promise;
     return canvas.toDataURL('image/png');
-  } catch (error) {
-    console.error('Error rendering PDF thumbnail:', error);
+  } catch {
     return null;
   }
 };

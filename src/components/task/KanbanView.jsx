@@ -218,7 +218,7 @@ const KanbanView = ({
                 className={`btn--icon btn--xs ${displayMode === 'kanban' ? 'active-mode' : ''}`}
                 onClick={() => setDisplayMode('kanban')}
                 title="看板视图"
-                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'kanban' ? 'var(--accent)' : 'transparent', color: displayMode === 'kanban' ? 'var(--accent-text)' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
+                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'kanban' ? 'var(--accent-soft)' : 'transparent', color: displayMode === 'kanban' ? 'var(--accent)' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
               >
                 <Layout size={16} />
               </button>
@@ -226,7 +226,7 @@ const KanbanView = ({
                 className={`btn--icon btn--xs ${displayMode === 'list' ? 'active-mode' : ''}`}
                 onClick={() => setDisplayMode('list')}
                 title="列表视图"
-                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'list' ? 'var(--accent)' : 'transparent', color: displayMode === 'list' ? 'var(--accent-text)' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
+                style={{ padding: '6px 12px', borderRadius: 6, background: displayMode === 'list' ? 'var(--accent-soft)' : 'transparent', color: displayMode === 'list' ? 'var(--accent)' : 'var(--text-2)', border: 'none', cursor: 'pointer' }}
               >
                 <FileText size={16} />
               </button>
@@ -379,25 +379,24 @@ const KanbanView = ({
         });
 
         return (
-          <div style={{ flex: 1, overflow: 'auto', padding: '0 32px 32px' }}>
-            <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, tableLayout: 'fixed' }} onClick={() => setActiveDropdown(null)}>
+          <div className="list-view-scroll" style={{ flex: 1, overflow: 'auto', padding: '0 32px 32px' }}>
+            <table className="data-table list-view-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, tableLayout: 'fixed' }} onClick={() => setActiveDropdown(null)}>
               <thead>
                 <tr>
-                  <th style={{ position: 'sticky', top: 0, left: 0, zIndex: 13, background: 'var(--bg-elev)', padding: '14px 10px', textAlign: 'center', fontSize: 13, color: 'var(--text-3)', width: 60, whiteSpace: 'nowrap', borderBottom: '2px solid var(--border)' }}>
+                  <th className="sticky-cell" style={{ position: 'sticky', top: 0, left: 0, zIndex: 13, padding: '14px 10px', textAlign: 'center', fontSize: 13, width: 60, whiteSpace: 'nowrap' }}>
                     序号
                   </th>
                   {stickyCols.map(col => (
                     <th
                       key={col.id}
+                      className={col.isSticky ? 'sticky-cell' : ''}
                       style={{
-                        padding: '14px 20px', textAlign: 'left', fontSize: 13, color: 'var(--text-3)', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap !important',
+                        padding: '14px 20px', textAlign: 'left', fontSize: 13, cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap !important',
                         width: col.width,
                         position: 'sticky',
                         top: 0,
                         left: col.isSticky ? col.left : 'auto',
-                        zIndex: col.isSticky ? 12 : 10,
-                        background: 'var(--bg-elev)',
-                        borderBottom: '2px solid var(--border)'
+                        zIndex: col.isSticky ? 12 : 10
                       }}
                       onClick={() => {
                         const isAsc = sortConfig.key === col.id && sortConfig.direction === 'asc';
@@ -423,27 +422,25 @@ const KanbanView = ({
                     return 0;
                   })
                   .map((task, idx) => (
-                    <tr key={task.id} className="list-row" style={{ borderBottom: '1px solid var(--bg-hover)' }}>
-                      <td style={{ position: 'sticky', left: 0, zIndex: 11, background: 'var(--bg-elev)', borderRight: '1px solid var(--border-weak)', textAlign: 'center', fontSize: 13, color: 'var(--text-2)', padding: '10px' }}>
+                    <tr key={task.id} className="list-row">
+                      <td className="sticky-cell" style={{ position: 'sticky', left: 0, zIndex: 11, textAlign: 'center', fontSize: 13, padding: '10px' }}>
                         {idx + 1}
                       </td>
                       {stickyCols.map(col => (
-                        <td key={col.id} style={{
-                          padding: '16px 20px', fontSize: 13, color: 'var(--text-2)',
+                        <td key={col.id} className={col.isSticky ? 'sticky-cell' : ''} style={{
+                          padding: '16px 20px', fontSize: 13,
                           whiteSpace: 'nowrap !important',
                           overflow: 'hidden', textOverflow: 'ellipsis',
                           position: col.isSticky ? 'sticky' : 'static',
                           left: col.isSticky ? col.left : 'auto',
-                          zIndex: col.isSticky ? 10 : 1,
-                          background: col.isSticky ? 'var(--bg-elev)' : 'transparent',
-                          borderRight: col.isSticky ? '1px solid var(--border-weak)' : 'none'
+                          zIndex: col.isSticky ? 10 : 1
                         }}>
                           {col.id === 'image' ? (
                             <div style={{ width: 80, height: 110, borderRadius: 6, overflow: 'hidden', background: 'var(--bg-elev-2)' }}>
                               <PdfThumb pdfUrl={task.pdf_url} objectFit="contain" />
                             </div>
                           ) : col.id === 'action' ? (
-                            <button className="btn--primary btn--sm" style={{ padding: '6px 16px' }} onClick={(e) => { e.stopPropagation(); onTaskClick(task); }}>详情</button>
+                            <button className="btn--ghost btn--sm" style={{ padding: '6px 16px' }} onClick={(e) => { e.stopPropagation(); onTaskClick(task); }}>详情</button>
                           ) : col.id === 'priority' ? (
                             <span className={`prio-${taskTopPriority(task) === 'S' ? 'high' : taskTopPriority(task) === 'A' ? 'mid' : 'low'}`} style={{ fontSize: 11, fontWeight: 700 }}>
                               {taskTopPriority(task)}

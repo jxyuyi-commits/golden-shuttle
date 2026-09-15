@@ -107,7 +107,7 @@ const MeasurementTemplateManager = ({ categories = [], onCategoriesChange }) => 
             <div className="active-cat-badge">{activeCat || '未选择'}</div>
             <span className="header-title">部位预设明细</span>
           </div>
-          <button className="btn--primary btn--sm" disabled={!activeCat} onClick={() => setEditing({ name: '', method: '', tolerance: '', grading_rule: '', sort_order: 0 })}>
+          <button className="btn--dashed-add" disabled={!activeCat} onClick={() => setEditing({ name: '', method: '', tolerance: '', grading_rule: '', sort_order: 0 })}>
             <Plus size={14} /> 新增部位
           </button>
         </div>

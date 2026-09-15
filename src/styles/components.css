@@ -14,9 +14,9 @@
   cursor: pointer;
 }
 .task-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-  border-color: var(--accent-blue);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow); /* 批9 D4：hover 才浮起（原上移+黑阴影+金边） */
+  /* border/transform 旧值移除：无上移、无金边 */
 }
 .card-title { font-weight: 700; color: var(--text); margin-bottom: 4px; }
 .card-meta { font-size: 12px; color: var(--text-3); }
@@ -31,7 +31,7 @@
 
 /* 部位管理增强布局 */
 .template-manager { display: flex; min-height: 500px; gap: 0; border: 1px solid var(--border-weak); border-radius: 12px; overflow: hidden; }
-.template-sidebar { width: 200px; background: var(--bg-panel); border-right: 1px solid var(--border); padding: 16px; display: flex; flex-direction: column; }
+.template-sidebar { width: 200px; background: var(--bg-elev); border-right: 1px solid var(--border); padding: 16px; display: flex; flex-direction: column; }
 .template-main { flex: 1; padding: 24px; background: var(--bg-elev-2); overflow-y: auto; }
 .template-item { padding: 12px 16px; border-radius: 8px; margin-bottom: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; color: var(--text-2); }
 .template-item:hover { background: var(--bg-hover); color: var(--text); }
@@ -46,9 +46,9 @@
 .cat-item:hover .del-btn { opacity: 1; }
 .content-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-weak); font-size: 14px; font-weight: 600; color: var(--text); }
 .tpl-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.tpl-table th { padding: 10px 16px; text-align: left; font-size: 12px; color: var(--text-3); font-weight: 600; border-bottom: 1px solid var(--border-weak); position: sticky; top: 0; background: var(--bg-elev); }
+.tpl-table th { padding: 10px 16px; text-align: left; font-size: 12px; color: var(--text-3); font-weight: 600; border-bottom: 1px solid var(--border-weak); position: sticky; top: 0; background: var(--bg-elev-2); /* 批9 D1：表头亮一档 */ }
 .tpl-table td { padding: 8px 16px; border-bottom: 1px solid var(--border-weak); color: var(--text-2); }
-.tpl-table tr:hover td { background: var(--bg-panel); }
+.tpl-table tr:hover td { background: var(--bg-hover); /* 批9：行 hover 中性弱底（原误用 bg-panel） */ }
 .row-ops { display: flex; gap: 6px; }
 .row-ops button { background: var(--bg-hover); border: none; border-radius: 6px; color: var(--text-2); cursor: pointer; padding: 5px 8px; transition: 0.15s; }
 .row-ops button:hover { background: var(--bg-hover-2); color: var(--text); }
@@ -72,7 +72,7 @@
 
 
 /* ============ Bento Box（便当盒）排版系统 ============ */
-.bento-box { border: 1px solid var(--border-strong); border-radius: 6px; background: var(--card-bg); }
+.bento-box { border: 1px solid var(--border-weak); border-radius: 6px; background: var(--bg-elev-2); /* 批9：卡内框统一 elev-2 实色（原 card-bg 半透明） */ }
 .bento-upper { display: flex; gap: 12px; align-items: stretch; /* 让右侧自动对齐左侧高度 */ }
 .bento-left { padding: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 /* 强制锁死 A4 黄金尺寸 140x198，无论父级如何拉伸 */
@@ -88,7 +88,7 @@
   position: static;
 }
 /* 缺稿占位（空设计稿）：图标 + 提示垂直居中，柔和配色 */
-.bento-img-wrap .pdf-empty { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: var(--bg-panel); color: var(--text-3); box-sizing: border-box; }
+.bento-img-wrap .pdf-empty { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: transparent; /* 批9：透出 wrap 的 bg-elev-2 */ color: var(--text-3); box-sizing: border-box; }
 .bento-img-wrap .pdf-empty .pdf-empty-icon { color: var(--text-4); opacity: 0.9; }
 .bento-img-wrap .pdf-empty .pdf-empty-text { font-size: 11px; letter-spacing: 0.5px; color: var(--text-3); }
 .bento-img-wrap .pdf-empty .pdf-empty-hint { font-size: 10px; color: var(--text-4); opacity: 0.7; }
@@ -96,7 +96,7 @@
    资料库选择器）此前只有卡片内覆盖，落到这些容器里退化为裸文本块（不铺满、不居中）。
    此处补齐「铺满容器 + 居中 + 统一观感」；卡片内 .bento-img-wrap .pdf-empty 保留其专属覆盖
    （上方规则体一字未改，特异性更高仍稳胜 → 卡片视觉零变化）。 */
-.pdf-empty { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: var(--bg-panel); color: var(--text-3); box-sizing: border-box; }
+.pdf-empty { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: var(--bg-elev-2); /* 批9：缩略图空位 = elev-2（原 bg-panel） */ color: var(--text-3); box-sizing: border-box; }
 .pdf-empty .pdf-empty-icon { color: var(--text-4); opacity: 0.9; }
 .pdf-empty .pdf-empty-text { font-size: 11px; letter-spacing: 0.5px; color: var(--text-3); }
 .pdf-empty .pdf-empty-hint { font-size: 10px; color: var(--text-4); opacity: 0.7; }
@@ -142,12 +142,12 @@ em.audit-wait { color: var(--text-2); }
 /* 号型规格与分类增强样式 */
 .mini-table {width: 100%; border-collapse: collapse; margin-top: 10px; }
 .mini-table th {text-align: left; padding: 10px; font-size: 11px; color: var(--text-4); border-bottom: 1px solid var(--bg-hover); text-transform: uppercase; }
-.mini-table td {padding: 10px; border-bottom: 1px solid var(--bg-panel); font-size: 13px; color: var(--text-2); }
+.mini-table td {padding: 10px; border-bottom: 1px solid var(--border-weak); font-size: 13px; color: var(--text-2); }
 .mini-table tr:hover {background: var(--bg-hover); }
 
 .category-list-wrapper {max-height: 200px; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.category-item-row {display: flex; align-items: center; gap: 10px; background: var(--bg-panel); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-weak); transition: 0.2s; }
-.category-item-row:hover {border-color: var(--accent-soft-2); background: var(--accent-soft); }
+.category-item-row {display: flex; align-items: center; gap: 10px; background: var(--bg-elev-2); /* 批9：列表项 elev-2 实色（原 bg-panel） */ padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-weak); transition: 0.2s; }
+.category-item-row:hover {border-color: var(--border-strong); background: var(--bg-hover); /* 批9：hover 中性（原金底） */ }
 .cat-name {font-size: 14px; font-weight: 600; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cat-group-tag {font-size: 10px; color: var(--accent); background: var(--accent-soft); padding: 2px 6px; border-radius: 4px; font-weight: 600; }
 
@@ -182,12 +182,12 @@ em.audit-wait { color: var(--text-2); }
 .content-v4 {flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; overflow: hidden; }
 .content-header-v4 {display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: var(--bg-elev); }
 .header-info {display: flex; align-items: center; gap: 12px; }
-.active-cat-badge {background: var(--accent); color: var(--accent-text); font-size: 11px; font-weight: 900; padding: 3px 10px; border-radius: 6px; text-transform: uppercase; }
+.active-cat-badge {background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill); border: 1px solid var(--accent-soft-2); /* 批9：金实心块→同色弱底胶囊（选中态规范） */ }
 .header-title {font-size: 16px; font-weight: 800; color: var(--text); }
 
-.tpl-table-wrapper {flex: 1; overflow-y: auto; border-radius: 16px; border: 1px solid var(--bg-hover-2); background: var(--bg-elev); width: 100%; }
+.tpl-table-wrapper {flex: 1; overflow-y: auto; border-radius: 10px; border: none; background: var(--bg-elev); width: 100%; /* 批9：去外框（融入 v4 卡）、圆角16→10 */ }
 .tpl-table-v4 {width: 100%; border-collapse: collapse; table-layout: fixed; }
-.tpl-table-v4 th {position: sticky; top: 0; background: var(--bg-elev); padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; z-index: 10; border-bottom: 1px solid var(--bg-hover); }
+.tpl-table-v4 th {position: sticky; top: 0; background: var(--bg-elev-2); /* 批9 D1：表头亮一档 */ padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; z-index: 10; border-bottom: 1px solid var(--bg-hover); }
 .tpl-table-v4 td {padding: 16px 20px; border-bottom: 1px solid var(--bg-hover); font-size: 14px; color: var(--text-2); }
 .tpl-table-v4 tr:hover {background: var(--bg-hover); }
 /* REQ-037：wrapper 顶部去 padding 后 sticky 表头贴齐滚动区顶缘，首尾 th 圆角补齐容器圆角 */
@@ -225,10 +225,10 @@ em.audit-wait { color: var(--text-2); }
 
 
 /* 任务卡片 */
-.card {padding: 14px; margin-bottom: 16px; cursor: pointer; transition: transform .25s, border-color .25s, box-shadow .25s; }
+.card {padding: 14px; margin-bottom: 16px; cursor: pointer; border-radius: 10px; /* 批9：卡片圆角统一 10 */ transition: transform .25s, border-color .25s, box-shadow .25s; }
 /* 逾期提醒徽章（看板卡片右上角） */
-.bento-overdue-badge {position: absolute; top: 10px; right: 10px; background: var(--color-overdue-soft); color: var(--color-overdue-fg); font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; z-index: 5; box-shadow: 0 4px 12px rgba(239,68,68,0.4); white-space: nowrap; }
-.card:hover {transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 6px 20px rgba(0,0,0,.22); }
+.bento-overdue-badge {position: absolute; top: 10px; right: 10px; background: rgba(244,63,94,0.15); /* 批9：高饱和红块+glow→同色 15% 弱底 */ color: #f43f5e; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: var(--radius-pill); z-index: 5; white-space: nowrap; }
+.card:hover {border-color: var(--border-strong); box-shadow: var(--shadow); /* 批9 D4：hover 才浮起阴影，无上移/金边（静态零阴影） */ }
 .card-header-row {font-size: 11px; color: var(--text-3); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border-weak); font-weight: 600; }
 .card-body-row {display: flex; gap: 12px; }
 .card-img-wrap {width: 108px; height: 108px; flex-shrink: 0; position: relative; border-radius: 10px; overflow: hidden; background: var(--bg-elev-2); }
@@ -251,9 +251,9 @@ em.audit-wait { color: var(--text-2); }
 .toggle-thumb {width: 12px; height: 12px; border-radius: 50%; background: var(--text); position: absolute; top: 2px; left: 2px; transition: 0.3s; }
 .toggle-btn.on .toggle-thumb {left: 18px; }
 
-.table-wrapper {border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background: var(--bg-panel); }
+.table-wrapper {border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--bg-elev); /* 批9：表格容器实色 bg-elev（原 bg-panel 半透明） */ }
 .data-table {width: 100%; border-collapse: collapse; font-size: 13px; background: transparent; }
-.data-table th {background: var(--bg-elev); padding: 14px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.data-table th {background: var(--bg-elev-2); /* 批9 D1：表头亮一档 */ padding: 14px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .data-table td {padding: 10px 14px; border-bottom: 1px solid var(--bg-hover); border-top: 1px solid var(--border-weak); }
 .data-table tr:hover {background: var(--bg-hover); }
 .data-table input, .data-table textarea {width: 100%; background: transparent; border: 1px solid transparent; padding: 8px; color: var(--text-2); border-radius: 6px; transition: none; }
@@ -273,7 +273,7 @@ em.audit-wait { color: var(--text-2); }
    原 !important 恒不透明（含 hover）；去 ! 后行态规则(0,2,1)会翻掉 .sticky-col(0,1,0) → 补同域高特异性规则：
    规则A 选中行冻结列保持 bg-elev；规则B hover 冻结列也保持 bg-elev（REQ-038 同根因：hover 透明会致横向滚动内容穿透） */
 .data-table tr.row-selected td.sticky-col { background-color: var(--bg-elev); }
-.data-table tr:hover td.sticky-col { background-color: var(--bg-elev); }
+.data-table tr:hover td.sticky-col { background-color: var(--bg-elev-2); /* 批9：hover 提亮且保持不透明，防横向滚动穿透（半透明 --bg-hover 会穿透） */ }
 
 /* 表格内 SmartSelect：常态透明（与表格零底衬规章一致）、打开时显示输入底 */
 .data-table .tbl-ss .ss-display {background: transparent; border: 1px solid transparent; padding: 6px 24px 6px 6px; min-height: 0; font-size: 13px; color: var(--text-2); }
@@ -298,15 +298,15 @@ em.audit-wait { color: var(--text-2); }
 .side-nav-item.active {background: var(--accent-soft); color: var(--accent); border-right: 2px solid var(--accent); }
 .modal-main {flex: 1; padding: 24px; overflow-y: auto; background: var(--bg-elev-2); }
 .template-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
-.template-card {background: var(--bg-panel); border: 1px solid var(--bg-hover-2); padding: 16px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; gap: 8px; }
-.template-card:hover {border-color: var(--accent-soft-2); transform: translateY(-2px); background: var(--accent-soft); }
+.template-card {background: var(--bg-elev); /* 批9：实色卡片（原 bg-panel） */ border: 1px solid var(--border); padding: 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; gap: 8px; }
+.template-card:hover {border-color: var(--border-strong); background: var(--bg-hover); /* 批9：hover 中性浮起（原金底+上移） */ }
 .template-card.selected {border-color: var(--accent); background: var(--accent-soft); }
 .tcard-name {font-weight: 700; color: var(--text); font-size: 15px; }
 .tcard-meta {font-size: 11px; color: var(--text-3); }
 .modal-footer {padding: 20px 32px; border-top: 1px solid var(--bg-hover-2); display: flex; justify-content: space-between; align-items: center; }
 
 /* 详情页表单与面包屑 */
-.form-panel {padding: 40px; border-radius: 24px; }
+.form-panel {padding: 40px; border-radius: 12px; /* 批9：圆角24→12，与面板体系统一 */ }
 .section-title {font-size: 17px; font-weight: 900; letter-spacing: -0.2px; margin-bottom: 24px; }
 .detail-breadcrumb {display: flex; align-items: center; gap: 20px; }
 .bc-title {font-size: 20px; font-weight: 900; }
@@ -416,19 +416,19 @@ em.audit-wait { color: var(--text-2); }
 /* §2：.btn-icon idx:281/app:355 → 取 app:355 */
 
 
-/* 列表视图行悬停（§3(b)：去 !important，靠源序与 app:655 收敛） */
-.list-row:hover {background: transparent; cursor: pointer; }
+/* 列表视图行悬停（批9：对齐参考 Data Grid——行 hover 中性弱底；冻结列不透明规则见 .list-view-table） */
+.list-row:hover {background: var(--bg-hover); cursor: pointer; }
 
 /* 图纸资料 */
-.drawing-card {background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: border-color .2s, box-shadow .2s; }
-.drawing-card:hover {border-color: rgba(167,139,250,0.4); box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+.drawing-card {background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color .2s, box-shadow .2s; }
+.drawing-card:hover {border-color: var(--border-strong); box-shadow: var(--shadow); /* 批9 D4：hover 才浮起（原紫边+常驻黑阴影），紫色仅留给文件类型徽标 */ }
 .drawing-thumb {position: relative; height: 180px; background: var(--bg-elev); }
 .drawing-thumb img {width: 100%; height: 100%; object-fit: contain; }
 .drawing-badge {position: absolute; top: 8px; left: 8px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; border: 1px solid; }
 /* 分类徽章 + 版本徽章：左上角 flex 并排 */
 .drawing-badges {position: absolute; top: 8px; left: 8px; display: flex; gap: 6px; align-items: center; z-index: 2; }
 .drawing-cat-sel {font-size: 11px; font-weight: 700; border-radius: 20px; }
-.drawing-cat-sel .ss-display {border-radius: 20px; font-size: 11px; font-weight: 700; padding: 3px 24px 3px 10px; min-height: 0; background: color-mix(in srgb, var(--cat-color) 13%, transparent); color: var(--cat-color); border: 1px solid color-mix(in srgb, var(--cat-color) 27%, transparent); }
+.drawing-cat-sel .ss-display {border-radius: 20px; font-size: 11px; font-weight: 700; padding: 3px 24px 3px 10px; min-height: 0; background: var(--bg-hover-2); /* 批9：原 color-mix(in srgb,var(--cat-color) 13%) 旧内核不支持会整条失效，改中性弱底 */ color: var(--cat-color); border: 1px solid transparent; }
 .drawing-cat-sel .ss-display:hover, .drawing-cat-sel.open .ss-display {border-color: var(--cat-color); }
 /* 文件类型标签（PNG/PDF/DXF/EMF/PRJ 等），按大类配色 */
 .drawing-type-badge {font-size: 11px; font-weight: 800; letter-spacing: 0.5px; padding: 3px 7px; border-radius: 6px; border: 1px solid; white-space: nowrap; }
@@ -436,7 +436,7 @@ em.audit-wait { color: var(--text-2); }
 .drawing-ver-badge {font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; border: 1px solid; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; outline: none; }
 .drawing-ver-badge:hover {border-color: var(--border-strong); filter: brightness(1.2); }
 /* 版本历史弹窗 */
-.drawing-ver-row {display: flex; gap: 12px; align-items: center; border: 1px solid var(--bg-hover-2); border-radius: 12px; padding: 10px; background: var(--bg-panel); }
+.drawing-ver-row {display: flex; gap: 12px; align-items: center; border: 1px solid var(--border-weak); border-radius: 10px; padding: 10px; background: var(--bg-elev-2); /* 批9：列表项 elev-2 实色（原 bg-panel） */ }
 .drawing-ver-row .ver-thumb {width: 84px; height: 64px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--bg-elev); }
 .drawing-ver-row .ver-thumb img {width: 100%; height: 100%; object-fit: cover; }
 .drawing-ver-row .ver-info {flex: 1; min-width: 0; }
@@ -459,11 +459,11 @@ em.audit-wait { color: var(--text-2); }
 .drawing-dropzone .dz-btn:hover {background: rgba(167,139,250,0.22); }
 /* 待上传文件列表 */
 .drawing-uplist {margin-top: 14px; display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow: auto; }
-.drawing-uplist-row {display: flex; align-items: center; gap: 8px; background: var(--bg-panel); border: 1px solid var(--bg-hover-2); border-radius: 8px; padding: 6px 10px; }
+.drawing-uplist-row {display: flex; align-items: center; gap: 8px; background: var(--bg-elev-2); /* 批9：列表项 elev-2（原 bg-panel） */ border: 1px solid var(--border-weak); border-radius: 6px; padding: 6px 10px; }
 .drawing-uplist-row .uplist-name {flex: 1; font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .drawing-uplist-row .uplist-size {font-size: 11px; color: var(--text-3); white-space: nowrap; }
 /* 通用专业文件占位（dxf/pla/prj 等） */
-.generic-file {display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: rgba(10,10,11,0.55); }
+.generic-file {display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: var(--bg-elev-2); /* 批9：硬编码 rgba(10,10,11,.55)→实色 elev-2，三主题统一 */ }
 .generic-file .generic-ext {font-size: 15px; font-weight: 900; color: #a78bfa; letter-spacing: 1px; }
 .generic-file .generic-hint {display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-3); }
 /* DXF 内联 SVG 放大预览 */
@@ -476,7 +476,7 @@ em.audit-wait { color: var(--text-2); }
 .run-list { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
 .run-card {
   border: 1px solid var(--border); border-radius: 10px;
-  padding: 12px 14px; background: var(--bg-panel);
+  padding: 12px 14px; background: var(--bg-elev); /* 批9：批次卡实色 bg-elev（原 bg-panel） */
 }
 .run-card[data-blocked="1"] { border-color: rgba(248,113,113,0.5); background: rgba(248,113,113,0.05); }
 .run-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
@@ -522,8 +522,8 @@ em.audit-wait { color: var(--text-2); }
 .dash-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
 .dash-stat-card {
   display: flex; align-items: center; gap: 14px; padding: 18px 20px;
-  background: var(--bg-panel); border: 1px solid var(--border-weak);
-  border-radius: 12px;
+  background: var(--bg-elev); /* 批9：KPI 卡实色 bg-elev（原 bg-panel） */ border: 1px solid var(--border);
+  border-radius: 10px;
   cursor: pointer; user-select: none;
   transition: border-color .15s, background .15s, box-shadow .15s;
 }
@@ -539,24 +539,24 @@ em.audit-wait { color: var(--text-2); }
 .dash-stat-label { font-size: 12px; color: var(--text-2); margin-top: 2px; }
 .dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 900px) { .dash-two-col { grid-template-columns: 1fr; } }
-.dash-panel { padding: 18px 20px; border-radius: 12px; }
+.dash-panel { padding: 18px 20px; border-radius: 10px; /* 批9：卡片圆角统一 10 */ }
 .dash-panel-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
 .dash-bar-row { display: grid; grid-template-columns: 90px 1fr 80px; align-items: center; gap: 10px; margin-bottom: 10px; }
 .dash-bar-row.clickable { cursor: pointer; padding: 4px 6px; margin-left: -6px; margin-right: -6px; border-radius: 8px; transition: background .15s; }
-.dash-bar-row.clickable:hover { background: var(--accent-soft); }
+.dash-bar-row.clickable:hover { background: var(--bg-hover); /* 批9：行 hover 中性（原金弱底），选中态保留金 */ }
 .dash-bar-row.clickable.active { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent-soft-2); }
 .dash-bar-row.clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .dash-bar-label { font-size: 12.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dash-bar-track { height: 18px; background: var(--bg-hover); border-radius: 4px; overflow: hidden; }
+.dash-bar-track { height: 18px; background: var(--bg-elev-2); /* 批9：轨道 elev-2（原 bg-hover），对齐参考无框 grid */ border-radius: 4px; overflow: hidden; }
 .dash-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
 .dash-bar-val { font-size: 12px; color: var(--text); text-align: right; }
 .dash-table-wrap { overflow-x: auto; }
 .dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.dash-table th { text-align: left; padding: 10px 12px; color: var(--text-2); font-weight: 500; font-size: 12px; border-bottom: 1px solid var(--border); }
+.dash-table th { text-align: left; padding: 10px 12px; color: var(--text-3); /* 批9 D1：表头 elev-2 弱底+三级文字 */ font-weight: 500; font-size: 12px; background: var(--bg-elev-2); border-bottom: 1px solid var(--border); }
 .dash-table td { padding: 11px 12px; border-bottom: 1px solid var(--border-weak); color: var(--text-2); }
 .dash-table-row { cursor: pointer; transition: background 0.15s; }
-.dash-table-row:hover { background: var(--accent-soft); }
-.dash-status-pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; border: 1px solid; }
+.dash-table-row:hover { background: var(--bg-hover); /* 批9：行 hover 中性（原金弱底） */ }
+.dash-status-pill { display: inline-block; padding: 2px 10px; border-radius: var(--radius-pill); font-size: 11.5px; font-weight: 600; border: 1px solid; /* 批9：胶囊 999 */ }
 
 /* ── 批次绑定资料版本 ── */
 .run-linked-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-weak); }
@@ -565,7 +565,7 @@ em.audit-wait { color: var(--text-2); }
 .run-linked-tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; background: var(--accent-soft); border: 1px solid var(--accent-soft-2); border-radius: 6px; font-size: 11.5px; color: var(--text); }
 .run-linked-tag button { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 0; display: flex; }
 .run-linked-tag button:hover { color: #f87171; }
-.run-linked-picker { margin-top: 10px; padding: 10px 12px; background: rgba(10,10,11,0.5); border-radius: 8px; max-height: 240px; overflow-y: auto; }
+.run-linked-picker { margin-top: 10px; padding: 10px 12px; background: var(--bg-elev-2); /* 批9：硬编码 rgba(10,10,11,.5)→实色 elev-2 */ border-radius: 8px; max-height: 240px; overflow-y: auto; }
 .run-linked-group { margin-bottom: 10px; }
 .run-linked-group:last-child { margin-bottom: 0; }
 .run-linked-group-title { font-size: 12px; color: var(--text-2); margin-bottom: 5px; font-weight: 600; }
@@ -611,7 +611,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .dp-input.open { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 .dp-icon { color: var(--text-3); flex: none; }
 .dp-placeholder { color: var(--text-3); }
-.dp-cal { position: absolute; top: calc(100% + 6px); left: 0; z-index: 1500; width: 288px; padding: 14px; border-radius: 12px; box-shadow: 0 20px 40px -12px rgba(0,0,0,.6); }
+.dp-cal { position: absolute; top: calc(100% + 6px); left: 0; z-index: 1500; width: 288px; padding: 14px; border-radius: 12px; background: var(--bg-elev-2); /* 批9：日历浮层与下拉同档（原吃 .glass 的 elev） */ box-shadow: 0 20px 40px -12px rgba(0,0,0,.6); }
 .dp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .dp-title { font-size: 14px; font-weight: 800; color: var(--text); }
 .dp-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 6px; }
@@ -630,7 +630,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .version-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .version-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; }
 .version-item { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 12px 40px 12px 14px; border: 1px solid var(--border-weak); border-radius: 10px; cursor: pointer; transition: all 0.15s; }
-.version-item:hover { border-color: var(--accent-soft-2); background: var(--accent-soft); }
+.version-item:hover { border-color: var(--border-strong); background: var(--bg-hover); /* 批9：hover 中性（原金底）；.latest 当前版金弱底保留 */ }
 .version-item.latest { border-color: var(--accent-soft-2); background: var(--accent-soft); }
 .version-item-head { display: flex; align-items: center; gap: 10px; }
 .version-no { font-weight: 800; color: var(--accent); font-size: 14px; }
@@ -660,7 +660,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
 
 /* REQ-010 外观主题选择器 */
-.theme-option {display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 16px; min-width: 140px; border-radius: var(--radius-lg); background: var(--bg-panel); border: 1px solid var(--border); color: var(--text); cursor: pointer; transition: 0.2s; font-family: inherit; text-align: left; }
+.theme-option {display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 16px; min-width: 140px; border-radius: var(--radius-lg); background: var(--bg-elev-2); /* 批9：选项卡 elev-2 实色（原 bg-panel） */ border: 1px solid var(--border); color: var(--text); cursor: pointer; transition: 0.2s; font-family: inherit; text-align: left; }
 .theme-option:hover {background: var(--bg-hover-2); }
 .theme-option[data-active="1"] {border-color: var(--accent); background: var(--accent-soft); }
 .theme-option-title {font-size: var(--fs-lg); font-weight: 700; }
@@ -705,8 +705,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
    ========================================================================== */
 
 /* —— A. 整块未迁移：系统设置页（紧凑卡/标签/人员预设）app.css:290-322 —— */
-.setting-card-compact {padding: 18px; display: flex; flex-direction: column; gap: 12px; transition: transform 0.2s; }
-.setting-card-compact:hover {transform: translateY(-2px); border-color: var(--accent-soft-2); }
+.setting-card-compact {padding: 18px; display: flex; flex-direction: column; gap: 12px; transition: border-color 0.2s, box-shadow 0.2s; }
+.setting-card-compact:hover {border-color: var(--border-strong); box-shadow: var(--shadow); /* 批9 D4：hover 才浮起，去上移/金边 */ }
 .card-mini-head {display: flex; justify-content: space-between; align-items: center; }
 .card-mini-title {font-size: 13px; font-weight: 800; color: var(--text-3); letter-spacing: 0.5px; }
 .card-mini-count {font-size: 10px; font-weight: 900; background: var(--border-weak); color: var(--text-4); padding: 2px 8px; border-radius: 10px; }
@@ -718,18 +718,18 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .add-row-mini input:focus {border-color: var(--accent); }
 .btn-add-mini {background: var(--accent-btn); color: var(--accent-btn-text); border: none; border-radius: 6px; padding: 0 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .people-list {display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; margin-bottom: 6px; }
-.people-row {display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; background: var(--bg-panel); }
+.people-row {display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; background: var(--bg-elev-2); /* 批9：列表项 elev-2（原 bg-panel） */ }
 .people-name {font-size: 12.5px; font-weight: 700; color: var(--text); min-width: 76px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; padding: 1px 4px; margin-left: -4px; border-radius: 5px; }
 .people-name:hover {background: var(--bg-hover); color: var(--accent); }
 .people-name-pen {opacity: 0; transition: opacity 0.15s; }
 .people-row:hover .people-name-pen {opacity: 0.6; }
 .people-name-input {width: 84px; background: var(--input-bg); border: 1px solid var(--accent); color: var(--text); border-radius: 6px; padding: 2px 6px; font-size: 12px; font-weight: 700; outline: none; }
 .people-roles {display: flex; flex-wrap: wrap; gap: 4px; align-items: center; flex: 1; }
-.people-role-input {width: 84px; background: var(--overlay); border: 1px solid var(--accent); color: var(--text); border-radius: 6px; padding: 2px 6px; font-size: 11px; outline: none; }
+.people-role-input {width: 84px; background: var(--input-bg); /* 批9：原 --overlay 深色遮罩，三主题不统一 */ border: 1px solid var(--accent); color: var(--text); border-radius: 6px; padding: 2px 6px; font-size: 11px; outline: none; }
 .people-suggest {display: inline-flex; gap: 3px; }
 
 /* —— B. 规则在、属性被漏并：并回败者独有属性（取值照旧） —— */
-.template-manager-v4 {background: var(--bg-panel); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-top: 16px; }
+.template-manager-v4 {background: var(--bg-elev); /* 批9：037 大容器实色 bg-elev（原 bg-panel 半透明补丁根因） */ border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-top: 16px; }
 .cat-item {margin-bottom: 2px; font-size: 13px; color: var(--text-2); position: relative; gap: 6px; }
 .tcard-meta {margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sidebar-v4 {border-right: 1px solid var(--border); background: var(--bg-elev); min-width: 180px; }
@@ -738,7 +738,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .sidebar-list {padding: 8px; padding-right: 4px; }
 .data-table input {font-size: 13px; outline: none; }
 .modal-content {max-height: 85vh; border-radius: 20px; }
-.modal-sidebar {background: var(--bg-panel); min-width: 140px; }
+.modal-sidebar {background: var(--bg-elev); /* 批9：弹窗内侧栏实色 elev（原 bg-panel），与主区 elev-2 分层 */ min-width: 140px; }
 .cat-item.active {color: var(--accent); font-weight: 600; }
 /* 简写获胜：既有 overflow:hidden（app:152）仍应胜出，故 overflow 写在 overflow-x 之后 */
 .table-wrapper {overflow-x: auto; overflow: hidden; }
@@ -787,7 +787,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .bento-right-col { gap: 10px; }
 
 /* 主信息层（常驻）：款名 + 优先级/状态/类别/版次/审核 元信息行 */
-.bento-primary { padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--card-bg); }
+.bento-primary { padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; border: 1px solid var(--border-weak); border-radius: 6px; background: var(--bg-elev-2); /* 批9：卡内框 elev-2 实色（原 card-bg 半透明+strong 边） */ }
 .bento-meta-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; font-size: 11px; color: var(--text-2); line-height: 1.2; }
 .bento-meta-line em { font-style: normal; font-weight: 800; }
 .bento-status { display: inline-flex; align-items: center; gap: 4px; color: var(--text-2); }
@@ -795,7 +795,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .bento-chipline { font-size: 10.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* 进度节点行：由独立整行改为右栏内一行（收紧内边距 + 便当盒边框） */
-.bento-nodes { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--card-bg); }
+.bento-nodes { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border: 1px solid var(--border-weak); border-radius: 6px; background: var(--bg-elev-2); /* 批9：卡内框 elev-2 实色 */ }
 
 /* 次级详情层（按需呈现）：hover / 键盘聚焦浮出，不参与布局；0.25s 延迟防扫过误触 */
 .bento-detail { position: absolute; inset: 0; z-index: 6; padding: 12px 14px; border-radius: inherit; background: var(--bg-elev-2); display: flex; flex-direction: column; gap: 6px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .16s ease, visibility .16s ease; overflow: hidden; }
@@ -838,4 +838,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 }
 @media (max-width: 1200px) { .bento-style-no { font-size: 20px; } }
 @media (max-width: 1024px) { .bento-style-no { font-size: 18px; } }
+
+/* ==========================================================================
+   批9（2026-09-16）REQ-038 看板列表视图：表格收进实色卡片容器，根治冻结列「补丁/黑边」
+   - 原结构：表格直接铺在页面底（custom 还有径向渐变）上，冻结列内联实色与透明区形成色差边缘；
+   - 现结构：滚动容器即 bg-elev 卡片；表头统一 bg-elev-2（D1）；冻结列静态与卡同色、
+     hover 用不透明 bg-elev-2（半透明 --bg-hover 会在 sticky 单元格下穿透滚动内容）。
+   - 视觉属性全部从 JSX 内联抽到本类（布局属性 position/left/z-index/宽度仍留内联）。
+   ========================================================================== */
+.list-view-scroll { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 10px; margin-top: 16px; }
+.list-view-table th { background: var(--bg-elev-2); color: var(--text-3); font-weight: 600; border-bottom: 1px solid var(--border); }
+.list-view-table td { color: var(--text-2); } /* 行底线沿用 .data-table td（border-weak/bg-hover），不重复声明 */
+.list-view-table .sticky-cell { background: var(--bg-elev); border-right: 1px solid var(--border-weak); }
+.list-view-table th.sticky-cell { background: var(--bg-elev-2); }
+.list-view-table tr:hover td { background: var(--bg-hover); }
+.list-view-table tr:hover td.sticky-cell { background: var(--bg-elev-2); /* 不透明提亮，防穿透 */ }
 

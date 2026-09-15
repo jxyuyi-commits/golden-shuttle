@@ -44,7 +44,7 @@
 /* 兼容旧别名变量（原 src/index.css 顶部 :root 块，原样保留以维持其原加载序） */
 :root {
   --bg-color: var(--bg-elev);
-  --glass-bg: rgba(22, 23, 25, 0.75);
+  --glass-bg: var(--bg-elev); /* 批9：旧别名原为 rgba(22,23,25,.75) 半透明，源序晚于 theme.css 会覆盖三主题 token；改为跟随实色 elev，根治浮层/卡片穿透 */
   --accent-blue: var(--accent);
   --accent-purple: #818cf8;
   --text-primary: var(--text);
@@ -79,9 +79,11 @@ input[type="number"], .tl-date, .bento-style-no, .bento-order-no, .run-order-no 
 .app { height: 100vh; display: flex; flex-direction: column; background: var(--app-bg); color: var(--text); overflow-x: auto; overflow-y: hidden; min-width: 1024px; }
 
 /* 玻璃层 */
-.glass {background: var(--glass-bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); }
-.glass-inner {background: var(--bg-panel); border: 1px solid var(--border-weak); border-radius: 12px; }
-.glass-card {background: var(--glass-bg); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); }
+.glass {background: var(--glass-bg); border: 1px solid var(--border); border-radius: 12px; } /* 批9：去常驻阴影、圆角20→12；浮层阴影见 .overlay .glass */
+.glass-inner {background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: 10px; } /* 批9：半透明弱底→实色 elev-2（卡内卡/列表区） */
+.glass-card {background: var(--glass-bg); border: 1px solid var(--border); border-radius: 10px; } /* 批9：去常驻阴影、圆角16→10 */
+/* 批9：弹窗浮层（Modal 遮罩内）保留浮起阴影与页面分离；普通面板 .glass 静态零阴影 */
+.overlay .glass, .modal.glass, .confirm-modal.glass { box-shadow: var(--shadow); }
 
 /* 滚动条优化 */
 .custom-scrollbar::-webkit-scrollbar {width: 6px; height: 6px; }

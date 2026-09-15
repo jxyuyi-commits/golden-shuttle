@@ -11,8 +11,8 @@
   --bg: #0e0f11;
   --bg-elev: #161719;
   --bg-elev-2: #1e2023;
-  --glass-bg: rgba(22, 23, 25, 0.75);
-  --glass-bg-strong: rgba(22, 23, 25, 0.88);
+  --glass-bg: #161719; /* 批9 实色化（原 rgba .75 半透明，叠加出补丁色），= --bg-elev */
+  --glass-bg-strong: #1e2023; /* 批9 实色化，= --bg-elev-2 */
   --bg-panel: rgba(255, 255, 255, 0.025);
   --bg-hover: rgba(255, 255, 255, 0.04);
   --bg-hover-2: rgba(255, 255, 255, 0.07);
@@ -34,8 +34,8 @@
   --overlay: rgba(10, 10, 11, 0.65);
   --overlay-strong: rgba(10, 10, 11, 0.88);
   --scroll-thumb: rgba(160, 150, 140, 0.2);
-  --shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
-  --card-bg: rgba(22, 23, 25, 0.75);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.30); /* 批9 对齐参考：仅 hover 浮起，静态零阴影 */
+  --card-bg: #161719; /* 批9 实色化（原 rgba .75 半透明），= --bg-elev */
   --board-col-w: 600px; /* U7·S3 .col 单源：看板分栏统一宽度（改宽度只动此处） */
   /* U8 语义状态色令牌：替代 JSX/CSS 内硬编码 hex（成功/危险/警告/信息/逾期 + 版次批次状态色） */
   --color-success: #34d399;
@@ -88,7 +88,7 @@
   --fs-sm: 12px;
   --fs-md: 13px;
   --fs-lg: 14px;
-  --app-bg: radial-gradient(circle at 22% 0%, rgba(200,169,110,0.10), transparent 52%), radial-gradient(circle at 78% 100%, rgba(200,169,110,0.06), transparent 55%), var(--bg);
+  --app-bg: var(--bg); /* 批9 D2：去金色径向渐变，纯页面底色，干净专业（dark/light 本就如此） */
   color-scheme: dark;
 }
 
@@ -98,8 +98,8 @@
   --bg: Canvas;
   --bg-elev: Canvas;
   --bg-elev-2: #232327;
-  --glass-bg: rgba(31, 31, 35, 0.8);
-  --glass-bg-strong: rgba(31, 31, 35, 0.92);
+  --glass-bg: #1f1f23; /* 批9 实色化（原 rgba .8），= --card-bg */
+  --glass-bg-strong: #232327; /* 批9 实色化，= --bg-elev-2 */
   --bg-panel: rgba(255, 255, 255, 0.06);
   --bg-hover: rgba(255, 255, 255, 0.08);
   --bg-hover-2: rgba(255, 255, 255, 0.1);
@@ -151,8 +151,8 @@
   --bg: Canvas;
   --bg-elev: Canvas;
   --bg-elev-2: #eef0f3;
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-bg-strong: rgba(255, 255, 255, 0.95);
+  --glass-bg: #ffffff; /* 批9 实色化（原 rgba .85），= --card-bg */
+  --glass-bg-strong: #f7f8fa; /* 批9 实色化 */
   --bg-panel: rgba(0, 0, 0, 0.05);
   --bg-hover: rgba(0, 0, 0, 0.06);
   --bg-hover-2: rgba(0, 0, 0, 0.08);

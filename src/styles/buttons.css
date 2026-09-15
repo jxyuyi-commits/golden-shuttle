@@ -20,8 +20,8 @@
 .btn-primary {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--accent-btn); color: var(--accent-btn-text);
-  font-weight: 800; border: none; padding: 10px 22px;
-  border-radius: 10px; cursor: pointer; font-size: 14px;
+  font-weight: 600; border: none; padding: 8px 16px; /* 批9：对齐参考主 CTA（原 800 / 10,22） */
+  border-radius: 6px; cursor: pointer; font-size: 13px; /* 批9：圆角10→6、14px→13px */
   transition: 0.2s;
 }
 .btn--primary:hover, .btn-blue:hover { opacity: 0.9; }
@@ -31,10 +31,10 @@
 .btn--primary.btn--sm,
 .btn-blue-sm {
   background: var(--accent-btn); color: var(--accent-btn-text); border: none;
-  padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700;
+  padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; /* 批9：700→600 */
   cursor: pointer; transition: 0.2s;
 }
-.btn--primary.btn--sm:hover, .btn-blue-sm:hover { transform: scale(1.05); }
+.btn--primary.btn--sm:hover, .btn-blue-sm:hover { opacity: 0.9; /* 批9：去 scale(1.05)，参考无缩放 */ }
 
 .btn--primary.btn--mini,
 .btn-add-mini {
@@ -65,9 +65,9 @@
 /* ============ 基类：描边幽灵 .btn--ghost ============ */
 .btn--ghost,
 .btn-ghost {
-  background: var(--bg-hover); color: var(--text); font-weight: 600;
-  border: 1px solid var(--border); padding: 10px 20px;
-  border-radius: var(--radius-lg); cursor: pointer; font-size: var(--fs-lg);
+  background: var(--input-bg); color: var(--text-2); font-weight: 500; /* 批9：次级钮对齐参考 */
+  border: 1px solid var(--border); padding: 8px 16px; /* 批9：10,20→8,16 */
+  border-radius: 6px; cursor: pointer; font-size: 13px; /* 批9：圆角 lg(12)→6、14→13 */
 }
 
 .btn--ghost.btn--sm,
@@ -130,6 +130,17 @@
 }
 .btn--ghost.btn--block.btn--dashed:hover,
 .btn-upload-pdf:hover { border-color: var(--accent); color: var(--accent); }
+
+/* 批9 D5：次要「新增」虚线幽灵钮（设置页 +新增部位/+添加品牌 等）。
+   对齐参考：透明底 + 1px 中性虚线 + 三级文字，hover 才出金色；不是页面主 CTA，不给实心金。 */
+.btn--dashed-add {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: transparent; border: 1px dashed var(--border-strong);
+  color: var(--text-3); font-size: 12px; font-weight: 600;
+  padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-family: inherit;
+}
+.btn--dashed-add:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btn--dashed-add:disabled { opacity: var(--control-disabled-opacity, 0.55); cursor: var(--control-disabled-cursor, default); }
 
 /* 幽灵危险（原 .btn-del-ghost） */
 .btn--ghost-danger,
@@ -223,11 +234,11 @@
 /* ============ 实心危险 .btn--danger（原 .btn-danger） ============ */
 .btn--danger,
 .btn-danger {
-  background: var(--color-danger-strong); border: none; color: var(--color-danger-fg);
-  padding: 7px 14px; border-radius: var(--radius-md); font-size: var(--fs-md);
+  background: rgba(244,63,94,0.10); border: 1px solid rgba(244,63,94,0.30); color: #f43f5e; /* 批9：实心深红→同色弱底描边红字（参考危险钮规范），三主题可读 */
+  padding: 7px 14px; border-radius: 6px; font-size: var(--fs-md); /* 批9：圆角 md→6 */
   cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;
 }
-.btn--danger:hover, .btn-danger:hover { background: var(--color-danger-deep); }
+.btn--danger:hover, .btn-danger:hover { background: rgba(244,63,94,0.18); /* 批9：弱底悬停加深（原实心 deep） */ }
 /* U16：disabled 态统一走 --control-disabled-* 令牌（theme.css），0.5 → 0.55 单档 */
 .btn--danger:disabled, .btn-danger:disabled { opacity: var(--control-disabled-opacity); cursor: var(--control-disabled-cursor); }
 

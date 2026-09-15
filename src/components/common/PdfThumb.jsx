@@ -133,11 +133,14 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
         thumb ? (
           <img src={thumb} loading="lazy" data-thumb-state="ready" alt="PDF 预览（单击放大，双击编辑）" ref={setHost} style={{ width: '100%', height: '100%', objectFit: objectFit, borderRadius: 8, cursor: pdfUrl ? 'pointer' : 'default' }} {...interactiveProps} />
         ) : pdfFailed ? (
-          /* 文件缺失/解析失败：优雅降级为文件占位（无点击交互，不刷 console） */
-          <div className="pdf-empty" data-thumb-state="failed" title="设计稿文件不可用（服务器缺失或解析失败），可在详情重新上传" ref={setHost}>
+          /* 文件缺失/解析失败：优雅降级为文件占位，不刷 console。
+             U20 修订：占位同样挂 interactiveProps（可点 → 放大层），以符合 AGENTS.md 交互契约——
+             在详情页点击可进入放大层，经「更换设计稿 / 从资料库选」恢复；
+             `interactive={false}` 的选择器场景由 handleInteract 首行早退，不拦截父级选择点击。 */
+          <div className="pdf-empty" data-thumb-state="failed" ref={setHost} {...interactiveProps}>
             <FileText size={22} className="pdf-empty-icon" />
             <span className="pdf-empty-text">设计稿缺失</span>
-            <span className="pdf-empty-hint">文件不可用，可重新上传</span>
+            <span className="pdf-empty-hint">文件不可用，可点击重新上传</span>
           </div>
         ) : !inView ? (
           /* 未进入视口：轻占位（复用既有 .pdf-empty 样式，无额外视觉噪音） */
@@ -196,6 +199,14 @@ const PdfThumb = ({ pdfUrl, objectFit = 'cover', enlargeActionItems, interactive
                 onClick={e => e.stopPropagation()}
                 dangerouslySetInnerHTML={{ __html: svgText }}
               />
+            ) : isPdf && pdfFailed ? (
+              /* U20 修订：设计稿缺失/解析失败——放大层显示缺失占位（不再渲染 src=null 的空图），
+                 底部仍保留 enlargeActionItems 的「更换设计稿 / 从资料库选」入口。 */
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, background: 'var(--bg-elev)', border: '1px solid var(--border-strong)', borderRadius: 14, padding: '48px 56px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+                <FileText size={56} color="var(--text-4)" />
+                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>设计稿缺失</div>
+                <div style={{ fontSize: 13, color: 'var(--text-3)' }}>服务器缺失或解析失败，可用下方入口重新上传 / 从资料库选择</div>
+              </div>
             ) : (
               <img
                 src={previewSrc}

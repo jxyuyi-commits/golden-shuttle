@@ -92,6 +92,14 @@
 .bento-img-wrap .pdf-empty .pdf-empty-icon { color: var(--text-4); opacity: 0.9; }
 .bento-img-wrap .pdf-empty .pdf-empty-text { font-size: 11px; letter-spacing: 0.5px; color: var(--text-3); }
 .bento-img-wrap .pdf-empty .pdf-empty-hint { font-size: 10px; color: var(--text-4); opacity: 0.7; }
+/* U20 修订：`.pdf-empty` 通用基样式——非卡片场景（详情 .pdf-preview-wrap / .drawing-thumb /
+   资料库选择器）此前只有卡片内覆盖，落到这些容器里退化为裸文本块（不铺满、不居中）。
+   此处补齐「铺满容器 + 居中 + 统一观感」；卡片内 .bento-img-wrap .pdf-empty 保留其专属覆盖
+   （上方规则体一字未改，特异性更高仍稳胜 → 卡片视觉零变化）。 */
+.pdf-empty { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: var(--bg-panel); color: var(--text-3); box-sizing: border-box; }
+.pdf-empty .pdf-empty-icon { color: var(--text-4); opacity: 0.9; }
+.pdf-empty .pdf-empty-text { font-size: 11px; letter-spacing: 0.5px; color: var(--text-3); }
+.pdf-empty .pdf-empty-hint { font-size: 10px; color: var(--text-4); opacity: 0.7; }
 .bento-badge { position: absolute; top: 4px; left: 4px; background: rgba(0, 0, 0, 0.65); border-radius: 4px; padding: 2px 6px; color: var(--color-overdue-fg); font-size: 11px; z-index: 10; width: auto; height: auto; line-height: 1.2; }
 .bento-right-col { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 0; }
 .bento-tr { padding: 8px 16px; display: flex; justify-content: flex-end; align-items: center; }

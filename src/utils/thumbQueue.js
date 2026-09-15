@@ -6,8 +6,9 @@
 //
 // 设计要点：
 // - 纯函数式、零依赖，便于单元测试与复用；
-// - `enqueue(fn)` 返回 `{ promise, cancel }`；`cancel()` 在任务**尚未开始**时立即结算
-//   （resolve(null)），避免组件卸载后 Promise 悬挂；**已开始**的任务无法中断（交由
+// - `enqueue(fn)` 返回 `{ promise, cancel }`；`cancel()` 在任务**尚未开始**时：立即结算
+//   （resolve(null)）并**从排队中移除**（U20 修订：避免 `stats().queued` 虚高），再 `pump()`
+//   推进后续任务，避免组件卸载后 Promise 悬挂；**已开始**的任务无法中断（交由
 //   pdf.js 自然结束），仅标记为已取消、结果不再向外抛出；
 // - `stats()` 暴露 active/queued/maxActive 供端到端探针断言「并发 ≤ limit」。
 //
@@ -60,7 +61,10 @@ export function createQueue(limit = DEFAULT_LIMIT) {
         cancel() {
           if (job.started) { job.cancelled = true; return; } // 已开始：仅标记，结果不外泄
           job.cancelled = true;
-          job.resolve(null); // 未开始：立即结算，防止卸载后悬挂
+          const i = waiting.indexOf(job);
+          if (i >= 0) waiting.splice(i, 1); // U20 修订：从未开始的排队中移除，避免 stats().queued 虚高（含并发占满场景）
+          job.resolve(null);                // 未开始：立即结算，防止卸载后悬挂
+          pump();                           // U20 修订：若因此空出名额/有可跑任务，推进队列
         },
       };
     },

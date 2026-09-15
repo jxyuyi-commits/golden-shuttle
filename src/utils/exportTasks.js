@@ -58,10 +58,10 @@ export function getTaskListFileName() {
   return `打样单列表_${timestamp()}.xlsx`;
 }
 
-/** 一键导出打样单列表 Excel（返回文件名） */
-export function exportTasksToExcel(tasks, { fileName } = {}) {
+/** 一键导出打样单列表 Excel（返回文件名）。G16：exportExcel 迁 exceljs 后为异步，故本函数 async。 */
+export async function exportTasksToExcel(tasks, { fileName } = {}) {
   const f = fileName || getTaskListFileName();
-  exportExcel({
+  await exportExcel({
     fileName: f,
     sheets: [buildTaskSheet(tasks)]
   });

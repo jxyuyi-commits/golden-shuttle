@@ -35,12 +35,12 @@
 **机器可验证计数（防漂移）**：
 
 <!-- STATS:BEGIN (由 scripts/doc-stats.cjs 生成，请勿手改) -->
-> 以下计数由 `node scripts/doc-stats.cjs` 从源码实测生成（生成于 2026-09-15 11:41）；手工改动会被 `--check` 判为漂移。
+> 以下计数由 `node scripts/doc-stats.cjs` 从源码实测生成（生成于 2026-09-15 12:24）；手工改动会被 `--check` 判为漂移。
 
 | 计数项 | 值 |
 | --- | --- |
 | 源码文件数（src/ + server/，.js/.jsx/.cjs/.mjs） | 77 |
-| 源码总行数（同上范围） | 11530 |
+| 源码总行数（同上范围） | 11549 |
 | `server/routes/*.cjs` | 12 |
 | `server/services/*.cjs` | 12 |
 | 迁移最大版本（`server/db.cjs` migrations） | 21 |
@@ -292,9 +292,9 @@ npm run dev:all        # 首选：node scripts/dev.cjs，同时起后端 3001 + 
 
 ## 8. 依赖清单（重要）
 
-`better-sqlite3 12.6.2`（原生，需 rebuild）、`cors 2.8.6`、`exceljs 4.4.0`、`express 5.2.1`、`fs-extra`、`lucide-react`、`pdfjs-dist 3.11.174`、`pdfmake 0.3.11`、`react 19.2`、`xlsx`。
+`better-sqlite3 12.6.2`（原生，需 rebuild）、`cors 2.8.6`、`exceljs 4.4.0`、`express 5.2.1`、`fs-extra`、`lucide-react`、`pdfjs-dist 3.11.174`、`pdfmake 0.3.11`、`react 19.2`。
 
-已清理的未用依赖：crypto-js /chokidar/app-builder-lib（90e7ed5 移除）。
+已清理的未用依赖：crypto-js /chokidar/app-builder-lib（90e7ed5 移除）、xlsx（G16 移除，导出迁 exceljs）。
 
 **字体资产（进 git，clone 即带）**
 

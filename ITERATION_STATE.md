@@ -800,6 +800,23 @@ npm run dev:all
 
 ---
 
+## 批4 U18–U22 性能与响应式（2026-09-15，收尾提交 `0757662` 已推远端）
+
+- **交付（U18→U22 五单元 + 5 轮修订）**：
+  - **U18 看板卡片两层层级重构**：`KanbanView.jsx` 退化为容器层（分组/筛选/布局/滚动），新增卡片层 `src/components/task/TaskCard.jsx` + 派生根工具 `src/utils/taskView.js`（`PRIO_RANK/taskRuns/taskRunTypes/taskTopPriority/derivedCol/getOverdueInfo/buildRunNodes` 单一来源）。卡片 = **主信息层**（缩略图+设计师徽标 / 款号 / 款名 / 优先级 / 款级状态 / 类别 / 版次数 / 审核 / 5 个进度节点，常驻） ∪ **次级详情层**（款号·品牌·时段·版单·类别·批次明细，`position:absolute` hover/focus 浮层、不占布局）。原目标「同屏卡片 ≈ +35%」达成（卡高约 320 → 238，受 140×198 缩略图下限约束）。
+  - **U19**：`TaskCard` 包 `React.memo`；`filteredTasks/activeCols/groupedTasks` 转 `useMemo`；保存后改单条 `GET /api/tasks/:id` 就地合并（去掉全量 `loadTasks()`）的乐观更新。
+  - **U20**：新增 `src/utils/thumbQueue.js`（并发≤2 队列 + cancel/卸载出队）；`PdfThumb` 首进视口才渲染并解绑 IntersectionObserver；`renderPdfThumb` 失败静默；失败态补「设计稿缺失」可点占位（放大层可达更换入口）。
+  - **U21**：`SmartSelect` 去每帧 rAF，改「打开期 scroll(捕获)/resize/ResizeObserver + rAF 节流」；Esc 关面板改 document 捕获监听（解「焦点不在下拉内」死锁）。
+  - **U22**：新增 3 个响应式断点（≤1366 / ≤1200 / ≤1024 → `--board-col-w` 420/380/360）+ 款号省略号全局化。
+- **⚠️ 主理人独立复核（自建 CDP 探针，不复用工程师脚本）共打回 5 处实锤**：①U18 重构后批次明细丢失（颜色/件数/尺码）；②U18 逾期徽标压款号；③U21 鼠标点开下拉后 Esc 完全无响应（死锁）；④U22 1024 卡片内部元素级溢出 + 节点文字重叠；⑤U20 失败占位点击无反应（降级路径不可用）。全部修复后复验通过。
+- **末项补修 `0757662`（U22 补修·窄宽度逾期卡款号截断）**：根因＝≤1366 右栏仅 136~196px，24px 款号与 104px 逾期徽标在 `.bento-tr` 同排争宽（徽标以 `padding-right:104px` 预留）→ ellipsis 截成「SS…」（实测 1366 `149/106`、1200 `149/66`、1024 `149/46`）。修法＝徽标 DOM 移入 `.bento-tr`（桌面仍 `position:absolute` → 定位祖先仍是 `.bento-card`，脱离文档流 ⇒ 1440 零漂移）；≤1366 把 `.bento-tr` 改列方向 + 徽标 `static` 独占一行、款号整行可用；≤1200/≤1024 再降字号至 20/18px。
+- **主理人终验（`_lead_probe8/9.cjs`：4 宽度 × 6 卡 = 24 组合）**：款号 `scrollWidth-clientWidth ≤ 1` 全绿 24/24；徽标∩款号 = 0、徽标∩设计师徽标 = 0、徽标均在卡内；卡高 238/240/242/246（在 238±8 区间内，且未超过基线已有的 246）；无元素级溢出、无节点文字重叠、`pageOverflowX = 0`、`consoleErrors = 0`。1440 与基线逐字段一致（徽标 absolute、内缩 10/10＋1px 卡片边框 = 11/11；款号内容宽 149/149/119/75 不变；卡高全 238）。真实鼠标 hover 复验：次级浮层正常浮出（opacity 0→1）、徽标仍压在浮层之上（z-index 8 > 6）、移出即收回。
+- **门禁**：`eslint src` 0 / `doc:check` STATS 一致 / `npm test` 98/98（含 U20 新增 thumbQueue 3 用例）/ `vite build` 11.41s；远端 = 本地 = `0757662`。
+- **⚠️ 遗留冲突（已登记 REQ-033）**：U22 把**分组视图**列宽降到 420/380/360px，与 **REQ-032（2026-09-11 已拍板「看板卡片最小宽度不得低于 500px」）冲突**（「全部」视图的 `minmax(500px,1fr)` 未动、仍合规）。窄列是「款号压字号 / 徽标被迫垂直分层 / meta 行拥挤」一串补丁的共同根因 —— 用户 2026-09-15 指示：先记录、跳过，另立「看板卡片布局重构专项」。
+- **下一单元**：批5 演进预备（G16 移除 xlsx → G17 前后端拆分留缝 → G18 extraResources 改空白示例库 → G19 分页按需）。
+
+---
+
 ## 批4 U18-U22 性能与响应式（2026-09-15 上午，提交 `1bca2a0`…`0757662` 已推）——**批4 收官**
 
 - **U18 卡片分层（`1bca2a0`，修订 `c13f9f0`）**：KanbanView 645→~400 行退化为容器层（分组/筛选/布局/滚动，拖拽保留），抽出 `src/components/task/TaskCard.jsx`（主信息层常驻 + `.bento-detail` hover/键盘聚焦浮层，absolute 不占布局）+ 新增 `src/utils/taskView.js`（PRIO_RANK / taskRuns / taskRunTypes / taskTopPriority / derivedCol / getOverdueInfo / buildRunNodes 口径单一来源）。**主理人打回**：首版丢批次明细（sample_color / sample_count / size）→ c13f9f0 补回，并顺修既有缺陷「逾期徽标压款号」（`.bento-card:has(.bento-overdue-badge) .bento-tr { padding-right:104px }`）。
